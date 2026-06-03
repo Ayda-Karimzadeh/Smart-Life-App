@@ -1,2 +1,1 @@
---index-url https://mirror2.chabokan.net/pypi/simple/
 PyQt6 == 6.11.0
