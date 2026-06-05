@@ -5,8 +5,10 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QLabel,
     QListWidget,
-    QLineEdit
+    QLineEdit, QListWidgetItem
 )
+from repositories.task_repository import TaskRepository
+from PyQt6.QtCore import Qt
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -15,7 +17,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Smart Life App")
         self.setMinimumSize(400, 300)
 
+        self.repo = TaskRepository()
+
         self._setup_ui()
+
+        self.tasks_list.itemChanged.connect(self.on_item_changed)
+
+        self.load_tasks()
 
     def _setup_ui(self):
         central_widget = QWidget()
@@ -57,14 +65,18 @@ class MainWindow(QMainWindow):
         task_text = self.task_input.text()
 
         if task_text:
-            self.tasks_list.addItem(task_text)
+            self.repo.add_task(task_text)
             self.task_input.clear()
+            self.load_tasks()
 
     def delete_task(self):
         selected_item = self.tasks_list.currentItem()
 
         if selected_item:
-            self.tasks_list.takeItem(self.tasks_list.row(selected_item))
+            task_id = selected_item.data(Qt.ItemDataRole.UserRole)
+
+            self.repo.delete_task(task_id)
+            self.load_tasks()
 
     def edit_task(self):
         selected_item = self.tasks_list.currentItem()
@@ -73,5 +85,43 @@ class MainWindow(QMainWindow):
             new_text = self.task_input.text()
 
             if new_text:
-                selected_item.setText(new_text)
+                task_id = selected_item.data(Qt.ItemDataRole.UserRole)
+
+                self.repo.update_task(task_id, new_text)
+
                 self.task_input.clear()
+                self.load_tasks()
+
+    def load_tasks(self):
+        self.tasks_list.blockSignals(True)
+
+        self.tasks_list.clear()
+
+        tasks = self.repo.get_all_tasks()
+
+        for task in tasks:
+            task_id = task[0]
+            title = task[1]
+            is_done = task[2]
+
+            item = QListWidgetItem(title)
+            item.setData(Qt.ItemDataRole.UserRole, task_id)
+
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+
+            if is_done:
+                item.setData(Qt.CheckState.Checked)
+            else:
+                item.setData(Qt.CheckState.Unchecked)
+
+            self.tasks_list.addItem(item)
+
+        self.tasks_list.blockSignals(False)
+
+    def on_item_changed(self, item):
+        task_id = item.data(Qt.ItemDataRole.UserRole)
+
+        if item.checkState() == Qt.CheckState.Checked:
+            self.repo.toggle_task(task_id, 1)
+        else:
+            self.repo.toggle_task(task_id, 0)
