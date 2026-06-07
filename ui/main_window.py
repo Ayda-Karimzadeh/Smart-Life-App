@@ -1,109 +1,109 @@
 from PyQt6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QLabel,
-    QLineEdit,
+    QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
+    QLabel, QStackedWidget
 )
-from repositories.task_repository import TaskRepository
-from ui.Widgets.task_card import TaskCard
+from PyQt6.QtCore import Qt
+from assets.style import GLOBAL_STYLE, BG_MAIN, BG_CARD, TEXT_PRIMARY, TEXT_MUTED, ORANGE, ACCENT2, placeholder_page
+from ui.sidebar import Sidebar
+from ui.dashboard_page import DashboardPage
+from ui.habits_page import HabitsPage
+from ui.tasks_page import TasksPage
+from datetime import date
+from ui.goals_page import GoalsPage
+
+class Header(QWidget):
+    PAGE_NAMES = ["Dashboard", "Habits", "Goals", "Tasks", "Time Tracking", "Analytics"]
+
+    def __init__(self):
+        super().__init__()
+        self.setFixedHeight(64)
+        self.setStyleSheet(f"background: {BG_MAIN}; border-bottom: 1px solid rgba(255,255,255,0.05);")
+
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(28, 0, 28, 0)
+
+        self.title = QLabel("Dashboard")
+        self.title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+
+        today = date.today().strftime("%A, %B %d, %Y")
+        self.date_lbl = QLabel(today)
+        self.date_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
+
+        left = QVBoxLayout()
+        left.setSpacing(2)
+        left.addWidget(self.title)
+        left.addWidget(self.date_lbl)
+
+        streak = QLabel("🔥  Streak  24 days")
+        streak.setStyleSheet(f"""
+            background: {BG_CARD};
+            color: {ORANGE};
+            border-radius: 10px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+        """)
+        score = QLabel("🏆  Score  92%")
+        score.setStyleSheet(f"""
+            background: {BG_CARD};
+            color: {ACCENT2};
+            border-radius: 10px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+        """)
+
+        lay.addLayout(left)
+        lay.addStretch()
+        lay.addWidget(streak)
+        lay.addSpacing(10)
+        lay.addWidget(score)
+
+    def set_page(self, idx):
+        self.title.setText(self.PAGE_NAMES[idx])
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Smart Life Dashboard")
+        self.resize(1280, 780)
+        self.setMinimumSize(900, 600)
+        self.setStyleSheet(GLOBAL_STYLE)
 
-        self.setWindowTitle("Smart Life App")
-        self.setMinimumSize(400, 300)
+        central = QWidget()
+        self.setCentralWidget(central)
+        root = QVBoxLayout(central)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        self.repo = TaskRepository()
-        self.editing_task_id = None
+        self.header = Header()
+        root.addWidget(self.header)
 
-        self._setup_ui()
+        body = QHBoxLayout()
+        body.setContentsMargins(0, 0, 0, 0)
+        body.setSpacing(0)
 
-        self.load_tasks()
+        self.stack = QStackedWidget()
+        self.stack.setStyleSheet("background: transparent;")
 
-    def _setup_ui(self):
-        central_widget = QWidget()
-        layout = QVBoxLayout()
+        pages = [
+            DashboardPage(),
+            HabitsPage(),
+            GoalsPage(),
+            TasksPage(),
+            placeholder_page("⏱", "Time Tracking"),
+            placeholder_page("📈", "Analytics"),
+        ]
+        for p in pages:
+            self.stack.addWidget(p)
 
-        title = QLabel("Smart Life App")
-        layout.addWidget(title)
+        self.sidebar = Sidebar(self._switch_page)
 
-        subtitle = QLabel("Today's Tasks")
-        layout.addWidget(subtitle)
+        body.addWidget(self.sidebar)
+        body.addWidget(self.stack, 1)
+        root.addLayout(body, 1)
 
-        self.tasks_container = QWidget()
-        self.tasks_layout = QVBoxLayout()
-        self.tasks_container.setLayout(self.tasks_layout)
-
-        layout.addWidget(self.tasks_container)
-
-        self.task_input = QLineEdit()
-        self.task_input.setPlaceholderText("Enter a new task...")
-        layout.addWidget(self.task_input)
-
-        self.add_button = QPushButton("Add Task")
-        layout.addWidget(self.add_button)
-        self.add_button.clicked.connect(self.save_task)
-
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
-
-    def save_task(self):
-        task_text = self.task_input.text().strip()
-        if not task_text:
-            return
-
-        if self.editing_task_id is not None:
-            self.repo.update_task(self.editing_task_id, task_text)
-            self._clear_edit_mode()
-        else:
-            self.repo.add_task(task_text)
-            self.task_input.clear()
-
-        self.load_tasks()
-
-    def delete_task(self, task_id):
-        if self.editing_task_id == task_id:
-            self._clear_edit_mode()
-        self.repo.delete_task(task_id)
-        self.load_tasks()
-
-    def edit_task(self, task_id, title):
-        self.editing_task_id = task_id
-        self.task_input.setText(title)
-        self.task_input.setFocus()
-        self.add_button.setText("Update Task")
-
-    def _clear_edit_mode(self):
-        self.editing_task_id = None
-        self.task_input.clear()
-        self.add_button.setText("Add Task")
-
-    def load_tasks(self):
-        self.clear_layout(self.tasks_layout)
-
-        tasks = self.repo.get_all_tasks()
-
-        for task in tasks:
-            task_id, title, is_done = task
-
-            card = TaskCard(task_id, title, is_done)
-
-            card.delete_requested.connect(self.delete_task)
-            card.edit_requested.connect(self.edit_task)
-            card.toggle_requested.connect(self.toggle_task)
-
-            self.tasks_layout.addWidget(card)
-
-    def toggle_task(self, task_id, is_done):
-        self.repo.toggle_task(task_id, is_done)
-        self.load_tasks()
-
-    def clear_layout(self, layout):
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+    def _switch_page(self, idx):
+        self.stack.setCurrentIndex(idx)
+        self.header.set_page(idx)

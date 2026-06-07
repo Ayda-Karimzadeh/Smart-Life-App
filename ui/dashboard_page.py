@@ -1,12 +1,15 @@
-import sys
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
-    QPushButton, QLabel, QFrame, QStackedWidget, QScrollArea,
-    QProgressBar, QSizePolicy
+    QWidget, QHBoxLayout, QVBoxLayout,
+    QPushButton, QLabel, QScrollArea, QProgressBar
 )
-from PyQt6.QtCore import Qt, QTimer, QTime
-from PyQt6.QtGui import QFont, QColor, QPalette, QPainter, QPen, QBrush
-import math
+from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QBrush, QPolygonF, QPainterPath
+
+from assets.style import (
+    BG_CARD, BG_CARD2, TEXT_PRIMARY, TEXT_MUTED, ACCENT,
+    ACCENT2, GREEN, ORANGE, BLUE,
+    make_card
+)
 
 class CircleChart(QWidget):
     def __init__(self, value=92, label="", color=ACCENT2, parent=None):
@@ -107,6 +110,9 @@ class DashboardPage(QWidget):
 
         # پایین: نمودارها
         layout.addWidget(self._charts_row())
+
+        layout.addWidget(self._tasks_goals_row())  # ← این
+        layout.addWidget(self._habit_streaks())  # ← و این
 
         layout.addStretch()
         scroll.setWidget(content)
@@ -258,3 +264,192 @@ class DashboardPage(QWidget):
         lay.addWidget(left, 1)
         lay.addWidget(right, 2)
         return row
+
+    def _tasks_goals_row(self):
+        row = QWidget()
+        row.setStyleSheet("background: transparent;")
+        lay = QHBoxLayout(row)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(14)
+
+        # ── Today's Tasks ──────────────────────────────────────
+        left = make_card()
+        ll = QVBoxLayout(left)
+        ll.setContentsMargins(20, 18, 20, 18)
+        ll.setSpacing(12)
+
+        # هدر
+        header = QHBoxLayout()
+        t = QLabel("Today's Tasks")
+        t.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        add_btn = QPushButton("+ Add Task")
+        add_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {ACCENT};
+                color: white;
+                border: none;
+                border-radius: 10px;
+                padding: 6px 14px;
+                font-size: 12px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{ background: {ACCENT2}; }}
+        """)
+        add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        header.addWidget(t)
+        header.addStretch()
+        header.addWidget(add_btn)
+        ll.addLayout(header)
+
+        tasks = [
+            ("Morning meditation", "6:00 AM", True),
+            ("Review project goals", "9:00 AM", True),
+            ("Workout session", "5:00 PM", False),
+            ("Read for 30 minutes", "8:00 PM", False),
+        ]
+
+        for name, time, done in tasks:
+            card = make_card(color="#1a2a1a" if done else BG_CARD2)
+            cl = QHBoxLayout(card)
+            cl.setContentsMargins(14, 10, 14, 10)
+            cl.setSpacing(12)
+
+            # دایره چک
+            check = QLabel("●")
+            check.setStyleSheet(f"""
+                font-size: 18px;
+                color: {GREEN if done else TEXT_MUTED};
+                background: transparent;
+            """)
+            check.setFixedWidth(22)
+
+            info = QVBoxLayout()
+            info.setSpacing(2)
+            name_lbl = QLabel(name)
+            name_lbl.setStyleSheet(f"""
+                font-size: 13px;
+                color: {TEXT_MUTED};
+                background: transparent;
+                {'text-decoration: line-through;' if done else f'color: {TEXT_PRIMARY};'}
+            """)
+            time_lbl = QLabel(time)
+            time_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+            info.addWidget(name_lbl)
+            info.addWidget(time_lbl)
+
+            cl.addWidget(check)
+            cl.addLayout(info, 1)
+            ll.addWidget(card)
+
+        # ── Active Goals ───────────────────────────────────────
+        right = make_card()
+        rl = QVBoxLayout(right)
+        rl.setContentsMargins(20, 18, 20, 18)
+        rl.setSpacing(12)
+
+        rheader = QHBoxLayout()
+        t2 = QLabel("Active Goals")
+        t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        view_all = QLabel("View All →")
+        view_all.setStyleSheet(f"font-size: 12px; color: {ACCENT2}; background: transparent;")
+        rheader.addWidget(t2)
+        rheader.addStretch()
+        rheader.addWidget(view_all)
+        rl.addLayout(rheader)
+
+        goals = [
+            ("Learn Web Development", "Learning", 68, ACCENT2),
+            ("Run 100km this month", "Fitness", 72, BLUE),
+            ("Read 12 books this year", "Personal", 42, ACCENT),
+        ]
+
+        for name, cat, pct, col in goals:
+            gc = make_card(color=BG_CARD2)
+            gl = QVBoxLayout(gc)
+            gl.setContentsMargins(14, 12, 14, 12)
+            gl.setSpacing(6)
+
+            top = QHBoxLayout()
+            n = QLabel(name)
+            n.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
+            p = QLabel(f"{pct}%")
+            p.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {col}; background: transparent;")
+            top.addWidget(n)
+            top.addStretch()
+            top.addWidget(p)
+
+            cat_lbl = QLabel(cat)
+            cat_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+
+            bar = QProgressBar()
+            bar.setRange(0, 100)
+            bar.setValue(pct)
+            bar.setTextVisible(False)
+            bar.setFixedHeight(6)
+            bar.setStyleSheet(f"""
+                QProgressBar {{ background: {BG_CARD}; border-radius: 3px; }}
+                QProgressBar::chunk {{ background: {col}; border-radius: 3px; }}
+            """)
+
+            gl.addLayout(top)
+            gl.addWidget(cat_lbl)
+            gl.addWidget(bar)
+            rl.addWidget(gc)
+
+        rl.addStretch()
+
+        lay.addWidget(left, 1)
+        lay.addWidget(right, 1)
+        return row
+
+    def _habit_streaks(self):
+        section = QWidget()
+        section.setStyleSheet("background: transparent;")
+        lay = QVBoxLayout(section)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(12)
+
+        title = QLabel("Habit Streaks")
+        title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        lay.addWidget(title)
+
+        row = QWidget()
+        row.setStyleSheet("background: transparent;")
+        rl = QHBoxLayout(row)
+        rl.setContentsMargins(0, 0, 0, 0)
+        rl.setSpacing(14)
+
+        streaks = [
+            ("Morning Routine", 24, True, ORANGE),
+            ("Exercise", 18, True, ORANGE),
+            ("Reading", 21, False, TEXT_MUTED),
+            ("Meditation", 30, True, ORANGE),
+        ]
+
+        for name, days, done, col in streaks:
+            card = make_card(color="#2a1a0a" if done else BG_CARD2)
+            cl = QVBoxLayout(card)
+            cl.setContentsMargins(16, 14, 16, 14)
+            cl.setSpacing(6)
+
+            top = QHBoxLayout()
+            fire = QLabel("🔥" if done else "🩶")
+            fire.setStyleSheet("font-size: 18px; background: transparent;")
+            days_lbl = QLabel(f"{days} days")
+            days_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {col}; background: transparent;")
+            top.addWidget(fire)
+            top.addStretch()
+            top.addWidget(days_lbl)
+
+            n = QLabel(name)
+            n.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
+            status = QLabel("Completed today" if done else "Not completed yet")
+            status.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+
+            cl.addLayout(top)
+            cl.addWidget(n)
+            cl.addWidget(status)
+            rl.addWidget(card)
+
+        lay.addWidget(row)
+        return section

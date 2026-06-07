@@ -1,11 +1,10 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from ui.dashboard_window import DashboardWindow
+from ui.main_window import MainWindow
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    window = DashboardWindow()
+    app.setStyle("Fusion")
+    window = MainWindow()
     window.show()
-
     sys.exit(app.exec())
