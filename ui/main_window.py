@@ -11,6 +11,7 @@ from ui.tasks_page import TasksPage
 from datetime import date
 from ui.goals_page import GoalsPage
 from ui.timer_page import TimerPage
+from ui.analytics_page import AnalyticsPage
 
 class Header(QWidget):
     PAGE_NAMES = ["Dashboard", "Habits", "Goals", "Tasks", "Time Tracking", "Analytics"]
@@ -94,7 +95,7 @@ class MainWindow(QMainWindow):
             GoalsPage(),
             TasksPage(),
             TimerPage(),
-            placeholder_page("📈", "Analytics"),
+            AnalyticsPage(),
         ]
         for p in pages:
             self.stack.addWidget(p)
