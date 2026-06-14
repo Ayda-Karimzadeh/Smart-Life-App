@@ -1,6 +1,8 @@
 import math
+from re import sub
+from turtle import title
 from PyQt6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout,
+    QFrame, QFrame, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QScrollArea
 )
 from PyQt6.QtCore import Qt, QPointF
@@ -12,15 +14,13 @@ from assets.style import (
     make_card
 )
 
-
-# ─── نمودار خطی با نقاط ──────────────────────────────────────────────────────
 class LineChartDot(QWidget):
     def __init__(self, data=None, color=ACCENT2, filled=False, parent=None):
         super().__init__(parent)
         self.data = data or [72, 78, 75, 82, 80, 88, 92]
         self.color = color
         self.filled = filled
-        self.labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        self.labels = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"]
         self.setMinimumHeight(180)
 
     def paintEvent(self, event):
@@ -94,7 +94,6 @@ class RadarChart(QWidget):
         self.setMinimumSize(250, 250)
 
     def paintEvent(self, event):
-        import math
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -251,6 +250,9 @@ class AnalyticsPage(QWidget):
         main.setContentsMargins(0, 0, 0, 0)
         main.addWidget(scroll)
 
+        layout.addWidget(self._charts_row())
+        layout.addWidget(self._performance_banner())  # ← اضافه کن
+        layout.addStretch()
     # ─ ۴ کارت آمار ───────────────────────────────────────────────────────────
     def _stats_row(self):
         row = QWidget()
@@ -437,3 +439,65 @@ class AnalyticsPage(QWidget):
         main_lay.addWidget(row2)
 
         return container
+    
+    def _performance_banner(self):
+        card = make_card(color="#1a1535")
+        card.setMinimumHeight(160)
+        lay = QVBoxLayout(card)
+        lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.setContentsMargins(28, 24, 28, 24)
+        lay.setSpacing(10)
+
+        icon = QLabel("🏅")
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setStyleSheet("""
+            font-size: 28px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 10px;
+        """)
+        icon.setFixedSize(52, 52)
+
+        title = QLabel("Outstanding Performance!")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+
+        sub = QLabel("You're in the top 5% of users this month. Your consistency and dedication are paying off!")
+        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
+        sub.setWordWrap(True)
+
+        # ─ آمار پایین ─
+        stats = QHBoxLayout()
+        stats.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        stats.setSpacing(0)
+
+        for val, lbl, col in [("92%", "Productivity", ACCENT2), ("88%", "Consistency", BLUE), ("24", "Day Streak", GREEN)]:
+            item = QVBoxLayout()
+            item.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            v = QLabel(val)
+            v.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            v.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {col}; background: transparent;")
+            l = QLabel(lbl)
+            l.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            l.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
+            item.addWidget(v)
+            item.addWidget(l)
+
+            stats.addLayout(item)
+
+            # خط جداکننده
+            if lbl != "Day Streak":
+                sep = QFrame()
+                sep.setFixedWidth(1)
+                sep.setFixedHeight(40)
+                sep.setStyleSheet(f"background: rgba(255,255,255,0.12);")
+                stats.addSpacing(30)
+                stats.addWidget(sep)
+                stats.addSpacing(30)
+
+        lay.addWidget(icon, alignment=Qt.AlignmentFlag.AlignHCenter)
+        lay.addWidget(title)
+        lay.addWidget(sub)
+        lay.addLayout(stats)
+        return card

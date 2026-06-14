@@ -128,7 +128,7 @@ class DashboardPage(QWidget):
         lay.setContentsMargins(28, 22, 28, 22)
         lay.setSpacing(10)
 
-        title = QLabel("Good evening, Alex! ✨")
+        title = QLabel("Good evening!✨")
         title.setStyleSheet(f"font-size: 26px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
         sub = QLabel("You're doing amazing! Keep pushing forward on your journey to greatness.")
         sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
