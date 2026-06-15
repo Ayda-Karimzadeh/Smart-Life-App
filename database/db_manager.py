@@ -15,7 +15,7 @@ from database.models import Habit, Goal, Milestone, Task, TimeSession
 # مسیر فایل دیتابیس
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "data", "smart_life.db")
-SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "Schema.sql")
+SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
 
 
 def get_connection():
@@ -192,6 +192,23 @@ def delete_goal(goal_id):
     conn.close()
 
 
+def update_goal(goal_id, name, description, icon, category, deadline=None):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE goals SET name = ?, description = ?, icon = ?, category = ?, deadline = ? WHERE id = ?",
+        (name, description, icon, category, deadline, goal_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_milestone(milestone_id):
+    conn = get_connection()
+    conn.execute("DELETE FROM milestones WHERE id = ?", (milestone_id,))
+    conn.commit()
+    conn.close()
+
+
 def add_milestone(goal_id, name, sort_order=0):
     conn = get_connection()
     conn.execute(
@@ -256,6 +273,18 @@ def get_all_tasks(done=None):
         ).fetchall()
     conn.close()
     return [Task.from_row(r) for r in rows]
+
+
+def update_task(task_id, name, description, category, priority, due_date=None, due_time=None):
+    conn = get_connection()
+    conn.execute(
+        """UPDATE tasks
+           SET name = ?, description = ?, category = ?, priority = ?, due_date = ?, due_time = ?
+           WHERE id = ?""",
+        (name, description, category, priority, due_date, due_time, task_id)
+    )
+    conn.commit()
+    conn.close()
 
 
 def toggle_task(task_id):

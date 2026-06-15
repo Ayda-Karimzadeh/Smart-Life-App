@@ -11,6 +11,7 @@ from assets.style import (
     make_card
 )
 from database import db_manager as db
+from ui.dialogs import AddHabitDialog
 
 
 class WeekBar(QWidget):
@@ -293,6 +294,20 @@ class HabitsPage(QWidget):
         self.selected_category = category
         self.refresh()
 
+    # ─ باز کردن دیالوگ افزودن عادت ──────────────────────────────────────────
+    def _open_add_dialog(self):
+        dialog = AddHabitDialog(self)
+        if dialog.exec():  # یعنی کاربر "Add Habit" رو زده
+            data = dialog.result_data
+            db.add_habit(
+                name=data["name"],
+                icon=data["icon"],
+                category=data["category"],
+                frequency_type=data["frequency_type"],
+                frequency_count=data["frequency_count"],
+            )
+            self.refresh()
+
     # ─ گرید عادت‌ها ──────────────────────────────────────────────────────────
     def _habits_grid(self):
         habits = db.get_all_habits()
@@ -337,6 +352,10 @@ class HabitsPage(QWidget):
         add_btn.setAlignment(Qt.AlignmentFlag.AlignCenter)
         add_btn.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
         add_lay.addWidget(add_btn)
+
+        # کلیک روی کارت = باز شدن دیالوگ
+        add_card.mousePressEvent = lambda event: self._open_add_dialog()
+
         lay.addWidget(add_card)
 
         return grid

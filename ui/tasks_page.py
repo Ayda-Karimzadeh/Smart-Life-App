@@ -1,14 +1,17 @@
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
-    QLabel, QScrollArea, QFrame, QPushButton
+    QLabel, QScrollArea, QFrame, QPushButton, QMessageBox
 )
 from PyQt6.QtCore import Qt
+from datetime import date, datetime
 
 from assets.style import (
     BG_CARD, BG_CARD2, TEXT_PRIMARY, TEXT_MUTED,
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE, RED,
     make_card
 )
+from database import db_manager as db
+from ui.dialogs import AddTaskDialog
 
 PRIO_COLORS = {
     "High":   RED,
@@ -17,19 +20,26 @@ PRIO_COLORS = {
 }
 
 CAT_COLORS = {
-    "Work":   ACCENT,
-    "Health": GREEN,
+    "Work":     ACCENT,
+    "Health":   GREEN,
     "Personal": BLUE,
     "Learning": ORANGE,
+    "Fitness":  RED,
+    "Wellness": ACCENT2,
 }
 
 
 # ─── کارت تسک ────────────────────────────────────────────────────────────────
 class TaskCard(QWidget):
-    def __init__(self, name, desc, category, date, time, priority, done=False, parent=None):
+    """کارت یه تسک. کلیک روی دایره چک، وضعیت done رو toggle می‌کنه."""
+
+    def __init__(self, task, on_toggle, parent=None):
         super().__init__(parent)
+        self.task = task
+        self.on_toggle = on_toggle
         self.setStyleSheet("background: transparent;")
 
+        done = task.done
         card = make_card(color=BG_CARD2 if not done else "#1a2a1a")
         lay = QVBoxLayout(card)
         lay.setContentsMargins(18, 14, 18, 14)
@@ -39,28 +49,41 @@ class TaskCard(QWidget):
         top = QHBoxLayout()
         top.setSpacing(12)
 
-        check = QLabel("✅" if done else "⭕")
-        check.setStyleSheet("font-size: 20px; background: transparent;")
-        check.setFixedWidth(28)
+        self.check_btn = QPushButton("✅" if done else "⭕")
+        self.check_btn.setStyleSheet("""
+            QPushButton {
+                font-size: 20px;
+                background: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background: rgba(255,255,255,0.08);
+                border-radius: 8px;
+            }
+        """)
+        self.check_btn.setFixedSize(28, 28)
+        self.check_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.check_btn.clicked.connect(self._handle_toggle)
 
         info = QVBoxLayout()
         info.setSpacing(3)
 
-        name_lbl = QLabel(name)
+        name_lbl = QLabel(task.name)
         name_lbl.setStyleSheet(f"""
             font-size: 14px; font-weight: 600;
             color: {TEXT_MUTED if done else TEXT_PRIMARY};
             background: transparent;
             {'text-decoration: line-through;' if done else ''}
         """)
-        desc_lbl = QLabel(desc)
-        desc_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
-
         info.addWidget(name_lbl)
-        info.addWidget(desc_lbl)
 
-        prio_col = PRIO_COLORS.get(priority, TEXT_MUTED)
-        prio_lbl = QLabel(priority)
+        if task.description:
+            desc_lbl = QLabel(task.description)
+            desc_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
+            info.addWidget(desc_lbl)
+
+        prio_col = PRIO_COLORS.get(task.priority, TEXT_MUTED)
+        prio_lbl = QLabel(task.priority)
         prio_lbl.setStyleSheet(f"""
             font-size: 11px; font-weight: 600;
             color: {prio_col};
@@ -71,9 +94,45 @@ class TaskCard(QWidget):
         """)
         prio_lbl.setFixedHeight(24)
 
-        top.addWidget(check)
+        # دکمه ویرایش
+        edit_btn = QPushButton("✏️")
+        edit_btn.setFixedSize(28, 28)
+        edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        edit_btn.setStyleSheet("""
+            QPushButton {
+                font-size: 14px;
+                background: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background: rgba(255,255,255,0.08);
+                border-radius: 8px;
+            }
+        """)
+        edit_btn.clicked.connect(self._handle_edit)
+
+        # دکمه حذف
+        delete_btn = QPushButton("🗑️")
+        delete_btn.setFixedSize(28, 28)
+        delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        delete_btn.setStyleSheet("""
+            QPushButton {
+                font-size: 14px;
+                background: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background: rgba(224,92,92,0.15);
+                border-radius: 8px;
+            }
+        """)
+        delete_btn.clicked.connect(self._handle_delete)
+
+        top.addWidget(self.check_btn)
         top.addLayout(info, 1)
         top.addWidget(prio_lbl)
+        top.addWidget(edit_btn)
+        top.addWidget(delete_btn)
         lay.addLayout(top)
 
         # ─ تگ‌ها ─
@@ -81,29 +140,61 @@ class TaskCard(QWidget):
         tags.setSpacing(8)
         tags.setContentsMargins(40, 0, 0, 0)
 
-        cat_col = CAT_COLORS.get(category, ACCENT)
-        cat_lbl = QLabel(category)
+        cat_col = CAT_COLORS.get(task.category, ACCENT)
+        cat_lbl = QLabel(task.category)
         cat_lbl.setStyleSheet(f"""
             font-size: 11px; color: white;
             background: {cat_col};
             border-radius: 6px; padding: 2px 10px;
         """)
-
-        date_lbl = QLabel(f"📅 {date}")
-        date_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
-
-        time_lbl = QLabel(f"🕐 {time}")
-        time_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
-
         tags.addWidget(cat_lbl)
-        tags.addWidget(date_lbl)
-        tags.addWidget(time_lbl)
+
+        if task.due_date:
+            date_lbl = QLabel(f"📅 {task.due_date}")
+            date_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+            tags.addWidget(date_lbl)
+
+        if task.due_time:
+            time_lbl = QLabel(f"🕐 {task.due_time}")
+            time_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+            tags.addWidget(time_lbl)
+
         tags.addStretch()
         lay.addLayout(tags)
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(card)
+
+    def _handle_toggle(self):
+        db.toggle_task(self.task.id)
+        self.on_toggle()
+
+    def _handle_edit(self):
+        dialog = AddTaskDialog(self, task=self.task)
+        if dialog.exec():
+            data = dialog.result_data
+            db.update_task(
+                task_id=self.task.id,
+                name=data["name"],
+                description=data["description"],
+                category=data["category"],
+                priority=data["priority"],
+                due_date=data["due_date"],
+                due_time=data["due_time"],
+            )
+            self.on_toggle()  # refresh
+
+    def _handle_delete(self):
+        reply = QMessageBox.question(
+            self, "Delete Task",
+            f"Are you sure you want to delete '{self.task.name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            db.delete_task(self.task.id)
+            self.on_toggle()  # refresh
 
 
 # ─── صفحه: Tasks ─────────────────────────────────────────────────────────────
@@ -112,10 +203,19 @@ class TasksPage(QWidget):
         super().__init__()
         self.setStyleSheet("background: transparent;")
 
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll = QScrollArea(self)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
+        main = QVBoxLayout(self)
+        main.setContentsMargins(0, 0, 0, 0)
+        main.addWidget(self.scroll)
+
+        self.active_filter = "All Tasks"  # All Tasks / Today / This Week
+        self.refresh()
+
+    # ─ بازسازی کامل صفحه با داده‌های تازه از دیتابیس ───────────────────────────
+    def refresh(self):
         content = QWidget()
         content.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(content)
@@ -124,17 +224,44 @@ class TasksPage(QWidget):
 
         layout.addWidget(self._stats_row())
         layout.addWidget(self._filter_row())
-        layout.addWidget(self._tasks_section("Pending Tasks", self._pending_tasks()))
-        layout.addWidget(self._tasks_section("Completed Tasks", self._completed_tasks()))
+
+        pending = self._filtered_tasks(done=False)
+        completed = self._filtered_tasks(done=True)
+
+        layout.addWidget(self._tasks_section(f"Pending Tasks ({len(pending)})", pending))
+        layout.addWidget(self._tasks_section(f"Completed ({len(completed)})", completed))
         layout.addStretch()
 
-        scroll.setWidget(content)
-        main = QVBoxLayout(self)
-        main.setContentsMargins(0, 0, 0, 0)
-        main.addWidget(scroll)
+        self.scroll.setWidget(content)
+
+    # ─ فیلتر بر اساس Today / This Week ──────────────────────────────────────────
+    def _filtered_tasks(self, done):
+        tasks = db.get_all_tasks(done=done)
+
+        if self.active_filter == "Today":
+            today = date.today().isoformat()
+            tasks = [t for t in tasks if t.due_date == today]
+        elif self.active_filter == "This Week":
+            today = date.today()
+            from datetime import timedelta
+            week_end = today + timedelta(days=7)
+            tasks = [
+                t for t in tasks
+                if t.due_date and today.isoformat() <= t.due_date <= week_end.isoformat()
+            ]
+
+        return tasks
 
     # ─ آمار ──────────────────────────────────────────────────────────────────
     def _stats_row(self):
+        all_tasks = db.get_all_tasks()
+        pending = [t for t in all_tasks if not t.done]
+        completed = [t for t in all_tasks if t.done]
+
+        today = date.today().isoformat()
+        due_today = [t for t in all_tasks if t.due_date == today and not t.done]
+        high_prio = [t for t in pending if t.priority == "High"]
+
         row = QWidget()
         row.setStyleSheet("background: transparent;")
         lay = QHBoxLayout(row)
@@ -142,10 +269,10 @@ class TasksPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("✅", "6",  "Pending Tasks", "To be completed", ACCENT2, True),
-            ("☑️", "4",  "Completed",     "Great progress!", GREEN,   False),
-            ("📅", "5",  "Due Today",     "Focus on these",  BLUE,    False),
-            ("🚩", "2",  "High Priority", "Needs attention", RED,     False),
+            ("✅", str(len(pending)),   "Pending Tasks", "To be completed", ACCENT2, True),
+            ("☑️", str(len(completed)), "Completed",     "Great progress!", GREEN,   False),
+            ("📅", str(len(due_today)), "Due Today",     "Focus on these",  BLUE,    False),
+            ("🚩", str(len(high_prio)), "High Priority", "Needs attention", RED,     False),
         ]
 
         for icon, val, title, sub, col, highlight in items:
@@ -159,7 +286,7 @@ class TasksPage(QWidget):
             icon_box = QLabel(icon)
             icon_box.setFixedSize(40, 40)
             icon_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            icon_box.setStyleSheet(f"""
+            icon_box.setStyleSheet("""
                 font-size: 20px;
                 background: rgba(255,255,255,0.07);
                 border-radius: 10px;
@@ -190,14 +317,16 @@ class TasksPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(8)
 
-        filters = ["🔽 Filter", "All Tasks", "Today", "This Week"]
-        for i, f in enumerate(filters):
+        filters = ["All Tasks", "Today", "This Week"]
+        for f in filters:
+            active = f == self.active_filter
             btn = QPushButton(f)
-            active = i == 1
+            btn.setCheckable(True)
+            btn.setChecked(active)
             btn.setStyleSheet(f"""
                 QPushButton {{
-                    background: {'rgba(255,255,255,0.07)' if not active else 'rgba(255,255,255,0.1)'};
-                    color: {TEXT_PRIMARY if active else TEXT_MUTED};
+                    background: {ACCENT if active else 'rgba(255,255,255,0.07)'};
+                    color: {'white' if active else TEXT_MUTED};
                     border: 1px solid rgba(255,255,255,0.12);
                     border-radius: 16px;
                     padding: 6px 16px;
@@ -205,10 +334,11 @@ class TasksPage(QWidget):
                 }}
                 QPushButton:hover {{
                     background: rgba(255,255,255,0.1);
-                    color: {TEXT_PRIMARY};
+                    color: white;
                 }}
             """)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.clicked.connect(lambda _, name=f: self._select_filter(name))
             lay.addWidget(btn)
 
         lay.addStretch()
@@ -227,12 +357,32 @@ class TasksPage(QWidget):
             QPushButton:hover {{ background: {ACCENT2}; }}
         """)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        add_btn.clicked.connect(self._open_add_dialog)
         lay.addWidget(add_btn)
 
         return row
 
+    def _select_filter(self, name):
+        self.active_filter = name
+        self.refresh()
+
+    # ─ باز کردن دیالوگ افزودن تسک ────────────────────────────────────────────
+    def _open_add_dialog(self):
+        dialog = AddTaskDialog(self)
+        if dialog.exec():
+            data = dialog.result_data
+            db.add_task(
+                name=data["name"],
+                description=data["description"],
+                category=data["category"],
+                priority=data["priority"],
+                due_date=data["due_date"],
+                due_time=data["due_time"],
+            )
+            self.refresh()
+
     # ─ سکشن با عنوان ─────────────────────────────────────────────────────────
-    def _tasks_section(self, title, tasks_widget):
+    def _tasks_section(self, title, tasks):
         section = QWidget()
         section.setStyleSheet("background: transparent;")
         lay = QVBoxLayout(section)
@@ -242,39 +392,14 @@ class TasksPage(QWidget):
         t = QLabel(title)
         t.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(t)
-        lay.addWidget(tasks_widget)
+
+        if not tasks:
+            empty = QLabel("تسکی وجود ندارد")
+            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent; padding: 20px;")
+            lay.addWidget(empty)
+        else:
+            for task in tasks:
+                lay.addWidget(TaskCard(task, on_toggle=self.refresh))
+
         return section
-
-    def _pending_tasks(self):
-        w = QWidget()
-        w.setStyleSheet("background: transparent;")
-        lay = QVBoxLayout(w)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(10)
-
-        tasks = [
-            ("Complete project proposal", "Write and submit the Q3 project proposal document", "Work",     "Jun 5", "2:00 PM",  "High",   False),
-            ("Review pull requests",      "Code review for team members' PRs",                 "Work",     "Jun 3", "4:00 PM",  "Medium", False),
-            ("Plan weekly meals",         "Prepare meal plan and grocery list",                 "Health",   "Jun 4", "10:00 AM", "Medium", False),
-            ("Study algorithms",          "Complete chapter 5 of the book",                    "Learning", "Jun 6", "7:00 PM",  "Low",    False),
-        ]
-        for t in tasks:
-            lay.addWidget(TaskCard(*t))
-        return w
-
-    def _completed_tasks(self):
-        w = QWidget()
-        w.setStyleSheet("background: transparent;")
-        lay = QVBoxLayout(w)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(10)
-
-        tasks = [
-            ("Morning meditation",   "Daily mindfulness practice",     "Personal", "Jun 3", "6:00 AM",  "Low",  True),
-            ("Team standup meeting", "Daily sync with the team",       "Work",     "Jun 3", "9:00 AM",  "High", True),
-            ("Workout session",      "45 min gym session",             "Health",   "Jun 3", "5:00 PM",  "Medium", True),
-            ("Read 30 minutes",      "Continue reading current book",  "Personal", "Jun 3", "9:00 PM",  "Low",  True),
-        ]
-        for t in tasks:
-            lay.addWidget(TaskCard(*t))
-        return w
