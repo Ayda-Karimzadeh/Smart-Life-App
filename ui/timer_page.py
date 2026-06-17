@@ -1,67 +1,62 @@
-from turtle import title
-
+import os
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
-    QLabel, QScrollArea, QPushButton
+    QLabel, QScrollArea, QPushButton,
+    QComboBox, QDialog, QLineEdit, QSpinBox
 )
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QPainterPath
+from PyQt6.QtCore import Qt, QTimer, QUrl
+from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QFont
+from PyQt6.QtMultimedia import QSoundEffect
 
 from assets.style import (
     BG_CARD, BG_CARD2, TEXT_PRIMARY, TEXT_MUTED,
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE, RED,
     make_card
 )
+from database import db_manager as db
 
 
 # ─── نمودار میله‌ای ───────────────────────────────────────────────────────────
 class BarChart(QWidget):
     def __init__(self, data=None, parent=None):
         super().__init__(parent)
-        # (روز, ساعت)
-        self.data = data or [
-            ("Mon", 3.5), ("Tue", 8.0), ("Wed", 5.0),
-            ("Thu", 9.5), ("Fri", 6.5), ("Sat", 4.0), ("Sun", 7.0)
-        ]
+        self.data = data or [("Mon", 0)] * 7
         self.setMinimumHeight(200)
+
+    def set_data(self, data):
+        self.data = data
+        self.update()
 
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-
         w, h = self.width(), self.height()
         pad_l, pad_r, pad_t, pad_b = 40, 20, 20, 30
         chart_w = w - pad_l - pad_r
         chart_h = h - pad_t - pad_b
-
-        max_val = max(v for _, v in self.data) or 1
+        max_val = max((v for _, v in self.data), default=1) or 1
         bar_count = len(self.data)
         bar_w = int(chart_w / bar_count * 0.5)
         gap = chart_w / bar_count
 
-        # خطوط راهنما
         for i in range(5):
             y = pad_t + i * chart_h // 4
-            p.setPen(QPen(QColor("rgba(255,255,255,20)"), 1))
+            p.setPen(QPen(QColor(50, 50, 70), 1))
             p.drawLine(pad_l, y, w - pad_r, y)
             val = max_val - i * max_val / 4
             p.setPen(QColor(TEXT_MUTED))
-            from PyQt6.QtGui import QFont
             p.setFont(QFont("Segoe UI", 9))
-            p.drawText(0, y + 5, pad_l - 4, 14, Qt.AlignmentFlag.AlignRight, f"{val:.0f}")
+            p.drawText(0, y - 6, pad_l - 4, 14,
+                       Qt.AlignmentFlag.AlignRight, f"{val:.1f}")
 
-        # میله‌ها
         for i, (day, val) in enumerate(self.data):
-            bar_h = int(val / max_val * chart_h)
+            bar_h = int(val / max_val * chart_h) if max_val > 0 else 0
             x = int(pad_l + i * gap + (gap - bar_w) / 2)
             y = pad_t + chart_h - bar_h
-
-            # میله
             p.setBrush(QBrush(QColor(GREEN)))
             p.setPen(Qt.PenStyle.NoPen)
-            p.drawRoundedRect(x, y, bar_w, bar_h, 4, 4)
-
-            # برچسب روز
+            if bar_h > 0:
+                p.drawRoundedRect(x, y, bar_w, bar_h, 4, 4)
             p.setPen(QColor(TEXT_MUTED))
             p.setFont(QFont("Segoe UI", 9))
             p.drawText(x - 5, h - pad_b + 6, bar_w + 10, 20,
@@ -72,51 +67,222 @@ class BarChart(QWidget):
 class DonutChart(QWidget):
     def __init__(self, data=None, parent=None):
         super().__init__(parent)
-        # (نام, مقدار, رنگ)
-        self.data = data or [
-            ("Study",    22, ACCENT2),
-            ("Work",     18, BLUE),
-            ("Exercise",  8, GREEN),
-            ("Personal", 12, ORANGE),
-            ("Other",     7, RED),
-        ]
-        self.setMinimumSize(200, 200)
+        self.data = data or []
+        self.setMinimumSize(180, 180)
+
+    def set_data(self, data):
+        self.data = data
+        self.update()
 
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-
+        if not self.data:
+            p.setPen(QColor(TEXT_MUTED))
+            p.setFont(QFont("Segoe UI", 11))
+            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No data yet")
+            return
         size = min(self.width(), self.height()) - 20
         x = (self.width() - size) // 2
         y = (self.height() - size) // 2
-
-        total = sum(v for _, v, _ in self.data)
+        total = sum(v for _, v, _ in self.data) or 1
         start = 90 * 16
         thickness = 28
-
-        for name, val, color in self.data:
+        for _, val, color in self.data:
             span = int(val / total * 360 * 16)
             p.setPen(QPen(QColor(color), thickness,
                           Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             p.setBrush(Qt.BrushStyle.NoBrush)
-            margin = thickness // 2
-            p.drawArc(x + margin, y + margin,
-                      size - thickness, size - thickness, start, -span)
+            m = thickness // 2
+            p.drawArc(x + m, y + m, size - thickness, size - thickness, start, -span)
             start -= span
+
+
+# ─── دیالوگ شروع session با زمان دلخواه ──────────────────────────────────────
+class StartSessionDialog(QDialog):
+    """قبل از شروع تایمر: اسم، دسته و مدت زمان رو می‌گیره."""
+
+    CATEGORIES = ["Study", "Work", "Fitness", "Personal", "Other"]
+    PRESETS = [("25 min — Pomodoro", 25), ("45 min — Deep Work", 45),
+               ("60 min — Focus", 60), ("90 min — Flow", 90), ("Custom", 0)]
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Start Focus Session")
+        self.setFixedWidth(360)
+        self.result_data = None
+
+        self.setStyleSheet(f"QDialog {{ background: {BG_CARD}; color: {TEXT_PRIMARY}; }}")
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 24, 24, 24)
+        lay.setSpacing(14)
+
+        title = QLabel("Start Focus Session")
+        title.setStyleSheet(f"font-size: 17px; font-weight: bold; color: {TEXT_PRIMARY};")
+        lay.addWidget(title)
+
+        INPUT = f"""
+            QLineEdit, QComboBox, QSpinBox {{
+                background: {BG_CARD2}; color: {TEXT_PRIMARY};
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px; padding: 8px 12px; font-size: 13px;
+            }}
+            QComboBox QAbstractItemView {{
+                background: {BG_CARD2}; color: {TEXT_PRIMARY};
+                selection-background-color: {ACCENT};
+            }}
+        """
+
+        # اسم session
+        lay.addWidget(self._lbl("Session Name"))
+        self.name_edit = QLineEdit()
+        self.name_edit.setPlaceholderText("e.g. Morning Workout")
+        self.name_edit.setStyleSheet(INPUT)
+        lay.addWidget(self.name_edit)
+
+        # دسته‌بندی
+        lay.addWidget(self._lbl("Category"))
+        self.cat_combo = QComboBox()
+        self.cat_combo.addItems(self.CATEGORIES)
+        self.cat_combo.setStyleSheet(INPUT)
+        lay.addWidget(self.cat_combo)
+
+        # preset زمان‌ها
+        lay.addWidget(self._lbl("Duration"))
+        preset_row = QHBoxLayout()
+        preset_row.setSpacing(8)
+        self.preset_btns = []
+        for label, mins in self.PRESETS:
+            btn = QPushButton(label.split("—")[0].strip())
+            btn.setCheckable(True)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setStyleSheet(self._preset_style(False))
+            btn.clicked.connect(lambda _, m=mins, b=btn: self._select_preset(m, b))
+            preset_row.addWidget(btn)
+            self.preset_btns.append((btn, mins))
+        lay.addLayout(preset_row)
+
+        # ورودی دقیقه دلخواه
+        custom_row = QHBoxLayout()
+        custom_row.setSpacing(8)
+        self.min_spin = QSpinBox()
+        self.min_spin.setRange(1, 480)
+        self.min_spin.setValue(25)
+        self.min_spin.setSuffix(" min")
+        self.min_spin.setStyleSheet(INPUT)
+        custom_row.addWidget(QLabel("Custom:"))
+        custom_label = QLabel("Custom:")
+        custom_label.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 12px;")
+        custom_row.addWidget(self.min_spin, 1)
+        lay.addLayout(custom_row)
+
+        # انتخاب پیش‌فرض اول
+        self._select_preset(25, self.preset_btns[0][0])
+
+        # دکمه‌ها
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent; color: {TEXT_MUTED};
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 10px; padding: 10px 0; font-size: 13px;
+            }}
+            QPushButton:hover {{ background: rgba(255,255,255,0.05); }}
+        """)
+        cancel_btn.clicked.connect(self.reject)
+
+        start_btn = QPushButton("▶  Start")
+        start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        start_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {ACCENT}; color: white; border: none;
+                border-radius: 10px; padding: 10px 0;
+                font-size: 13px; font-weight: 600;
+            }}
+            QPushButton:hover {{ background: {ACCENT2}; }}
+        """)
+        start_btn.clicked.connect(self._handle_start)
+
+        btn_row.addWidget(cancel_btn, 1)
+        btn_row.addWidget(start_btn, 1)
+        lay.addLayout(btn_row)
+
+    def _lbl(self, text):
+        l = QLabel(text)
+        l.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
+        return l
+
+    def _preset_style(self, active):
+        return f"""
+            QPushButton {{
+                background: {'%s' % ACCENT if active else 'rgba(255,255,255,0.07)'};
+                color: {'white' if active else TEXT_MUTED};
+                border: none; border-radius: 8px;
+                padding: 6px 8px; font-size: 11px;
+            }}
+            QPushButton:hover {{ background: rgba(255,255,255,0.12); }}
+        """
+
+    def _select_preset(self, mins, active_btn):
+        for btn, m in self.preset_btns:
+            btn.setChecked(btn == active_btn)
+            btn.setStyleSheet(self._preset_style(btn == active_btn))
+        if mins > 0:
+            self.min_spin.setValue(mins)
+
+    def _handle_start(self):
+        name = self.name_edit.text().strip() or self.cat_combo.currentText()
+        self.result_data = {
+            "name": name,
+            "category": self.cat_combo.currentText(),
+            "minutes": self.min_spin.value(),
+        }
+        self.accept()
 
 
 # ─── صفحه: Time Tracking ─────────────────────────────────────────────────────
 class TimerPage(QWidget):
+
+    MODE_STOPWATCH  = "stopwatch"   # شمارش رو به جلو
+    MODE_COUNTDOWN  = "countdown"   # شمارش معکوس
+
     def __init__(self):
         super().__init__()
         self.setStyleSheet("background: transparent;")
-        self._seconds = 0
-        self._running = False
 
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._seconds     = 0        # زمان فعلی
+        self._target      = 0        # هدف (برای countdown)
+        self._running     = False
+        self._mode        = self.MODE_STOPWATCH
+        self._session_name    = ""
+        self._session_category = "Other"
 
+        self._qt_timer = QTimer(self)
+        self._qt_timer.timeout.connect(self._tick)
+
+        # صدای اتمام — فایل beep.wav اگه نبود، از QApplication.beep استفاده می‌کنیم
+        self._sound = QSoundEffect()
+        beep_path = os.path.join(os.path.dirname(__file__), "beep.wav")
+        if os.path.exists(beep_path):
+            self._sound.setSource(QUrl.fromLocalFile(beep_path))
+
+        self.scroll = QScrollArea(self)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        main = QVBoxLayout(self)
+        main.setContentsMargins(0, 0, 0, 0)
+        main.addWidget(self.scroll)
+
+        self.refresh()
+
+    # ─ بازسازی صفحه ──────────────────────────────────────────────────────────
+    def refresh(self):
         content = QWidget()
         content.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(content)
@@ -129,17 +295,22 @@ class TimerPage(QWidget):
         layout.addWidget(self._recent_sessions())
         layout.addStretch()
 
-        scroll.setWidget(content)
-        main = QVBoxLayout(self)
-        main.setContentsMargins(0, 0, 0, 0)
-        main.addWidget(scroll)
-
-        # تایمر واقعی
-        self._timer = QTimer(self)
-        self._timer.timeout.connect(self._tick)
+        self.scroll.setWidget(content)
 
     # ─ آمار ──────────────────────────────────────────────────────────────────
     def _stats_row(self):
+        total_today = db.get_total_time_today()
+        weekly      = db.get_weekly_activity()
+        total_week  = sum(h for _, h in weekly)
+        dist        = db.get_time_distribution()
+        top_cat     = max(dist, key=lambda x: x[1])[0] if dist else "—"
+        daily_avg   = round(total_week / 7, 1) if total_week else 0
+
+        def fmt(secs):
+            h = int(secs // 3600)
+            m = int((secs % 3600) // 60)
+            return f"{h}h {m}m" if h else f"{m}m"
+
         row = QWidget()
         row.setStyleSheet("background: transparent;")
         lay = QHBoxLayout(row)
@@ -147,10 +318,10 @@ class TimerPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("⏱",  "4.5h", "Focused Today",  "+30 min vs yesterday",  ACCENT2, True),
-            ("📈", "67h",  "This Week",       "Across all categories", BLUE,    False),
-            ("📖", "22h",  "Study Time",      "Most time spent",       ACCENT,  False),
-            ("📅", "9.6h", "Daily Average",   "This week",             GREEN,   False),
+            ("⏱",  fmt(total_today),    "Focused Today",  "+30 min vs yesterday", ACCENT2, True),
+            ("📈", f"{total_week:.1f}h", "This Week",      "Across all categories",BLUE,    False),
+            ("📖", top_cat,              "Top Category",   "Most time spent",      ACCENT,  False),
+            ("📅", f"{daily_avg}h",      "Daily Average",  "This week",            GREEN,   False),
         ]
 
         for icon, val, title, sub, col, highlight in items:
@@ -159,26 +330,19 @@ class TimerPage(QWidget):
             cl = QVBoxLayout(card)
             cl.setContentsMargins(18, 16, 18, 16)
             cl.setSpacing(6)
-
             top = QHBoxLayout()
             icon_box = QLabel(icon)
             icon_box.setFixedSize(40, 40)
             icon_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            icon_box.setStyleSheet(f"""
-                font-size: 20px;
-                background: rgba(255,255,255,0.07);
-                border-radius: 10px;
-            """)
+            icon_box.setStyleSheet("font-size: 20px; background: rgba(255,255,255,0.07); border-radius: 10px;")
             top.addWidget(icon_box)
             top.addStretch()
-
-            val_lbl = QLabel(val)
-            val_lbl.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+            val_lbl = QLabel(str(val))
+            val_lbl.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
             t_lbl = QLabel(title)
             t_lbl.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
             s_lbl = QLabel(sub)
             s_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
-
             cl.addLayout(top)
             cl.addWidget(val_lbl)
             cl.addWidget(t_lbl)
@@ -190,57 +354,106 @@ class TimerPage(QWidget):
     # ─ بنر تایمر ─────────────────────────────────────────────────────────────
     def _timer_banner(self):
         card = make_card(color="#1a1535")
-        card.setMinimumHeight(160)
+        card.setMinimumHeight(220)
         lay = QVBoxLayout(card)
         lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.setContentsMargins(28, 24, 28, 24)
-        lay.setSpacing(12)
+        lay.setSpacing(10)
 
-        title = QLabel("Ready to Focus?")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+        # نام session جاری
+        self.session_info_lbl = QLabel("")
+        self.session_info_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.session_info_lbl.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
+        lay.addWidget(self.session_info_lbl)
 
-        sub = QLabel("Start a new focus session and track your productivity")
-        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
-
-        # نمایش زمان
+        # نمایش زمان بزرگ
         self.time_lbl = QLabel("00:00:00")
         self.time_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.time_lbl.setStyleSheet(f"font-size: 32px; font-weight: bold; color: {ACCENT2}; background: transparent;")
-
-        # دکمه Start/Stop
-        self.start_btn = QPushButton("▶  Start Timer")
-        self.start_btn.setFixedSize(160, 46)
-        self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.start_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {ACCENT};
-                color: white;
-                border: none;
-                border-radius: 14px;
-                font-size: 14px;
-                font-weight: 600;
-            }}
-            QPushButton:hover {{ background: {ACCENT2}; }}
-        """)
-        self.start_btn.clicked.connect(self._toggle_timer)
-
-        lay.addWidget(title)
-        lay.addWidget(sub)
+        self.time_lbl.setStyleSheet(f"font-size: 42px; font-weight: bold; color: {ACCENT2}; background: transparent;")
         lay.addWidget(self.time_lbl)
-        lay.addWidget(self.start_btn, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        # progress bar برای countdown
+        from PyQt6.QtWidgets import QProgressBar
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setFixedHeight(6)
+        self.progress_bar.setStyleSheet(f"""
+            QProgressBar {{ background: rgba(255,255,255,0.08); border-radius: 3px; }}
+            QProgressBar::chunk {{ background: {ACCENT2}; border-radius: 3px; }}
+        """)
+        self.progress_bar.hide()
+        lay.addWidget(self.progress_bar)
+
+        # دکمه‌ها
+        btn_row = QHBoxLayout()
+        btn_row.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        btn_row.setSpacing(12)
+
+        # دکمه Start Session (باز کردن دیالوگ)
+        self.start_btn = QPushButton("▶  Start Session")
+        self.start_btn.setFixedHeight(46)
+        self.start_btn.setMinimumWidth(160)
+        self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.start_btn.setStyleSheet(self._btn_style(ACCENT, ACCENT2))
+        self.start_btn.clicked.connect(self._handle_start_btn)
+
+        # دکمه Stop
+        self.stop_btn = QPushButton("⏹  Stop & Save")
+        self.stop_btn.setFixedHeight(46)
+        self.stop_btn.setMinimumWidth(140)
+        self.stop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.stop_btn.setStyleSheet(self._btn_style(RED, "#c04040"))
+        self.stop_btn.hide()
+        self.stop_btn.clicked.connect(self._handle_stop)
+
+        # دکمه Reset
+        self.reset_btn = QPushButton("↺  Reset")
+        self.reset_btn.setFixedHeight(46)
+        self.reset_btn.setMinimumWidth(100)
+        self.reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.reset_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(255,255,255,0.07); color: {TEXT_MUTED};
+                border: none; border-radius: 14px; font-size: 13px;
+            }}
+            QPushButton:hover {{ background: rgba(255,255,255,0.12); color: white; }}
+        """)
+        self.reset_btn.hide()
+        self.reset_btn.clicked.connect(self._handle_reset)
+
+        btn_row.addWidget(self.start_btn)
+        btn_row.addWidget(self.stop_btn)
+        btn_row.addWidget(self.reset_btn)
+        lay.addLayout(btn_row)
+
         return card
+
+    def _btn_style(self, color, hover):
+        return f"""
+            QPushButton {{
+                background: {color}; color: white; border: none;
+                border-radius: 14px; font-size: 14px; font-weight: 600;
+            }}
+            QPushButton:hover {{ background: {hover}; }}
+        """
 
     # ─ نمودارها ──────────────────────────────────────────────────────────────
     def _charts_row(self):
+        container = QWidget()
+        container.setStyleSheet("background: transparent;")
+        main_lay = QVBoxLayout(container)
+        main_lay.setContentsMargins(0, 0, 0, 0)
+        main_lay.setSpacing(14)
+
         row = QWidget()
         row.setStyleSheet("background: transparent;")
         lay = QHBoxLayout(row)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(14)
 
-        # Weekly Activity
+        weekly_data = db.get_weekly_activity()
         left = make_card()
         ll = QVBoxLayout(left)
         ll.setContentsMargins(20, 18, 20, 18)
@@ -248,99 +461,59 @@ class TimerPage(QWidget):
         t1 = QLabel("Weekly Activity")
         t1.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         ll.addWidget(t1)
-        ll.addWidget(BarChart())
+        ll.addWidget(BarChart(weekly_data))
 
         legend = QHBoxLayout()
         legend.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         legend.setSpacing(16)
-        for name, col in [("study", ACCENT2), ("work", BLUE), ("fitness", ORANGE), ("personal", GREEN)]:
-            row_l = QHBoxLayout()
+        for name, col in [("Study", ACCENT2), ("Work", BLUE), ("Fitness", ORANGE), ("Personal", GREEN)]:
+            rl = QHBoxLayout()
             dot = QLabel("■")
             dot.setStyleSheet(f"color: {col}; background: transparent; font-size: 11px;")
             lbl = QLabel(name)
             lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
-            row_l.addWidget(dot)
-            row_l.addWidget(lbl)
-            legend.addLayout(row_l)
+            rl.addWidget(dot)
+            rl.addWidget(lbl)
+            legend.addLayout(rl)
         ll.addLayout(legend)
 
-        # Time Distribution
+        dist_data = db.get_time_distribution()
+        cat_colors = {"Study": ACCENT2, "Work": BLUE, "Fitness": GREEN, "Personal": ORANGE, "Other": RED}
+        donut_data = [(cat, hrs, cat_colors.get(cat, ACCENT)) for cat, hrs in dist_data]
+
         right = make_card()
-        rl = QVBoxLayout(right)
-        rl.setContentsMargins(20, 18, 20, 18)
-        rl.setSpacing(12)
+        rl2 = QVBoxLayout(right)
+        rl2.setContentsMargins(20, 18, 20, 18)
+        rl2.setSpacing(12)
         t2 = QLabel("Time Distribution")
         t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        rl.addWidget(t2)
+        rl2.addWidget(t2)
+        donut = DonutChart(donut_data)
+        donut.setMinimumHeight(180)
+        rl2.addWidget(donut)
 
-        donut = DonutChart()
-        donut.setMinimumHeight(200)
-        rl.addWidget(donut)
-
-        # راهنما
-        legend_data = [
-            ("Study",    22, ACCENT2),
-            ("Work",     18, BLUE),
-            ("Exercise",  8, GREEN),
-            ("Personal", 12, ORANGE),
-            ("Other",     7, RED),
-        ]
-        for name, val, col in legend_data:
-            row2 = QHBoxLayout()
+        for cat, hrs, col in donut_data:
+            r2 = QHBoxLayout()
             dot = QLabel("●")
             dot.setStyleSheet(f"color: {col}; background: transparent; font-size: 12px;")
             dot.setFixedWidth(16)
-            n = QLabel(name)
+            n = QLabel(cat)
             n.setStyleSheet(f"font-size: 12px; color: {TEXT_PRIMARY}; background: transparent;")
-            v = QLabel(f"{val}h")
+            v = QLabel(f"{hrs}h")
             v.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
-            row2.addWidget(dot)
-            row2.addWidget(n, 1)
-            row2.addWidget(v)
-            rl.addLayout(row2)
+            r2.addWidget(dot)
+            r2.addWidget(n, 1)
+            r2.addWidget(v)
+            rl2.addLayout(r2)
 
         lay.addWidget(left, 2)
         lay.addWidget(right, 1)
-        return row
+        main_lay.addWidget(row)
+        return container
 
-    # ─ منطق تایمر ────────────────────────────────────────────────────────────
-    def _toggle_timer(self):
-        if self._running:
-            self._timer.stop()
-            self._running = False
-            self.start_btn.setText("▶  Start Timer")
-            self.start_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: {ACCENT};
-                    color: white; border: none;
-                    border-radius: 14px;
-                    font-size: 14px; font-weight: 600;
-                }}
-                QPushButton:hover {{ background: {ACCENT2}; }}
-            """)
-        else:
-            self._timer.start(1000)
-            self._running = True
-            self.start_btn.setText("⏹  Stop Timer")
-            self.start_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: {RED};
-                    color: white; border: none;
-                    border-radius: 14px;
-                    font-size: 14px; font-weight: 600;
-                }}
-                QPushButton:hover {{ background: #c04040; }}
-            """)
-
-    def _tick(self):
-        self._seconds += 1
-        h = self._seconds // 3600
-        m = (self._seconds % 3600) // 60
-        s = self._seconds % 60
-        self.time_lbl.setText(f"{h:02d}:{m:02d}:{s:02d}")
-
-
+    # ─ Recent Sessions ────────────────────────────────────────────────────────
     def _recent_sessions(self):
+        sessions = db.get_recent_sessions(limit=5)
         section = QWidget()
         section.setStyleSheet("background: transparent;")
         lay = QVBoxLayout(section)
@@ -351,40 +524,40 @@ class TimerPage(QWidget):
         title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(title)
 
-        sessions = [
-            ("📖", "React Development", "Study", "Today, 2:00 PM",  "2h 30m", ACCENT2),
-            ("💼", "Project Meeting",   "Work",  "Today, 10:00 AM", "1h 15m", BLUE),
-            ("🏃", "Morning Run",       "Fitness","Today, 7:00 AM", "45m",    GREEN),
-            ("📚", "Spanish Practice",  "Study", "Yesterday, 8PM",  "1h 00m", ACCENT2),
-        ]
+        if not sessions:
+            empty = QLabel("هنوز session ای ثبت نشده. تایمر رو شروع کن!")
+            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent; padding: 20px;")
+            lay.addWidget(empty)
+            return section
 
-        for icon, name, cat, time, duration, col in sessions:
+        cat_icons  = {"Study": "📖", "Work": "💼", "Fitness": "🏃", "Personal": "🧘", "Other": "⏱"}
+        cat_colors = {"Study": ACCENT2, "Work": BLUE, "Fitness": GREEN, "Personal": ORANGE, "Other": RED}
+
+        for s in sessions:
             card = make_card(color=BG_CARD2)
             cl = QHBoxLayout(card)
             cl.setContentsMargins(16, 12, 16, 12)
             cl.setSpacing(14)
 
+            icon = cat_icons.get(s.category, "⏱")
             icon_box = QLabel(icon)
             icon_box.setFixedSize(40, 40)
             icon_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            icon_box.setStyleSheet(f"""
-                font-size: 20px;
-                background: rgba(255,255,255,0.07);
-                border-radius: 10px;
-            """)
+            icon_box.setStyleSheet("font-size: 20px; background: rgba(255,255,255,0.07); border-radius: 10px;")
 
             info = QVBoxLayout()
             info.setSpacing(3)
-            n = QLabel(name)
+            n = QLabel(s.name)
             n.setStyleSheet(f"font-size: 14px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-            t = QLabel(f"{cat}  •  {time}")
+            t = QLabel(f"{s.category}  •  {s.session_date}")
             t.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
             info.addWidget(n)
             info.addWidget(t)
 
             dur_col = QVBoxLayout()
             dur_col.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            d = QLabel(duration)
+            d = QLabel(s.duration_str)
             d.setAlignment(Qt.AlignmentFlag.AlignRight)
             d.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
             dl = QLabel("Duration")
@@ -399,3 +572,134 @@ class TimerPage(QWidget):
             lay.addWidget(card)
 
         return section
+
+    # ─ منطق تایمر ────────────────────────────────────────────────────────────
+    def _handle_start_btn(self):
+        """باز کردن دیالوگ تنظیم session"""
+        if self._running:
+            return
+
+        dialog = StartSessionDialog(self)
+        if not dialog.exec():
+            return
+
+        data = dialog.result_data
+        self._session_name     = data["name"]
+        self._session_category = data["category"]
+        minutes                = data["minutes"]
+
+        self._mode    = self.MODE_COUNTDOWN
+        self._target  = minutes * 60
+        self._seconds = self._target   # شمارش معکوس از target
+
+        # آپدیت UI
+        self.session_info_lbl.setText(
+            f"⏱  {self._session_name}  •  {self._session_category}  •  {minutes} min"
+        )
+        self.progress_bar.setValue(0)
+        self.progress_bar.show()
+        self._update_display()
+
+        # نمایش دکمه‌های مناسب
+        self.start_btn.hide()
+        self.stop_btn.show()
+        self.reset_btn.show()
+
+        self._running = True
+        self._qt_timer.start(1000)
+
+    def _handle_stop(self):
+        """توقف و ذخیره session"""
+        if not self._running:
+            return
+        self._qt_timer.stop()
+        self._running = False
+
+        # زمان واقعی که گذشته
+        elapsed = self._target - self._seconds if self._mode == self.MODE_COUNTDOWN else self._seconds
+        if elapsed >= 10:  # حداقل ۱۰ ثانیه
+            db.add_time_session(
+                name=self._session_name,
+                category=self._session_category,
+                duration_seconds=elapsed,
+            )
+
+        self._reset_state()
+        self.refresh()
+
+    def _handle_reset(self):
+        """ریست بدون ذخیره"""
+        self._qt_timer.stop()
+        self._running = False
+        self._reset_state()
+
+    def _reset_state(self):
+        self._seconds = 0
+        self._target  = 0
+        self.time_lbl.setText("00:00:00")
+        self.time_lbl.setStyleSheet(f"font-size: 42px; font-weight: bold; color: {ACCENT2}; background: transparent;")
+        self.session_info_lbl.setText("")
+        self.progress_bar.setValue(0)
+        self.progress_bar.hide()
+        self.start_btn.show()
+        self.stop_btn.hide()
+        self.reset_btn.hide()
+
+    def _tick(self):
+        if self._mode == self.MODE_COUNTDOWN:
+            self._seconds -= 1
+            if self._seconds <= 0:
+                self._seconds = 0
+                self._update_display()
+                self._on_countdown_done()
+                return
+            # رنگ قرمز وقتی کمتر از ۱ دقیقه مونده
+            if self._seconds <= 60:
+                self.time_lbl.setStyleSheet(f"font-size: 42px; font-weight: bold; color: {RED}; background: transparent;")
+            # progress bar
+            pct = int((1 - self._seconds / self._target) * 100) if self._target else 0
+            self.progress_bar.setValue(pct)
+        else:
+            self._seconds += 1
+
+        self._update_display()
+
+    def _update_display(self):
+        secs = abs(self._seconds)
+        h = secs // 3600
+        m = (secs % 3600) // 60
+        s = secs % 60
+        self.time_lbl.setText(f"{h:02d}:{m:02d}:{s:02d}")
+
+    def _on_countdown_done(self):
+        """وقتی countdown به صفر رسید"""
+        self._qt_timer.stop()
+        self._running = False
+
+        # پخش صدا
+        if self._sound.source().isValid():
+            self._sound.play()
+        else:
+            from PyQt6.QtWidgets import QApplication
+            QApplication.beep()
+
+        # پیام تبریک
+        from PyQt6.QtWidgets import QMessageBox
+        msg = QMessageBox(self)
+        msg.setWindowTitle("✅ Session Complete!")
+        msg.setText(
+            f"<b>{self._session_name}</b> finished!<br>"
+            f"Duration: <b>{self._target // 60} minutes</b>"
+        )
+        msg.setStyleSheet(f"QMessageBox {{ background: {BG_CARD}; color: {TEXT_PRIMARY}; }}")
+        msg.exec()
+
+        # ذخیره خودکار
+        db.add_time_session(
+            name=self._session_name,
+            category=self._session_category,
+            duration_seconds=self._target,
+        )
+
+        self._reset_state()
+        self.refresh()
