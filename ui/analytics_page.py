@@ -250,7 +250,6 @@ class AnalyticsPage(QWidget):
         main.setContentsMargins(0, 0, 0, 0)
         main.addWidget(scroll)
 
-        layout.addWidget(self._charts_row())
         layout.addWidget(self._performance_banner())  # ← اضافه کن
         layout.addStretch()
     # ─ ۴ کارت آمار ───────────────────────────────────────────────────────────

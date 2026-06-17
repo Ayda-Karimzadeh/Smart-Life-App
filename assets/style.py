@@ -50,7 +50,7 @@ def placeholder_page(icon, label):
     ic = QLabel(icon)
     ic.setStyleSheet("font-size: 48px; background: transparent;")
     ic.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    lbl = QLabel(f"{label}\nبه زودی اضافه می‌شود...")
+    lbl = QLabel(f"{label}\nComing soon...")
     lbl.setStyleSheet(f"font-size: 18px; color: {TEXT_MUTED}; background: transparent;")
     lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
     lay.addWidget(ic)

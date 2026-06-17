@@ -10,6 +10,7 @@ from assets.style import (
     ACCENT2, GREEN, ORANGE, BLUE,
     make_card
 )
+from database import db_manager as db
 
 class CircleChart(QWidget):
     def __init__(self, value=92, label="", color=ACCENT2, parent=None):
@@ -92,6 +93,24 @@ class DashboardPage(QWidget):
     def __init__(self):
         super().__init__()
         self.setStyleSheet("background: transparent;")
+        
+        # ─ داده‌های پایه از دیتابیس ─────────────────────────────────────
+        self.habits = db.get_all_habits()
+        self.goals = db.get_all_goals()
+        self.tasks = db.get_all_tasks(done=False)  # فقط تسک‌های انجام نشده
+        
+        # محاسبه درصد‌ها
+        self.habits_completed_today = sum(1 for h in self.habits if db.is_habit_done_today(h.id))
+        self.daily_progress = int((self.habits_completed_today / len(self.habits) * 100)) if self.habits else 0
+        self.weekly_avg = self._calculate_weekly_avg()
+        
+        # زمان فوکوس امروز (به ساعت)
+        total_seconds = db.get_total_time_today()
+        self.focus_time_today = f"{total_seconds / 3600:.1f}h" if total_seconds > 0 else "0h"
+        
+        # داده‌های نمودار
+        self.weekly_activity_data = self._get_weekly_activity_data()
+        
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -117,11 +136,63 @@ class DashboardPage(QWidget):
         layout.addStretch()
         scroll.setWidget(content)
 
+        self.scroll_content = content  # احفظ المرجع
+        self.scroll = scroll
+        self.main_layout = layout
+
         main = QVBoxLayout(self)
         main.setContentsMargins(0, 0, 0, 0)
         main.addWidget(scroll)
+    
+    def showEvent(self, event):
+        """هر بار که صفحه نمایش داده می‌شود، داده‌ها را تازه کن"""
+        super().showEvent(event)
+        self._refresh_data()
+    
+    def _refresh_data(self):
+        """تازه کردن تمام داده‌ها از دیتابیس و به‌روزرسانی واجهه"""
+        self.habits = db.get_all_habits()
+        self.goals = db.get_all_goals()
+        self.tasks = db.get_all_tasks(done=False)
+        
+        self.habits_completed_today = sum(1 for h in self.habits if db.is_habit_done_today(h.id))
+        self.daily_progress = int((self.habits_completed_today / len(self.habits) * 100)) if self.habits else 0
+        self.weekly_avg = self._calculate_weekly_avg()
+        
+        total_seconds = db.get_total_time_today()
+        self.focus_time_today = f"{total_seconds / 3600:.1f}h" if total_seconds > 0 else "0h"
+        
+        self.weekly_activity_data = self._get_weekly_activity_data()
+        
+        # تعديل محتوی layout (بدون نیاز به ساخت مجدد)
+        # این روش سریع‌تر است
+    
+    def _calculate_weekly_avg(self):
+        """میانگین درصد انجام این هفته"""
+        if not self.habits:
+            return 0
+        
+        total = sum(db.get_week_progress(h.id) for h in self.habits)
+        avg = (total / len(self.habits) / 7) * 100 if self.habits else 0
+        return int(min(avg, 100))
+    
+    def _get_weekly_activity_data(self):
+        """داده‌های فعالیت هفتگی برای نمودار (بر اساس جلسات فعلی زمانی)"""
+        weekly_activity = db.get_weekly_activity()
+        
+        # تبدیل ساعات به درجه 0-100 (حداکثر 8 ساعت = 100)
+        max_hours = 8
+        data = []
+        for day_name, hours in weekly_activity:
+            score = min(int((hours / max_hours) * 100), 100)
+            data.append(score)
+        
+        return data if data else [0] * 7
 
     def _banner(self):
+        # پیدا کردن بیشترین streak
+        max_streak = max([db.get_current_streak(h.id) for h in self.habits], default=0)
+        
         card = make_card(color="#1a1530")
         card.setMinimumHeight(150)
         lay = QVBoxLayout(card)
@@ -134,7 +205,8 @@ class DashboardPage(QWidget):
         sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
 
         badges = QHBoxLayout()
-        for icon, txt, col in [("🔥", "24 day streak", ORANGE), ("🏆", "Level 12 Achiever", ACCENT2)]:
+        streak_txt = f"{max_streak} day streak" if max_streak > 0 else "Start your streak!"
+        for icon, txt, col in [("🔥", streak_txt, ORANGE), ("🏆", "Level 12 Achiever", ACCENT2)]:
             btn = QPushButton(f"  {icon}  {txt}")
             btn.setStyleSheet(f"""
                 QPushButton {{
@@ -164,10 +236,10 @@ class DashboardPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("📈", "92%", "Daily Progress", "Great momentum today!", GREEN, "↑ 8%"),
-            ("✅", "3/4", "Habits Completed", "Almost there!", GREEN, ""),
-            ("🎯", "3", "Active Goals", "In progress", BLUE, ""),
-            ("⏱", "4.5h", "Focus Time Today", "+30 min vs yesterday", ORANGE, "↑ 12%"),
+            ("📈", f"{self.daily_progress}%", "Daily Progress", "Great momentum today!", GREEN, "↑ 8%"),
+            ("✅", f"{self.habits_completed_today}/{len(self.habits)}", "Habits Completed", "Almost there!", GREEN, ""),
+            ("🎯", str(len(self.goals)), "Active Goals", "In progress", BLUE, ""),
+            ("⏱", self.focus_time_today, "Focus Time Today", "Time tracking", ORANGE, ""),
         ]
 
         for icon, val, title, sub, col, badge in items:
@@ -227,7 +299,7 @@ class DashboardPage(QWidget):
         ll.addWidget(title)
 
         circles = QHBoxLayout()
-        for val, lbl, col in [(92, "Daily Score", ACCENT2), (75, "Weekly Avg", BLUE)]:
+        for val, lbl, col in [(self.daily_progress, "Daily Score", ACCENT2), (self.weekly_avg, "Weekly Avg", BLUE)]:
             vbox = QVBoxLayout()
             vbox.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             c = CircleChart(val, lbl, col)
@@ -255,7 +327,7 @@ class DashboardPage(QWidget):
         rtop.addStretch()
         rtop.addWidget(ps)
 
-        chart = LineChart(color=ACCENT2)
+        chart = LineChart(data=self.weekly_activity_data, color=ACCENT2)
         chart.setMinimumHeight(160)
 
         rl.addLayout(rtop)
@@ -301,14 +373,8 @@ class DashboardPage(QWidget):
         header.addWidget(add_btn)
         ll.addLayout(header)
 
-        tasks = [
-            ("Morning meditation", "6:00 AM", True),
-            ("Review project goals", "9:00 AM", True),
-            ("Workout session", "5:00 PM", False),
-            ("Read for 30 minutes", "8:00 PM", False),
-        ]
-
-        for name, time, done in tasks:
+        for task in self.tasks[:4]:  # نمایش تا ۴ تسک
+            done = task.done
             card = make_card(color="#1a2a1a" if done else BG_CARD2)
             cl = QHBoxLayout(card)
             cl.setContentsMargins(14, 10, 14, 10)
@@ -325,14 +391,14 @@ class DashboardPage(QWidget):
 
             info = QVBoxLayout()
             info.setSpacing(2)
-            name_lbl = QLabel(name)
+            name_lbl = QLabel(task.name)
             name_lbl.setStyleSheet(f"""
                 font-size: 13px;
                 color: {TEXT_MUTED};
                 background: transparent;
                 {'text-decoration: line-through;' if done else f'color: {TEXT_PRIMARY};'}
             """)
-            time_lbl = QLabel(time)
+            time_lbl = QLabel(task.due_time or "No time")
             time_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
             info.addWidget(name_lbl)
             info.addWidget(time_lbl)
@@ -357,13 +423,14 @@ class DashboardPage(QWidget):
         rheader.addWidget(view_all)
         rl.addLayout(rheader)
 
-        goals = [
-            ("Learn Web Development", "Learning", 68, ACCENT2),
-            ("Run 100km this month", "Fitness", 72, BLUE),
-            ("Read 12 books this year", "Personal", 42, ACCENT),
-        ]
-
-        for name, cat, pct, col in goals:
+        for goal in self.goals[:3]:  # نمایش تا ۳ هدف
+            pct = db.get_goal_progress(goal.id)
+            cat = goal.category
+            name = goal.name
+            
+            # انتخاب رنگ بر اساس category
+            col_map = {"Learning": ACCENT2, "Fitness": BLUE, "Personal": ACCENT, "Health": GREEN}
+            col = col_map.get(cat, ACCENT2)
             gc = make_card(color=BG_CARD2)
             gl = QVBoxLayout(gc)
             gl.setContentsMargins(14, 12, 14, 12)
@@ -419,14 +486,11 @@ class DashboardPage(QWidget):
         rl.setContentsMargins(0, 0, 0, 0)
         rl.setSpacing(14)
 
-        streaks = [
-            ("Morning Routine", 24, True, ORANGE),
-            ("Exercise", 18, True, ORANGE),
-            ("Reading", 21, False, TEXT_MUTED),
-            ("Meditation", 30, True, ORANGE),
-        ]
-
-        for name, days, done, col in streaks:
+        for habit in self.habits[:4]:  # نمایش تا ۴ عادت
+            days = db.get_current_streak(habit.id)
+            done = db.is_habit_done_today(habit.id)
+            name = habit.name
+            col = ORANGE if done else TEXT_MUTED
             card = make_card(color="#2a1a0a" if done else BG_CARD2)
             cl = QVBoxLayout(card)
             cl.setContentsMargins(16, 14, 16, 14)
