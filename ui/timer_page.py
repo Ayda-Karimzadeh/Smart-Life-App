@@ -2,7 +2,8 @@ import os
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QScrollArea, QPushButton,
-    QComboBox, QDialog, QLineEdit, QSpinBox
+    QComboBox, QDialog, QLineEdit, QSpinBox,
+    QMessageBox
 )
 from PyQt6.QtCore import Qt, QTimer, QUrl
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QFont
@@ -13,6 +14,7 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE, RED,
     make_card
 )
+from ui.dialogs import EditSessionDialog
 from database import db_manager as db
 
 
@@ -243,6 +245,238 @@ class StartSessionDialog(QDialog):
             "minutes": self.min_spin.value(),
         }
         self.accept()
+
+
+# ─── دیالوگ ویرایش session ───────────────────────────────────────────────────
+class EditSessionDialog(QDialog):
+    CATEGORIES = ["Study", "Work", "Fitness", "Personal", "Other"]
+
+    def __init__(self, session, parent=None):
+        super().__init__(parent)
+        self.session = session
+        self.setWindowTitle("Edit Session")
+        self.setFixedWidth(360)
+        self.result_data = None
+
+        self.setStyleSheet(f"QDialog {{ background: {BG_CARD}; color: {TEXT_PRIMARY}; }}")
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 24, 24, 24)
+        lay.setSpacing(14)
+
+        title = QLabel("Edit Session")
+        title.setStyleSheet(f"font-size: 17px; font-weight: bold; color: {TEXT_PRIMARY};")
+        lay.addWidget(title)
+
+        INPUT = f"""
+            QLineEdit, QComboBox, QSpinBox {{
+                background: {BG_CARD2}; color: {TEXT_PRIMARY};
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px; padding: 8px 12px; font-size: 13px;
+            }}
+            QComboBox QAbstractItemView {{
+                background: {BG_CARD2}; color: {TEXT_PRIMARY};
+                selection-background-color: {ACCENT};
+            }}
+        """
+
+        # نام
+        name_lbl = QLabel("Session Name")
+        name_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
+        self.name_edit = QLineEdit(session.name)
+        self.name_edit.setStyleSheet(INPUT)
+        lay.addWidget(name_lbl)
+        lay.addWidget(self.name_edit)
+
+        # دسته‌بندی
+        cat_lbl = QLabel("Category")
+        cat_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
+        self.cat_combo = QComboBox()
+        self.cat_combo.addItems(self.CATEGORIES)
+        idx = self.cat_combo.findText(session.category)
+        if idx >= 0:
+            self.cat_combo.setCurrentIndex(idx)
+        self.cat_combo.setStyleSheet(INPUT)
+        lay.addWidget(cat_lbl)
+        lay.addWidget(self.cat_combo)
+
+        # مدت زمان (دقیقه و ثانیه جدا)
+        dur_lbl = QLabel("Duration")
+        dur_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
+        lay.addWidget(dur_lbl)
+
+        dur_row = QHBoxLayout()
+        dur_row.setSpacing(10)
+
+        self.min_spin = QSpinBox()
+        self.min_spin.setRange(0, 1440)
+        self.min_spin.setValue(session.duration // 60)
+        self.min_spin.setSuffix(" min")
+        self.min_spin.setStyleSheet(INPUT)
+
+        self.sec_spin = QSpinBox()
+        self.sec_spin.setRange(0, 59)
+        self.sec_spin.setValue(session.duration % 60)
+        self.sec_spin.setSuffix(" sec")
+        self.sec_spin.setStyleSheet(INPUT)
+
+        dur_row.addWidget(self.min_spin, 1)
+        dur_row.addWidget(self.sec_spin, 1)
+        lay.addLayout(dur_row)
+
+        # دکمه‌ها
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent; color: {TEXT_MUTED};
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 10px; padding: 10px 0; font-size: 13px;
+            }}
+            QPushButton:hover {{ background: rgba(255,255,255,0.05); }}
+        """)
+        cancel_btn.clicked.connect(self.reject)
+
+        save_btn = QPushButton("Save Changes")
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {ACCENT}; color: white; border: none;
+                border-radius: 10px; padding: 10px 0;
+                font-size: 13px; font-weight: 600;
+            }}
+            QPushButton:hover {{ background: {ACCENT2}; }}
+        """)
+        save_btn.clicked.connect(self._handle_save)
+
+        btn_row.addWidget(cancel_btn, 1)
+        btn_row.addWidget(save_btn, 1)
+        lay.addLayout(btn_row)
+
+    def _handle_save(self):
+        name = self.name_edit.text().strip()
+        if not name:
+            self.name_edit.setStyleSheet(
+                self.name_edit.styleSheet() + "QLineEdit { border: 1px solid #e05c5c; }"
+            )
+            return
+        total_secs = self.min_spin.value() * 60 + self.sec_spin.value()
+        self.result_data = {
+            "name": name,
+            "category": self.cat_combo.currentText(),
+            "duration_seconds": total_secs,
+        }
+        self.accept()
+
+
+# ─── کارت session با دکمه‌های edit/delete ────────────────────────────────────
+class SessionCard(QWidget):
+    CAT_ICONS  = {"Study": "📖", "Work": "💼", "Fitness": "🏃", "Personal": "🧘", "Other": "⏱"}
+    CAT_COLORS = {"Study": ACCENT2, "Work": BLUE, "Fitness": GREEN, "Personal": ORANGE, "Other": RED}
+
+    def __init__(self, session, on_change, parent=None):
+        super().__init__(parent)
+        self.session   = session
+        self.on_change = on_change
+        self.setStyleSheet("background: transparent;")
+
+        card = make_card(color=BG_CARD2)
+        cl = QHBoxLayout(card)
+        cl.setContentsMargins(16, 12, 16, 12)
+        cl.setSpacing(14)
+
+        # آیکون
+        icon = self.CAT_ICONS.get(session.category, "⏱")
+        icon_box = QLabel(icon)
+        icon_box.setFixedSize(40, 40)
+        icon_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_box.setStyleSheet("font-size: 20px; background: rgba(255,255,255,0.07); border-radius: 10px;")
+
+        # اطلاعات
+        info = QVBoxLayout()
+        info.setSpacing(3)
+        n = QLabel(session.name)
+        n.setStyleSheet(f"font-size: 14px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        t = QLabel(f"{session.category}  •  {session.session_date}")
+        t.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+        info.addWidget(n)
+        info.addWidget(t)
+
+        # مدت + دکمه‌ها
+        right_col = QVBoxLayout()
+        right_col.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        right_col.setSpacing(4)
+
+        d = QLabel(session.duration_str)
+        d.setAlignment(Qt.AlignmentFlag.AlignRight)
+        d.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        dl = QLabel("Duration")
+        dl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        dl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+
+        actions = QHBoxLayout()
+        actions.setSpacing(4)
+        actions.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        edit_btn = self._icon_btn("✏️")
+        edit_btn.clicked.connect(self._handle_edit)
+
+        del_btn = self._icon_btn("🗑️", danger=True)
+        del_btn.clicked.connect(self._handle_delete)
+
+        actions.addWidget(edit_btn)
+        actions.addWidget(del_btn)
+
+        right_col.addLayout(actions)
+        right_col.addWidget(d)
+        right_col.addWidget(dl)
+
+        cl.addWidget(icon_box)
+        cl.addLayout(info, 1)
+        cl.addLayout(right_col)
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(card)
+
+    def _icon_btn(self, text, danger=False):
+        btn = QPushButton(text)
+        btn.setFixedSize(28, 28)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        hover = "rgba(224,92,92,0.2)" if danger else "rgba(255,255,255,0.1)"
+        btn.setStyleSheet(f"""
+            QPushButton {{
+                font-size: 13px; background: transparent; border: none;
+            }}
+            QPushButton:hover {{ background: {hover}; border-radius: 8px; }}
+        """)
+        return btn
+
+    def _handle_edit(self):
+        from ui.dialogs import EditSessionDialog
+        dialog = EditSessionDialog(self.session, self)
+        if dialog.exec():
+            data = dialog.result_data
+            db.update_time_session(
+                self.session.id,
+                data["name"],
+                data["category"],
+            )
+            self.on_change()
+
+    def _handle_delete(self):
+        reply = QMessageBox.question(
+            self, "Delete Session",
+            f"Delete '{self.session.name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            db.delete_time_session(self.session.id)
+            self.on_change()
 
 
 # ─── صفحه: Time Tracking ─────────────────────────────────────────────────────
@@ -513,7 +747,7 @@ class TimerPage(QWidget):
 
     # ─ Recent Sessions ────────────────────────────────────────────────────────
     def _recent_sessions(self):
-        sessions = db.get_recent_sessions(limit=5)
+        sessions = db.get_recent_sessions(limit=10)
         section = QWidget()
         section.setStyleSheet("background: transparent;")
         lay = QVBoxLayout(section)
@@ -531,45 +765,8 @@ class TimerPage(QWidget):
             lay.addWidget(empty)
             return section
 
-        cat_icons  = {"Study": "📖", "Work": "💼", "Fitness": "🏃", "Personal": "🧘", "Other": "⏱"}
-        cat_colors = {"Study": ACCENT2, "Work": BLUE, "Fitness": GREEN, "Personal": ORANGE, "Other": RED}
-
         for s in sessions:
-            card = make_card(color=BG_CARD2)
-            cl = QHBoxLayout(card)
-            cl.setContentsMargins(16, 12, 16, 12)
-            cl.setSpacing(14)
-
-            icon = cat_icons.get(s.category, "⏱")
-            icon_box = QLabel(icon)
-            icon_box.setFixedSize(40, 40)
-            icon_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            icon_box.setStyleSheet("font-size: 20px; background: rgba(255,255,255,0.07); border-radius: 10px;")
-
-            info = QVBoxLayout()
-            info.setSpacing(3)
-            n = QLabel(s.name)
-            n.setStyleSheet(f"font-size: 14px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-            t = QLabel(f"{s.category}  •  {s.session_date}")
-            t.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
-            info.addWidget(n)
-            info.addWidget(t)
-
-            dur_col = QVBoxLayout()
-            dur_col.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            d = QLabel(s.duration_str)
-            d.setAlignment(Qt.AlignmentFlag.AlignRight)
-            d.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-            dl = QLabel("Duration")
-            dl.setAlignment(Qt.AlignmentFlag.AlignRight)
-            dl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
-            dur_col.addWidget(d)
-            dur_col.addWidget(dl)
-
-            cl.addWidget(icon_box)
-            cl.addLayout(info, 1)
-            cl.addLayout(dur_col)
-            lay.addWidget(card)
+            lay.addWidget(SessionCard(s, on_change=self.refresh))
 
         return section
 

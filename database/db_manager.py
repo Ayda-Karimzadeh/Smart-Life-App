@@ -307,6 +307,40 @@ def delete_task(task_id):
 # TIME SESSIONS
 # ════════════════════════════════════════════════════════════════
 
+def update_time_session(session_id, name, category, duration_seconds):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE time_sessions SET name = ?, category = ?, duration = ? WHERE id = ?",
+        (name, category, duration_seconds, session_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_time_session(session_id):
+    conn = get_connection()
+    conn.execute("DELETE FROM time_sessions WHERE id = ?", (session_id,))
+    conn.commit()
+    conn.close()
+
+
+def update_time_session(session_id, name, category):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE time_sessions SET name = ?, category = ? WHERE id = ?",
+        (name, category, session_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_time_session(session_id):
+    conn = get_connection()
+    conn.execute("DELETE FROM time_sessions WHERE id = ?", (session_id,))
+    conn.commit()
+    conn.close()
+
+
 def add_time_session(name, category, duration_seconds, session_date=None):
     if session_date is None:
         session_date = date.today().isoformat()

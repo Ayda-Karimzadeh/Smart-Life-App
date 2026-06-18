@@ -618,3 +618,100 @@ class AddMilestoneDialog(QDialog):
             return
         self.result_data = {"name": name}
         self.accept()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+class EditSessionDialog(QDialog):
+    """دیالوگ ویرایش اسم و دسته یه session."""
+
+    CATEGORIES = ["Study", "Work", "Fitness", "Personal", "Other"]
+
+    def __init__(self, session, parent=None):
+        super().__init__(parent)
+        self.session = session
+        self.setWindowTitle("Edit Session")
+        self.setFixedWidth(320)
+        self.result_data = None
+
+        self.setStyleSheet(f"QDialog {{ background: {BG_CARD}; color: {TEXT_PRIMARY}; }}")
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 24, 24, 24)
+        lay.setSpacing(14)
+
+        title = QLabel("Edit Session")
+        title.setStyleSheet(f"font-size: 17px; font-weight: bold; color: {TEXT_PRIMARY};")
+        lay.addWidget(title)
+
+        dur_lbl = QLabel(f"Duration: {session.duration_str}")
+        dur_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
+        lay.addWidget(dur_lbl)
+
+        INPUT = f"""
+            QLineEdit, QComboBox {{
+                background: {BG_CARD2}; color: {TEXT_PRIMARY};
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px; padding: 8px 12px; font-size: 13px;
+            }}
+            QComboBox QAbstractItemView {{
+                background: {BG_CARD2}; color: {TEXT_PRIMARY};
+                selection-background-color: {ACCENT};
+            }}
+        """
+
+        name_lbl = QLabel("Session Name")
+        name_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
+        self.name_edit = QLineEdit(session.name)
+        self.name_edit.setStyleSheet(INPUT)
+        lay.addWidget(name_lbl)
+        lay.addWidget(self.name_edit)
+
+        cat_lbl = QLabel("Category")
+        cat_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
+        self.cat_combo = QComboBox()
+        self.cat_combo.addItems(self.CATEGORIES)
+        idx = self.cat_combo.findText(session.category)
+        if idx >= 0:
+            self.cat_combo.setCurrentIndex(idx)
+        self.cat_combo.setStyleSheet(INPUT)
+        lay.addWidget(cat_lbl)
+        lay.addWidget(self.cat_combo)
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent; color: {TEXT_MUTED};
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 10px; padding: 10px 0; font-size: 13px;
+            }}
+            QPushButton:hover {{ background: rgba(255,255,255,0.05); }}
+        """)
+        cancel_btn.clicked.connect(self.reject)
+
+        save_btn = QPushButton("Save")
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {ACCENT}; color: white; border: none;
+                border-radius: 10px; padding: 10px 0;
+                font-size: 13px; font-weight: 600;
+            }}
+            QPushButton:hover {{ background: {ACCENT2}; }}
+        """)
+        save_btn.clicked.connect(self._handle_save)
+
+        btn_row.addWidget(cancel_btn, 1)
+        btn_row.addWidget(save_btn, 1)
+        lay.addLayout(btn_row)
+
+    def _handle_save(self):
+        name = self.name_edit.text().strip() or self.cat_combo.currentText()
+        self.result_data = {
+            "name": name,
+            "category": self.cat_combo.currentText(),
+        }
+        self.accept()
