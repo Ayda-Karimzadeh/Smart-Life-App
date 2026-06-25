@@ -415,3 +415,20 @@ def get_time_distribution():
     ).fetchall()
     conn.close()
     return [(cat, round((dur or 0) / 3600, 1)) for cat, dur in rows]
+
+def get_habit_log_count(habit_id, start_date, end_date):
+    conn = get_connection()
+
+    row = conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM habit_logs
+        WHERE habit_id = ?
+        AND log_date BETWEEN ? AND ?
+        """,
+        (habit_id, start_date, end_date)
+    ).fetchone()
+
+    conn.close()
+
+    return row[0]

@@ -1,56 +1,29 @@
 from datetime import date, timedelta
 from database import db_manager as db
 
-# ════════════════════════════════════════════════════════════
 # Consistency Score
-# ════════════════════════════════════════════════════════════
-
 def consistency_score(habit_id: int, days: int = 30) -> float:
-
     today = date.today()
     start = today - timedelta(days=days - 1)
-
-    conn = db.get_connection()
-    row = conn.execute(
-        "SELECT COUNT(*) FROM habit_logs WHERE habit_id = ? AND log_date BETWEEN ? AND ?",
-        (habit_id, start.isoformat(), today.isoformat())
-    ).fetchone()
-    conn.close()
-
-    done = row[0] if row else 0
+    done = db.get_habit_log_count(
+        habit_id,   start.isoformat(), today.isoformat()
+    )
     return round(done / days * 100, 1)
 
-
 def overall_consistency(days: int = 30) -> float:
-    """
-    میانگین Consistency Score همه عادت‌ها در X روز گذشته.
-    """
     habits = db.get_all_habits()
     if not habits:
         return 0.0
     scores = [consistency_score(h.id, days) for h in habits]
     return round(sum(scores) / len(scores), 1)
 
-
-# ════════════════════════════════════════════════════════════
 # Productivity Score (0-100)
-# ════════════════════════════════════════════════════════════
-
 def productivity_score() -> int:
-    """
-    امتیاز کلی بهره‌وری امروز بر اساس ۴ فاکتور:
-
-    - ۴۰٪ : عادت‌های امروز
-    - ۳۰٪ : پیشرفت اهداف
-    - ۲۰٪ : تسک‌های انجام‌شده
-    - ۱۰٪ : Focus time (هدف: ۴ ساعت)
-    """
     habits = db.get_all_habits()
     goals  = db.get_all_goals()
     tasks  = db.get_all_tasks()
     focus  = db.get_total_time_today()
 
-    # ─ فاکتور ۱: عادت‌ها ─
     if habits:
         done_today  = sum(1 for h in habits if db.is_habit_done_today(h.id))
         habit_score = done_today / len(habits) * 100
@@ -82,11 +55,7 @@ def productivity_score() -> int:
     )
     return round(total)
 
-
-# ════════════════════════════════════════════════════════════
 # Weekly Report
-# ════════════════════════════════════════════════════════════
-
 def weekly_report() -> dict:
     """
     گزارش کامل هفته جاری.
