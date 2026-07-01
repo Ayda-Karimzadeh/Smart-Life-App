@@ -18,7 +18,7 @@ def overall_consistency(days: int = 30) -> float:
     return round(sum(scores) / len(scores), 1)
 
 # Productivity Score (0-100)
-def productivity_score() -> int:
+def productivity_score(target_focus_hours: int = 4) -> int:
     habits = db.get_all_habits()
     goals  = db.get_all_goals()
     tasks  = db.get_all_tasks()
@@ -30,28 +30,30 @@ def productivity_score() -> int:
     else:
         habit_score = 0
 
-    # ─ فاکتور ۲: اهداف ─
     if goals:
-        goal_score = sum(db.get_goal_progress(g.id) for g in goals) / len(goals)
+        goal_score = sum(db.get_goal_progress_percent(g.id) for g in goals) / len(goals)
     else:
         goal_score = 0
 
-    # ─ فاکتور ۳: تسک‌ها ─
     if tasks:
         done_tasks = sum(1 for t in tasks if t.done)
         task_score = done_tasks / len(tasks) * 100
     else:
         task_score = 0
 
-    # ─ فاکتور ۴: Focus time ─
-    target_focus = 4 * 3600   # ۴ ساعت هدف
+    target_focus = target_focus_hours * 3600   # hours to seconds
     focus_score  = min(focus / target_focus * 100, 100)
-
+    weights = {
+        "habit": 0.40,
+        "goal":  0.30,
+        "task":  0.20,
+        "focus": 0.10
+    }
     total = (
-        habit_score * 0.40 +
-        goal_score  * 0.30 +
-        task_score  * 0.20 +
-        focus_score * 0.10
+        habit_score * weights["habit"] +
+        goal_score  * weights["goal"] +
+        task_score  * weights["task"] +
+        focus_score * weights["focus"]
     )
     return round(total)
 
@@ -119,11 +121,7 @@ def weekly_report() -> dict:
         "tasks_completed": sum(tasks_done),
     }
 
-
-# ════════════════════════════════════════════════════════════
 # Streak Engine (Weekly)
-# ════════════════════════════════════════════════════════════
-
 def weekly_streak(habit_id: int) -> int:
     """
     تعداد هفته‌های متوالی که هدف frequency برآورده شده.

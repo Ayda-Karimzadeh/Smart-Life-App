@@ -290,7 +290,7 @@ class AnalyticsPage(QWidget):
         habit_pct   = round(done_today / total * 100) if total else 0
 
         goals       = self._goals
-        goal_progs  = [db.get_goal_progress(g.id) for g in goals]
+        goal_progs  = [db.get_goal_progress_percent(g.id) for g in goals]
         avg_goal    = round(sum(goal_progs) / len(goal_progs)) if goal_progs else 0
 
         tasks       = self._tasks
@@ -357,7 +357,7 @@ class AnalyticsPage(QWidget):
 
         # هدف نزدیک به تموم شدن
         for g in self._goals:
-            pct = db.get_goal_progress(g.id)
+            pct = db.get_goal_progress_percent(g.id)
             if pct >= 75:
                 insights.append(("🎯", "Goal Almost Done!",
                                   f"'{g.name}' is {pct}% complete. Keep pushing!",
@@ -494,7 +494,7 @@ class AnalyticsPage(QWidget):
         tasks      = self._tasks
 
         habit_score = round(sum(1 for h in habits if db.is_habit_done_today(h.id)) / len(habits) * 100) if habits else 0
-        goal_score  = round(sum(db.get_goal_progress(g.id) for g in goals) / len(goals)) if goals else 0
+        goal_score  = round(sum(db.get_goal_progress_percent(g.id) for g in goals) / len(goals)) if goals else 0
         task_score  = round(sum(1 for t in tasks if t.done) / len(tasks) * 100) if tasks else 0
         focus_score = min(round(self._focus_today / 3600 / 8 * 100), 100)  # هدف ۸ ساعت
 
@@ -558,7 +558,7 @@ class AnalyticsPage(QWidget):
         tasks      = self._tasks
 
         habit_pct  = round(sum(1 for h in habits if db.is_habit_done_today(h.id)) / len(habits) * 100) if habits else 0
-        avg_goal   = round(sum(db.get_goal_progress(g.id) for g in goals) / len(goals)) if goals else 0
+        avg_goal   = round(sum(db.get_goal_progress_percent(g.id) for g in goals) / len(goals)) if goals else 0
         max_streak = max((db.get_current_streak(h.id) for h in habits), default=0)
 
         # پیام بر اساس عملکرد

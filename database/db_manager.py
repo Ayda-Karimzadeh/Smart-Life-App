@@ -238,7 +238,7 @@ def toggle_milestone(milestone_id):
     conn.close()
 
 
-def get_goal_progress(goal_id):
+def get_goal_progress_percent(goal_id):
     """درصد پیشرفت هدف بر اساس مایلستون‌های انجام‌شده"""
     milestones = get_milestones(goal_id)
     if not milestones:

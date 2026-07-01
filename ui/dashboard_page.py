@@ -365,7 +365,7 @@ class DashboardPage(QWidget):
             rl.addWidget(empty)
         else:
             for i, goal in enumerate(goals):
-                pct = db.get_goal_progress(goal.id)
+                pct = db.get_goal_progress_percent(goal.id)
                 col = COLORS[i % len(COLORS)]
                 gc = make_card(color=BG_CARD2)
                 gl = QVBoxLayout(gc)

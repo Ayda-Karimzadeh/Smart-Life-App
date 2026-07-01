@@ -43,7 +43,7 @@ class GoalCard(QWidget):
         self.setStyleSheet("background: transparent;")
 
         milestones = db.get_milestones(goal.id)
-        progress = db.get_goal_progress(goal.id)
+        progress = db.get_goal_progress_percent(goal.id)
         days_left = _days_left(goal.deadline)
 
         card = make_card(color=bg_color)
@@ -321,7 +321,7 @@ class GoalsPage(QWidget):
         total = len(goals)
 
         if goals:
-            progresses = [db.get_goal_progress(g.id) for g in goals]
+            progresses = [db.get_goal_progress_percent(g.id) for g in goals]
             avg_progress = round(sum(progresses) / len(progresses))
             completed = sum(1 for p in progresses if p == 100)
         else:
