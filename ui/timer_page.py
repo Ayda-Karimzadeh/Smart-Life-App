@@ -15,7 +15,12 @@ from assets.style import (
     make_card
 )
 from ui.dialogs import EditSessionDialog
-from database import db_manager as db
+from database.repository import (
+    goal_repo,
+    habit_repo,
+    task_repo,
+    analytics_repo,
+)
 
 
 # ─── نمودار میله‌ای ───────────────────────────────────────────────────────────

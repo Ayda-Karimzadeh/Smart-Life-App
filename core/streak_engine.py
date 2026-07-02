@@ -10,7 +10,12 @@ core/streak_engine.py
 """
 
 from datetime import date, timedelta, datetime
-from database import db_manager as db
+from database.repository import (
+    goal_repo,
+    habit_repo,
+    task_repo,
+    analytics_repo,
+)
 
 
 # ════════════════════════════════════════════════════════════
@@ -24,7 +29,7 @@ def daily_streak(habit_id: int) -> int:
     مثال:
       امروز ✅، دیروز ✅، پریروز ✅، ۳ روز قبل ❌  →  streak = 3
     """
-    conn = db.get_connection()
+    conn = habit_repo.get_connection()
     rows = conn.execute(
         "SELECT log_date FROM habit_logs WHERE habit_id = ? ORDER BY log_date DESC",
         (habit_id,)
@@ -53,7 +58,7 @@ def daily_streak(habit_id: int) -> int:
 
 def best_daily_streak(habit_id: int) -> int:
     """طولانی‌ترین streak روزانه در کل تاریخچه."""
-    conn = db.get_connection()
+    conn = habit_repo.get_connection()
     rows = conn.execute(
         "SELECT log_date FROM habit_logs WHERE habit_id = ? ORDER BY log_date ASC",
         (habit_id,)
@@ -90,7 +95,7 @@ def weekly_streak(habit_id: int) -> int:
       هفته قبل:    ۳ بار ✅  →  streak = 2
       ۲ هفته قبل:  ۲ بار ❌  →  streak شکسته  →  نتیجه: 2
     """
-    conn  = db.get_connection()
+    conn  = habit_repo.get_connection()
     habit = conn.execute(
         "SELECT frequency_count FROM habits WHERE id = ?",
         (habit_id,)
@@ -122,7 +127,7 @@ def weekly_streak(habit_id: int) -> int:
 
 def best_weekly_streak(habit_id: int) -> int:
     """طولانی‌ترین weekly streak در کل تاریخچه."""
-    conn  = db.get_connection()
+    conn  = habit_repo.get_connection()
     habit = conn.execute(
         "SELECT frequency_count, created_at FROM habits WHERE id = ?",
         (habit_id,)
@@ -178,7 +183,7 @@ def week_status(habit_id: int) -> dict:
         "daily_log": [T, F, T, F, F, F, F], # ۷ روز هفته
     }
     """
-    conn  = db.get_connection()
+    conn  = habit_repo.get_connection()
     habit = conn.execute(
         "SELECT frequency_count FROM habits WHERE id = ?",
         (habit_id,)
@@ -194,7 +199,7 @@ def week_status(habit_id: int) -> dict:
     week_end   = week_start + timedelta(days=6)
     done       = _count_in_range(habit_id, week_start, today)
 
-    conn       = db.get_connection()
+    conn       = habit_repo.get_connection()
     done_dates = {
         r[0] for r in conn.execute(
             "SELECT log_date FROM habit_logs WHERE habit_id = ? AND log_date BETWEEN ? AND ?",
@@ -245,7 +250,7 @@ def all_habits_report() -> list:
         ...
     ]
     """
-    habits = db.get_all_habits()
+    habits = habit_repo.get_all_habits()
     report = []
 
     for h in habits:
@@ -256,7 +261,7 @@ def all_habits_report() -> list:
             "best_streak":    best_daily_streak(h.id),
             "weekly_streak":  weekly_streak(h.id),
             "week_status":    ws,
-            "done_today":     db.is_habit_done_today(h.id),
+            "done_today":     habit_repo.is_habit_done_today(h.id),
             "prediction":     predict_streak_break(h.id),
         })
 
@@ -266,7 +271,6 @@ def all_habits_report() -> list:
 # ════════════════════════════════════════════════════════════
 # پیش‌بینی
 # ════════════════════════════════════════════════════════════
-
 def predict_streak_break(habit_id: int) -> str:
     """
     پیش‌بینی وضعیت streak هفته جاری.
@@ -298,7 +302,7 @@ def predict_streak_break(habit_id: int) -> str:
 
 def _count_in_range(habit_id: int, start: date, end: date) -> int:
     """تعداد روزهای انجام‌شده بین دو تاریخ"""
-    conn = db.get_connection()
+    conn = habit_repo.get_connection()
     row  = conn.execute(
         "SELECT COUNT(*) FROM habit_logs WHERE habit_id = ? AND log_date BETWEEN ? AND ?",
         (habit_id, start.isoformat(), end.isoformat())

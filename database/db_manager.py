@@ -432,3 +432,79 @@ def get_habit_log_count(habit_id, start_date, end_date):
     conn.close()
 
     return row[0]
+
+def get_habits_done_count_on_date(habits, target_date) -> int:
+    conn = get_connection()
+    try:
+        count = 0
+
+        for habit in habits:
+            row = conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM habit_logs
+                WHERE habit_id = ?
+                  AND log_date = ?
+                """,
+                (habit.id, target_date.isoformat())
+            ).fetchone()
+
+            if row and row[0] > 0:
+                count += 1
+
+        return count
+
+    finally:
+        conn.close()
+
+def get_focus_duration_on_date(target_date) -> float:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT SUM(duration)
+            FROM time_sessions
+            WHERE session_date = ?
+            """,
+            (target_date.isoformat(),)
+        ).fetchone()
+
+        return (row[0] or 0) / 3600
+
+    finally:
+        conn.close()
+
+def count_habit_logs_in_range(habit_id: int, start_date: str, end_date: str) -> int:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM habit_logs
+            WHERE habit_id = ?
+              AND log_date BETWEEN ? AND ?
+            """,
+            (habit_id, start_date, end_date)
+        ).fetchone()
+
+        return row[0] if row else 0
+
+    finally:
+        conn.close()
+
+def get_focus_duration_in_range(start_date: str, end_date: str) -> float:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT SUM(duration)
+            FROM time_sessions
+            WHERE session_date BETWEEN ? AND ?
+            """,
+            (start_date, end_date)
+        ).fetchone()
+
+        return (row[0] or 0) / 3600
+
+    finally:
+        conn.close()

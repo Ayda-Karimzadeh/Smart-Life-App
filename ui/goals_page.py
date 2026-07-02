@@ -1,3 +1,5 @@
+import re
+
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QScrollArea, QFrame, QProgressBar, QGridLayout,
@@ -11,7 +13,7 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE,
     make_card
 )
-from database import db_manager as db
+from database.repository import GoalRepository as repo
 from ui.dialogs import AddGoalDialog, AddMilestoneDialog
 
 # پالت رنگ‌ها برای چرخش بین اهداف
@@ -42,8 +44,8 @@ class GoalCard(QWidget):
         self.on_change = on_change
         self.setStyleSheet("background: transparent;")
 
-        milestones = db.get_milestones(goal.id)
-        progress = db.get_goal_progress_percent(goal.id)
+        milestones = repo.get_milestones(goal.id)
+        progress = repo.get_goal_progress_percent(goal.id)
         days_left = _days_left(goal.deadline)
 
         card = make_card(color=bg_color)
@@ -253,7 +255,7 @@ class GoalCard(QWidget):
         dialog = AddGoalDialog(self, goal=self.goal)
         if dialog.exec():
             data = dialog.result_data
-            db.update_goal(
+            repo.update_goal(
                 self.goal.id, data["name"], data["description"],
                 data["icon"], data["category"], data["deadline"]
             )
@@ -267,21 +269,21 @@ class GoalCard(QWidget):
             QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            db.delete_goal(self.goal.id)
+            repo.delete_goal(self.goal.id)
             self.on_change()
 
     def _handle_add_milestone(self):
         dialog = AddMilestoneDialog(self)
         if dialog.exec():
-            db.add_milestone(self.goal.id, dialog.result_data["name"])
+            repo.add_milestone(self.goal.id, dialog.result_data["name"])
             self.on_change()
 
     def _handle_toggle_milestone(self, milestone_id):
-        db.toggle_milestone(milestone_id)
+        repo.toggle_milestone(milestone_id)
         self.on_change()
 
     def _handle_delete_milestone(self, milestone_id):
-        db.delete_milestone(milestone_id)
+        repo.delete_milestone(milestone_id)
         self.on_change()
 
 
@@ -317,11 +319,11 @@ class GoalsPage(QWidget):
 
     # ─ ۴ کارت آمار ───────────────────────────────────────────────────────────
     def _stats_row(self):
-        goals = db.get_all_goals()
+        goals = repo.get_all_goals()
         total = len(goals)
 
         if goals:
-            progresses = [db.get_goal_progress_percent(g.id) for g in goals]
+            progresses = [repo.get_goal_progress_percent(g.id) for g in goals]
             avg_progress = round(sum(progresses) / len(progresses))
             completed = sum(1 for p in progresses if p == 100)
         else:
@@ -369,7 +371,7 @@ class GoalsPage(QWidget):
 
     # ─ لیست اهداف ─────────────────────────────────────────────────────────────
     def _goals_list(self):
-        goals = db.get_all_goals()
+        goals = repo.get_all_goals()
 
         col = QWidget()
         col.setStyleSheet("background: transparent;")
@@ -407,7 +409,7 @@ class GoalsPage(QWidget):
         dialog = AddGoalDialog(self)
         if dialog.exec():
             data = dialog.result_data
-            db.add_goal(
+            repo.add_goal(
                 name=data["name"],
                 description=data["description"],
                 icon=data["icon"],

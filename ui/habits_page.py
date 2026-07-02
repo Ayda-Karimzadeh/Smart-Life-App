@@ -10,7 +10,12 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE, RED,
     make_card
 )
-from database import db_manager as db
+from database.repository import (
+    goal_repo,
+    habit_repo,
+    task_repo,
+    analytics_repo,
+)
 from core.streak_engine import (
     daily_streak, best_daily_streak,
     weekly_streak, week_status, predict_streak_break
@@ -51,7 +56,7 @@ class HabitCard(QWidget):
 
         # داده از streak_engine
         ws             = week_status(habit.id)
-        done_today     = db.is_habit_done_today(habit.id)
+        done_today     = habit_repo.is_habit_done_today(habit.id)
         cur_streak     = daily_streak(habit.id)
         best_str       = best_daily_streak(habit.id)
         w_streak       = weekly_streak(habit.id)
@@ -204,14 +209,14 @@ class HabitCard(QWidget):
         outer.addWidget(card)
 
     def _handle_toggle(self):
-        db.toggle_habit_today(self.habit.id)
+        habit_repo.toggle_habit_today(self.habit.id)
         self.on_change()
 
     def _handle_edit(self):
         dialog = AddHabitDialog(self, habit=self.habit)
         if dialog.exec():
             data = dialog.result_data
-            db.update_habit(
+            habit_repo.update_habit(
                 self.habit.id,
                 data["name"], data["icon"], data["category"],
                 data["frequency_type"], data["frequency_count"]
@@ -226,7 +231,7 @@ class HabitCard(QWidget):
             QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            db.delete_habit(self.habit.id)
+            habit_repo.delete_habit(self.habit.id)
             self.on_change()
 
 
@@ -262,9 +267,9 @@ class HabitsPage(QWidget):
         self.scroll.setWidget(content)
 
     def _stats_row(self):
-        habits     = db.get_all_habits()
+        habits     = habit_repo.get_all_habits()
         total      = len(habits)
-        done_today = sum(1 for h in habits if db.is_habit_done_today(h.id))
+        done_today = sum(1 for h in habits if habit_repo.is_habit_done_today(h.id))
         today_pct  = round(done_today / total * 100) if total else 0
 
         # طولانی‌ترین streak
@@ -325,7 +330,7 @@ class HabitsPage(QWidget):
         return row
 
     def _filter_row(self):
-        habits     = db.get_all_habits()
+        habits     = habit_repo.get_all_habits()
         categories = ["All"] + sorted(set(h.category for h in habits))
 
         row = QWidget()
@@ -360,7 +365,7 @@ class HabitsPage(QWidget):
         self.refresh()
 
     def _habits_grid(self):
-        habits = db.get_all_habits()
+        habits = habit_repo.get_all_habits()
         if self.selected_category != "All":
             habits = [h for h in habits if h.category == self.selected_category]
 
@@ -407,7 +412,7 @@ class HabitsPage(QWidget):
         dialog = AddHabitDialog(self)
         if dialog.exec():
             data = dialog.result_data
-            db.add_habit(
+            habit_repo.add_habit(
                 data["name"], data["icon"], data["category"],
                 data["frequency_type"], data["frequency_count"]
             )

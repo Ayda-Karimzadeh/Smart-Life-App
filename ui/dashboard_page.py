@@ -11,7 +11,12 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE,
     make_card
 )
-from database import db_manager as db
+from database.repository import (
+    goal_repo,
+    habit_repo,
+    task_repo,
+    analytics_repo,
+)
 
 
 # ─── نمودار دایره‌ای ──────────────────────────────────────────────────────────
@@ -119,8 +124,8 @@ class DashboardPage(QWidget):
     # ─ بنر ───────────────────────────────────────────────────────────────────
     def _banner(self):
         # محاسبه streak کلی (بیشترین streak بین همه عادت‌ها)
-        habits = db.get_all_habits()
-        max_streak = max((db.get_current_streak(h.id) for h in habits), default=0) if habits else 0
+        habits = habit_repo.get_all_habits()
+        max_streak = max((habit_repo.get_current_streak(h.id) for h in habits), default=0) if habits else 0
 
         # سطح بر اساس streak
         level = max(1, max_streak // 5)
@@ -162,14 +167,14 @@ class DashboardPage(QWidget):
     # ─ ۴ کارت آمار ───────────────────────────────────────────────────────────
     def _stats_row(self):
         # داده‌های واقعی
-        habits = db.get_all_habits()
+        habits = habit_repo.get_all_habits()
         total_habits = len(habits)
-        done_today   = sum(1 for h in habits if db.is_habit_done_today(h.id))
+        done_today   = sum(1 for h in habits if habit_repo.is_habit_done_today(h.id))
 
-        goals        = db.get_all_goals()
+        goals        = goal_repo.get_all_goals()
         active_goals = len(goals)
 
-        focus_today  = db.get_total_time_today()
+        focus_today  = analytics_repo.get_total_time_today()
 
         if total_habits > 0:
             daily_pct = round(done_today / total_habits * 100)
@@ -221,17 +226,17 @@ class DashboardPage(QWidget):
 
     # ─ نمودارها ──────────────────────────────────────────────────────────────
     def _charts_row(self):
-        habits = db.get_all_habits()
+        habits = habit_repo.get_all_habits()
         total  = len(habits)
 
         # Daily Score — درصد انجام امروز
-        done_today = sum(1 for h in habits if db.is_habit_done_today(h.id))
+        done_today = sum(1 for h in habits if habit_repo.is_habit_done_today(h.id))
         daily_score = round(done_today / total * 100) if total else 0
 
         # Weekly Avg — میانگین هفته جاری
         if habits:
             week_pcts = [
-                min(db.get_week_progress(h.id) / h.frequency_count, 1) * 100
+                min(habit_repo.get_week_progress(h.id) / h.frequency_count, 1) * 100
                 for h in habits
             ]
             weekly_avg = round(sum(week_pcts) / len(week_pcts))
@@ -239,7 +244,7 @@ class DashboardPage(QWidget):
             weekly_avg = 0
 
         # نمودار خطی هفتگی از time_sessions
-        weekly_data = db.get_weekly_activity()
+        weekly_data = analytics_repo.get_weekly_activity()
         chart_data  = [v for _, v in weekly_data]
 
         row = QWidget()
@@ -295,8 +300,8 @@ class DashboardPage(QWidget):
     # ─ Tasks + Goals ──────────────────────────────────────────────────────────
     def _tasks_goals_row(self):
         today = date.today().isoformat()
-        tasks_today = [t for t in db.get_all_tasks() if t.due_date == today]
-        goals       = db.get_all_goals()[:3]  # فقط ۳ تا
+        tasks_today = [t for t in task_repo.get_all_tasks() if t.due_date == today]
+        goals       = goal_repo.get_all_goals()[:3]  # فقط ۳ تا
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -365,7 +370,7 @@ class DashboardPage(QWidget):
             rl.addWidget(empty)
         else:
             for i, goal in enumerate(goals):
-                pct = db.get_goal_progress_percent(goal.id)
+                pct = goal_repo.get_goal_progress_percent(goal.id)
                 col = COLORS[i % len(COLORS)]
                 gc = make_card(color=BG_CARD2)
                 gl = QVBoxLayout(gc)
@@ -398,7 +403,7 @@ class DashboardPage(QWidget):
 
     # ─ Habit Streaks ─────────────────────────────────────────────────────────
     def _habit_streaks(self):
-        habits = db.get_all_habits()
+        habits = habit_repo.get_all_habits()
 
         section = QWidget()
         section.setStyleSheet("background: transparent;")
@@ -424,8 +429,8 @@ class DashboardPage(QWidget):
 
         # فقط ۴ تا نشون بده
         for h in habits[:4]:
-            streak = db.get_current_streak(h.id)
-            done   = db.is_habit_done_today(h.id)
+            streak = habit_repo.get_current_streak(h.id)
+            done   = habit_repo.is_habit_done_today(h.id)
             col    = ORANGE if streak > 0 else TEXT_MUTED
 
             card = make_card(color="#2a1a0a" if done else BG_CARD2)

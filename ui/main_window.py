@@ -18,7 +18,12 @@ from ui.goals_page     import GoalsPage
 from ui.tasks_page     import TasksPage
 from ui.timer_page     import TimerPage
 from ui.analytics_page import AnalyticsPage
-from database import db_manager as db
+from database.repository import (
+    goal_repo,
+    habit_repo,
+    task_repo,
+    analytics_repo,
+)
 
 
 # ─── Header ───────────────────────────────────────────────────────────────────
@@ -57,9 +62,9 @@ class Header(QWidget):
         left.addWidget(self.date_lbl)
 
         # Streak و Score از دیتابیس
-        habits = db.get_all_habits()
+        habits = habit_repo.get_all_habits()
         max_streak = max(
-            (db.get_current_streak(h.id) for h in habits), default=0
+            (habit_repo.get_current_streak(h.id) for h in habits), default=0
         ) if habits else 0
 
         self.streak_lbl = QLabel(f"🔥  Streak  {max_streak} days")

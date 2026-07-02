@@ -10,7 +10,12 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE, RED,
     make_card
 )
-from database import db_manager as db
+from database.repository import (
+    goal_repo,
+    habit_repo,
+    task_repo,
+    analytics_repo,
+)
 from ui.dialogs import AddTaskDialog
 
 PRIO_COLORS = {

@@ -354,7 +354,7 @@ class MplHabitHeatmap(BaseChart):
 
     def _draw(self):
         from datetime import date, timedelta
-        from database import db_manager as db
+        from database.repository import repo as db
 
         self.fig.patch.set_facecolor(BG_CARD)
         ax = self.fig.add_subplot(111)

@@ -4,18 +4,26 @@ from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QScrollArea, QFrame
 )
+
 from PyQt6.QtCore import Qt, QPointF
+
 from PyQt6.QtGui import (
     QColor, QPainter, QPen, QBrush,
     QPolygonF, QPainterPath, QFont
 )
 
 from assets.style import (
-    BG_CARD, BG_CARD2, TEXT_PRIMARY, TEXT_MUTED,
-    ACCENT, ACCENT2, GREEN, ORANGE, BLUE, RED,
+    BG_CARD, TEXT_PRIMARY, TEXT_MUTED,
+    ACCENT, ACCENT2, GREEN, ORANGE, BLUE,
     make_card
 )
-from database import db_manager as db
+
+from database.repository import (
+    goal_repo,
+    habit_repo,
+    task_repo,
+    analytics_repo,
+)
 
 
 # ─── نمودار خطی با نقاط ──────────────────────────────────────────────────────
@@ -253,12 +261,12 @@ class AnalyticsPage(QWidget):
 
     def refresh(self):
         # ─ بارگذاری همه داده‌ها یک‌بار ─
-        self._habits     = db.get_all_habits()
-        self._goals      = db.get_all_goals()
-        self._tasks      = db.get_all_tasks()
-        self._weekly     = db.get_weekly_activity()
-        self._dist       = db.get_time_distribution()
-        self._focus_today = db.get_total_time_today()
+        self._habits     = habit_repo.get_all_habits()
+        self._goals      = goal_repo.get_all_goals()
+        self._tasks      = task_repo.get_all_tasks()
+        self._weekly     = analytics_repo.get_weekly_activity()
+        self._dist       = analytics_repo.get_time_distribution()
+        self._focus_today = analytics_repo.get_total_time_today()
 
         content = QWidget()
         content.setStyleSheet("background: transparent;")
@@ -286,18 +294,18 @@ class AnalyticsPage(QWidget):
     def _stats_row(self):
         habits      = self._habits
         total       = len(habits)
-        done_today  = sum(1 for h in habits if db.is_habit_done_today(h.id))
+        done_today  = sum(1 for h in habits if habit_repo.is_habit_done_today(h.id))
         habit_pct   = round(done_today / total * 100) if total else 0
 
         goals       = self._goals
-        goal_progs  = [db.get_goal_progress_percent(g.id) for g in goals]
+        goal_progs  = [goal_repo.get_goal_progress_percent(g.id) for g in goals]
         avg_goal    = round(sum(goal_progs) / len(goal_progs)) if goal_progs else 0
 
         tasks       = self._tasks
         done_tasks  = sum(1 for t in tasks if t.done)
         task_pct    = round(done_tasks / len(tasks) * 100) if tasks else 0
 
-        max_streak  = max((db.get_current_streak(h.id) for h in habits), default=0)
+        max_streak  = max((habit_repo.get_current_streak(h.id) for h in habits), default=0)
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -348,7 +356,7 @@ class AnalyticsPage(QWidget):
 
         # Streak بالا
         for h in self._habits:
-            streak = db.get_current_streak(h.id)
+            streak = habit_repo.get_current_streak(h.id)
             if streak >= 7:
                 insights.append(("🔥", f"{streak}-Day Streak!",
                                   f"You've kept up '{h.name}' for {streak} days. Amazing!",
@@ -357,7 +365,7 @@ class AnalyticsPage(QWidget):
 
         # هدف نزدیک به تموم شدن
         for g in self._goals:
-            pct = db.get_goal_progress_percent(g.id)
+            pct = goal_repo.get_goal_progress_percent(g.id)
             if pct >= 75:
                 insights.append(("🎯", "Goal Almost Done!",
                                   f"'{g.name}' is {pct}% complete. Keep pushing!",
@@ -366,7 +374,7 @@ class AnalyticsPage(QWidget):
 
         # همه عادت‌های امروز انجام شده
         if self._habits:
-            all_done = all(db.is_habit_done_today(h.id) for h in self._habits)
+            all_done = all(habit_repo.is_habit_done_today(h.id) for h in self._habits)
             if all_done:
                 insights.append(("⭐", "Perfect Day!",
                                   "You completed all your habits today. Outstanding!",
@@ -444,14 +452,15 @@ class AnalyticsPage(QWidget):
             if self._habits:
                 week_done = []
                 for h in self._habits:
-                    logs_this_week = self._count_logs_in_range(h.id, week_start, week_end)
+                    logs_this_week = habit_repo.count_logs_in_range(h.id,week_start.isoformat(),week_end.isoformat()
+)
                     week_done.append(min(logs_this_week / h.frequency_count, 1) * 100)
                 habit_trend.append(round(sum(week_done) / len(week_done)))
             else:
                 habit_trend.append(0)
 
             # focus hours این هفته
-            focus_h = self._focus_in_range(week_start, week_end)
+            focus_h = analytics_repo.get_focus_duration_in_range(week_start.isoformat(),week_end.isoformat())
             focus_trend.append(round(focus_h, 1))
 
             trend_labels.append(f"W{7 - week_offset}")
@@ -493,12 +502,12 @@ class AnalyticsPage(QWidget):
         goals      = self._goals
         tasks      = self._tasks
 
-        habit_score = round(sum(1 for h in habits if db.is_habit_done_today(h.id)) / len(habits) * 100) if habits else 0
-        goal_score  = round(sum(db.get_goal_progress_percent(g.id) for g in goals) / len(goals)) if goals else 0
+        habit_score = round(sum(1 for h in habits if habit_repo.is_habit_done_today(h.id)) / len(habits) * 100) if habits else 0
+        goal_score  = round(sum(goal_repo.get_goal_progress_percent(g.id) for g in goals) / len(goals)) if goals else 0
         task_score  = round(sum(1 for t in tasks if t.done) / len(tasks) * 100) if tasks else 0
         focus_score = min(round(self._focus_today / 3600 / 8 * 100), 100)  # هدف ۸ ساعت
 
-        max_streak  = max((db.get_current_streak(h.id) for h in habits), default=0)
+        max_streak  = max((habit_repo.get_current_streak(h.id) for h in habits), default=0)
         streak_score = min(max_streak * 3, 100)  # ۳۳ روز = 100%
 
         radar_values = [habit_score, goal_score, task_score, focus_score, streak_score]
@@ -515,8 +524,9 @@ class AnalyticsPage(QWidget):
         for i in range(7):
             d_this = this_start + timedelta(days=i)
             d_last = last_start + timedelta(days=i)
-            this_week_hours.append(round(self._focus_in_range(d_this, d_this), 1))
-            last_week_hours.append(round(self._focus_in_range(d_last, d_last), 1))
+            this_week_hours.append(round(analytics_repo.get_focus_duration_in_range(d_this.isoformat(),d_this.isoformat()),1))
+
+            last_week_hours.append(round(analytics_repo.get_focus_duration_in_range(d_last.isoformat(),d_last.isoformat()),1))
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -557,9 +567,9 @@ class AnalyticsPage(QWidget):
         goals      = self._goals
         tasks      = self._tasks
 
-        habit_pct  = round(sum(1 for h in habits if db.is_habit_done_today(h.id)) / len(habits) * 100) if habits else 0
-        avg_goal   = round(sum(db.get_goal_progress_percent(g.id) for g in goals) / len(goals)) if goals else 0
-        max_streak = max((db.get_current_streak(h.id) for h in habits), default=0)
+        habit_pct  = round(sum(1 for h in habits if habit_repo.is_habit_done_today(h.id)) / len(habits) * 100) if habits else 0
+        avg_goal   = round(sum(goal_repo.get_goal_progress_percent(g.id) for g in goals) / len(goals)) if goals else 0
+        max_streak = max((habit_repo.get_current_streak(h.id) for h in habits), default=0)
 
         # پیام بر اساس عملکرد
         if habit_pct == 100:
@@ -643,23 +653,3 @@ class AnalyticsPage(QWidget):
         return card
 
     # ─ توابع کمکی ────────────────────────────────────────────────────────────
-    def _count_logs_in_range(self, habit_id, start: date, end: date) -> int:
-        """تعداد روزهایی که یه عادت بین دو تاریخ انجام شده"""
-        import sqlite3
-        conn = db.get_connection()
-        row = conn.execute(
-            "SELECT COUNT(*) FROM habit_logs WHERE habit_id = ? AND log_date BETWEEN ? AND ?",
-            (habit_id, start.isoformat(), end.isoformat())
-        ).fetchone()
-        conn.close()
-        return row[0] if row else 0
-
-    def _focus_in_range(self, start: date, end: date) -> float:
-        """مجموع ساعت‌های focus بین دو تاریخ"""
-        conn = db.get_connection()
-        row = conn.execute(
-            "SELECT SUM(duration) FROM time_sessions WHERE session_date BETWEEN ? AND ?",
-            (start.isoformat(), end.isoformat())
-        ).fetchone()
-        conn.close()
-        return (row[0] or 0) / 3600
