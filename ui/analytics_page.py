@@ -24,6 +24,7 @@ from database.repository import (
     task_repo,
     analytics_repo,
 )
+from core.dates import start_of_week, end_of_week
 
 
 # ─── نمودار خطی با نقاط ──────────────────────────────────────────────────────
@@ -445,8 +446,8 @@ class AnalyticsPage(QWidget):
         trend_labels = []
 
         for week_offset in range(6, -1, -1):
-            week_start = today - timedelta(days=today.weekday() + week_offset * 7)
-            week_end   = week_start + timedelta(days=6)
+            week_start = start_of_week(today) - timedelta(weeks=week_offset)
+            week_end   = min(end_of_week(week_start), today) if week_offset == 0 else end_of_week(week_start)
 
             # habit score این هفته
             if self._habits:

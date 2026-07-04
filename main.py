@@ -8,14 +8,15 @@ from PyQt6.QtWidgets import QApplication, QSplashScreen, QLabel
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor
 
-from database.db_manager import init_db, get_all_habits, add_habit
+from database.db_manager import init_db
+from database.repository import habit_repo
 
 
 # ─── Seed Data — داده‌های اولیه اگه دیتابیس خالیه ───────────────────────────
 def seed_data():
     """اگه دیتابیس خالیه، چند عادت نمونه اضافه می‌کنه."""
-    if get_all_habits():
-        return  # قبلاً داده داره — چیزی اضافه نکن
+    if habit_repo.get_all_habits():
+        return
 
     default_habits = [
         ("Morning Meditation", "🧘", "Mindfulness", "daily",  7),
@@ -26,7 +27,7 @@ def seed_data():
     ]
 
     for name, icon, cat, freq_type, freq_count in default_habits:
-        add_habit(name, icon, cat, freq_type, freq_count)
+        habit_repo.add_habit(name, icon, cat, freq_type, freq_count)
 
 
 # ─── Splash Screen ────────────────────────────────────────────────────────────

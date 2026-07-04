@@ -354,7 +354,7 @@ class MplHabitHeatmap(BaseChart):
 
     def _draw(self):
         from datetime import date, timedelta
-        from database.repository import repo as db
+        from database.repository import habit_repo
 
         self.fig.patch.set_facecolor(BG_CARD)
         ax = self.fig.add_subplot(111)
@@ -369,14 +369,9 @@ class MplHabitHeatmap(BaseChart):
         grid = np.zeros((7, weeks))
 
         if self.habit_id:
-            conn = db.get_connection()
-            rows = conn.execute(
-                "SELECT log_date FROM habit_logs WHERE habit_id = ? AND log_date >= ?",
-                (self.habit_id, start.isoformat())
-            ).fetchall()
-            conn.close()
-
-            done_dates = {r[0] for r in rows}
+            done_dates = set(habit_repo.get_habit_log_dates(
+                self.habit_id, start_date=start.isoformat()
+            ))
             for col in range(weeks):
                 for row in range(7):
                     d = start + timedelta(weeks=col, days=row)

@@ -172,14 +172,14 @@ class TaskCard(QWidget):
         outer.addWidget(card)
 
     def _handle_toggle(self):
-        db.toggle_task(self.task.id)
+        task_repo.toggle_task(self.task.id)
         self.on_toggle()
 
     def _handle_edit(self):
         dialog = AddTaskDialog(self, task=self.task)
         if dialog.exec():
             data = dialog.result_data
-            db.update_task(
+            task_repo.update_task(
                 task_id=self.task.id,
                 name=data["name"],
                 description=data["description"],
@@ -198,7 +198,7 @@ class TaskCard(QWidget):
             QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            db.delete_task(self.task.id)
+            task_repo.delete_task(self.task.id)
             self.on_toggle()  # refresh
 
 
@@ -241,7 +241,7 @@ class TasksPage(QWidget):
 
     # ─ فیلتر بر اساس Today / This Week ──────────────────────────────────────────
     def _filtered_tasks(self, done):
-        tasks = db.get_all_tasks(done=done)
+        tasks = task_repo.get_all_tasks(done=done)
 
         if self.active_filter == "Today":
             today = date.today().isoformat()
@@ -259,7 +259,7 @@ class TasksPage(QWidget):
 
     # ─ آمار ──────────────────────────────────────────────────────────────────
     def _stats_row(self):
-        all_tasks = db.get_all_tasks()
+        all_tasks = task_repo.get_all_tasks()
         pending = [t for t in all_tasks if not t.done]
         completed = [t for t in all_tasks if t.done]
 
@@ -376,7 +376,7 @@ class TasksPage(QWidget):
         dialog = AddTaskDialog(self)
         if dialog.exec():
             data = dialog.result_data
-            db.add_task(
+            task_repo.add_task(
                 name=data["name"],
                 description=data["description"],
                 category=data["category"],

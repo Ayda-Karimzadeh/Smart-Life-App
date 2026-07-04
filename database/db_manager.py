@@ -8,9 +8,10 @@ db_manager.py
 
 import sqlite3
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from database.models import Habit, Goal, Milestone, Task, TimeSession
+from core.dates import start_of_week, WEEKDAY_LABELS_SHORT
 
 # مسیر فایل دیتابیس
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -56,6 +57,16 @@ def get_all_habits():
     return [Habit.from_row(r) for r in rows]
 
 
+def update_habit(habit_id, name, icon, category, frequency_type="daily", frequency_count=7):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE habits SET name = ?, icon = ?, category = ?, frequency_type = ?, frequency_count = ? WHERE id = ?",
+        (name, icon, category, frequency_type, frequency_count, habit_id)
+    )
+    conn.commit()
+    conn.close()
+
+
 def delete_habit(habit_id):
     conn = get_connection()
     conn.execute("DELETE FROM habits WHERE id = ?", (habit_id,))
@@ -96,72 +107,71 @@ def is_habit_done_today(habit_id):
 
 def get_week_progress(habit_id):
     """تعداد روزهای انجام‌شده در هفته جاری (شنبه تا الان) رو برمی‌گردونه"""
-    today = date.today()
-    # پیدا کردن شنبه این هفته (شروع هفته فارسی)
-    weekday = (today.weekday() + 2) % 7  # تبدیل به شنبه=0
-    start_of_week = today - timedelta(days=weekday)
+    week_start = start_of_week()
 
     conn = get_connection()
     rows = conn.execute(
         "SELECT COUNT(*) FROM habit_logs WHERE habit_id = ? AND log_date >= ?",
-        (habit_id, start_of_week.isoformat())
+        (habit_id, week_start.isoformat())
     ).fetchone()
     conn.close()
     return rows[0]
 
 
-def get_current_streak(habit_id):
-    """تعداد روزهای متوالی انجام‌شده تا امروز رو حساب می‌کنه"""
+def get_habit_log_dates(habit_id, start_date=None, end_date=None, order="ASC"):
     conn = get_connection()
-    rows = conn.execute(
-        "SELECT log_date FROM habit_logs WHERE habit_id = ? ORDER BY log_date DESC",
-        (habit_id,)
-    ).fetchall()
-    conn.close()
-
-    if not rows:
-        return 0
-
-    dates = [datetime.strptime(r[0], "%Y-%m-%d").date() for r in rows]
-    streak = 0
-    expected = date.today()
-
-    for d in dates:
-        if d == expected:
-            streak += 1
-            expected -= timedelta(days=1)
-        elif d == expected + timedelta(days=1):
-            # هنوز امروز ثبت نشده، ولی دیروز ثبت شده -> ادامه بده
-            continue
-        else:
-            break
-
-    return streak
+    try:
+        query = "SELECT log_date FROM habit_logs WHERE habit_id = ?"
+        params = [habit_id]
+        if start_date:
+            query += " AND log_date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND log_date <= ?"
+            params.append(end_date)
+        if order.upper() not in ("ASC", "DESC"):
+            order = "ASC"
+        query += f" ORDER BY log_date {order.upper()}"
+        rows = conn.execute(query, params).fetchall()
+        return [r[0] for r in rows]
+    finally:
+        conn.close()
 
 
-def get_best_streak(habit_id):
-    """طولانی‌ترین رشته روزهای متوالی در کل تاریخچه"""
+def get_habit_frequency_count(habit_id):
     conn = get_connection()
-    rows = conn.execute(
-        "SELECT log_date FROM habit_logs WHERE habit_id = ? ORDER BY log_date ASC",
-        (habit_id,)
-    ).fetchall()
-    conn.close()
+    try:
+        row = conn.execute(
+            "SELECT frequency_count FROM habits WHERE id = ?",
+            (habit_id,)
+        ).fetchone()
+        return row[0] if row else None
+    finally:
+        conn.close()
 
-    if not rows:
-        return 0
 
-    dates = [datetime.strptime(r[0], "%Y-%m-%d").date() for r in rows]
-    best = current = 1
+def get_habit_created_at(habit_id):
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT created_at FROM habits WHERE id = ?",
+            (habit_id,)
+        ).fetchone()
+        return row[0] if row else None
+    finally:
+        conn.close()
 
-    for i in range(1, len(dates)):
-        if (dates[i] - dates[i - 1]).days == 1:
-            current += 1
-            best = max(best, current)
-        else:
-            current = 1
 
-    return best
+def count_habit_logs_in_range(habit_id, start_date, end_date):
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM habit_logs WHERE habit_id = ? AND log_date BETWEEN ? AND ?",
+            (habit_id, start_date, end_date)
+        ).fetchone()
+        return row[0] if row else 0
+    finally:
+        conn.close()
 
 
 # ════════════════════════════════════════════════════════════════
@@ -231,11 +241,15 @@ def get_milestones(goal_id):
 
 def toggle_milestone(milestone_id):
     conn = get_connection()
-    row = conn.execute("SELECT done FROM milestones WHERE id = ?", (milestone_id,)).fetchone()
-    new_val = 0 if row[0] else 1
-    conn.execute("UPDATE milestones SET done = ? WHERE id = ?", (new_val, milestone_id))
-    conn.commit()
-    conn.close()
+    try:
+        row = conn.execute("SELECT done FROM milestones WHERE id = ?", (milestone_id,)).fetchone()
+        if not row:
+            return
+        new_val = 0 if row[0] else 1
+        conn.execute("UPDATE milestones SET done = ? WHERE id = ?", (new_val, milestone_id))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_goal_progress_percent(goal_id):
@@ -289,11 +303,15 @@ def update_task(task_id, name, description, category, priority, due_date=None, d
 
 def toggle_task(task_id):
     conn = get_connection()
-    row = conn.execute("SELECT done FROM tasks WHERE id = ?", (task_id,)).fetchone()
-    new_val = 0 if row[0] else 1
-    conn.execute("UPDATE tasks SET done = ? WHERE id = ?", (new_val, task_id))
-    conn.commit()
-    conn.close()
+    try:
+        row = conn.execute("SELECT done FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        if not row:
+            return
+        new_val = 0 if row[0] else 1
+        conn.execute("UPDATE tasks SET done = ? WHERE id = ?", (new_val, task_id))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def delete_task(task_id):
@@ -322,24 +340,6 @@ def delete_time_session(session_id):
     conn.execute("DELETE FROM time_sessions WHERE id = ?", (session_id,))
     conn.commit()
     conn.close()
-
-
-def update_time_session(session_id, name, category):
-    conn = get_connection()
-    conn.execute(
-        "UPDATE time_sessions SET name = ?, category = ? WHERE id = ?",
-        (name, category, session_id)
-    )
-    conn.commit()
-    conn.close()
-
-
-def delete_time_session(session_id):
-    conn = get_connection()
-    conn.execute("DELETE FROM time_sessions WHERE id = ?", (session_id,))
-    conn.commit()
-    conn.close()
-
 
 def add_time_session(name, category, duration_seconds, session_date=None):
     if session_date is None:
@@ -387,22 +387,19 @@ def get_total_time_today():
 
 
 def get_weekly_activity():
-    """برمی‌گرداند: [(day_name, total_hours), ...] برای ۷ روز گذشته"""
-    today = date.today()
-    weekday = (today.weekday() + 2) % 7
-    start_of_week = today - timedelta(days=weekday)
+    """برمی‌گرداند: [(day_name, total_hours), ...] برای ۷ روز هفته جاری (شنبه تا جمعه)"""
+    week_start = start_of_week()
 
     conn = get_connection()
     result = []
-    day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     for i in range(7):
-        d = start_of_week + timedelta(days=i)
+        d = week_start + timedelta(days=i)
         row = conn.execute(
             "SELECT SUM(duration) FROM time_sessions WHERE session_date = ?",
             (d.isoformat(),)
         ).fetchone()
         total_hours = (row[0] or 0) / 3600
-        result.append((day_names[i], round(total_hours, 1)))
+        result.append((WEEKDAY_LABELS_SHORT[i], round(total_hours, 1)))
     conn.close()
     return result
 
@@ -416,43 +413,21 @@ def get_time_distribution():
     conn.close()
     return [(cat, round((dur or 0) / 3600, 1)) for cat, dur in rows]
 
-def get_habit_log_count(habit_id, start_date, end_date):
-    conn = get_connection()
+def get_habits_done_count_on_date(target_date) -> int:
+    """تعداد عادت‌های انجام‌شده در یک تاریخ مشخص."""
 
-    row = conn.execute(
-        """
-        SELECT COUNT(*)
-        FROM habit_logs
-        WHERE habit_id = ?
-        AND log_date BETWEEN ? AND ?
-        """,
-        (habit_id, start_date, end_date)
-    ).fetchone()
-
-    conn.close()
-
-    return row[0]
-
-def get_habits_done_count_on_date(habits, target_date) -> int:
     conn = get_connection()
     try:
-        count = 0
+        row = conn.execute(
+            """
+            SELECT COUNT(DISTINCT habit_id)
+            FROM habit_logs
+            WHERE log_date = ?
+            """,
+            (target_date.isoformat(),)
+        ).fetchone()
 
-        for habit in habits:
-            row = conn.execute(
-                """
-                SELECT COUNT(*)
-                FROM habit_logs
-                WHERE habit_id = ?
-                  AND log_date = ?
-                """,
-                (habit.id, target_date.isoformat())
-            ).fetchone()
-
-            if row and row[0] > 0:
-                count += 1
-
-        return count
+        return row[0] or 0
 
     finally:
         conn.close()
@@ -470,24 +445,6 @@ def get_focus_duration_on_date(target_date) -> float:
         ).fetchone()
 
         return (row[0] or 0) / 3600
-
-    finally:
-        conn.close()
-
-def count_habit_logs_in_range(habit_id: int, start_date: str, end_date: str) -> int:
-    conn = get_connection()
-    try:
-        row = conn.execute(
-            """
-            SELECT COUNT(*)
-            FROM habit_logs
-            WHERE habit_id = ?
-              AND log_date BETWEEN ? AND ?
-            """,
-            (habit_id, start_date, end_date)
-        ).fetchone()
-
-        return row[0] if row else 0
 
     finally:
         conn.close()

@@ -1,7 +1,7 @@
 import re
 
 from PyQt6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout,
+    QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QScrollArea, QFrame, QProgressBar, QGridLayout,
     QPushButton, QMessageBox
 )
@@ -13,8 +13,10 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE,
     make_card
 )
-from database.repository import GoalRepository as repo
+from database.repository import goal_repo
 from ui.dialogs import AddGoalDialog, AddMilestoneDialog
+
+repo = goal_repo
 
 # پالت رنگ‌ها برای چرخش بین اهداف
 GOAL_COLORS = [
@@ -49,7 +51,7 @@ class GoalCard(QWidget):
         days_left = _days_left(goal.deadline)
 
         card = make_card(color=bg_color)
-        card.setMinimumHeight(200)
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         lay = QVBoxLayout(card)
         lay.setContentsMargins(22, 20, 22, 20)
         lay.setSpacing(12)
@@ -175,6 +177,8 @@ class GoalCard(QWidget):
         if milestones:
             grid = QGridLayout()
             grid.setSpacing(8)
+            grid.setColumnStretch(0, 1)
+            grid.setColumnStretch(1, 1)
             for i, m in enumerate(milestones):
                 grid.addWidget(self._milestone_widget(m), i // 2, i % 2)
             lay.addLayout(grid)
@@ -186,6 +190,7 @@ class GoalCard(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(card)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
     # ─ دکمه آیکونی کوچک ──────────────────────────────────────────────────────
     def _icon_button(self, text, danger=False):
@@ -209,6 +214,8 @@ class GoalCard(QWidget):
     # ─ آیتم مایلستون (قابل کلیک برای toggle، با دکمه حذف) ─────────────────────
     def _milestone_widget(self, milestone):
         ms_card = QFrame()
+        ms_card.setMinimumHeight(40)
+        ms_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         ms_card.setStyleSheet(f"""
             QFrame {{
                 background: rgba(255,255,255,{'0.1' if milestone.done else '0.05'});
@@ -221,6 +228,7 @@ class GoalCard(QWidget):
 
         chk = QPushButton("✅" if milestone.done else "⭕")
         chk.setFixedSize(22, 22)
+        chk.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         chk.setCursor(Qt.CursorShape.PointingHandCursor)
         chk.setStyleSheet("""
             QPushButton { font-size: 13px; background: transparent; border: none; }
@@ -229,6 +237,8 @@ class GoalCard(QWidget):
         chk.clicked.connect(lambda: self._handle_toggle_milestone(milestone.id))
 
         nm = QLabel(milestone.name)
+        nm.setWordWrap(True)
+        nm.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         nm.setStyleSheet(f"""
             font-size: 12px;
             color: {TEXT_PRIMARY if milestone.done else TEXT_MUTED};
@@ -238,6 +248,7 @@ class GoalCard(QWidget):
 
         del_btn = QPushButton("✕")
         del_btn.setFixedSize(20, 20)
+        del_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         del_btn.setStyleSheet(f"""
             QPushButton {{ font-size: 11px; color: {TEXT_MUTED}; background: transparent; border: none; }}
@@ -296,6 +307,7 @@ class GoalsPage(QWidget):
         self.scroll = QScrollArea(self)
         self.scroll.setWidgetResizable(True)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         main = QVBoxLayout(self)
         main.setContentsMargins(0, 0, 0, 0)
@@ -375,6 +387,7 @@ class GoalsPage(QWidget):
 
         col = QWidget()
         col.setStyleSheet("background: transparent;")
+        col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         lay = QVBoxLayout(col)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(14)

@@ -20,6 +20,7 @@ from database.repository import (
     habit_repo,
     task_repo,
     analytics_repo,
+    time_repo,
 )
 
 
@@ -465,10 +466,11 @@ class SessionCard(QWidget):
         dialog = EditSessionDialog(self.session, self)
         if dialog.exec():
             data = dialog.result_data
-            db.update_time_session(
+            time_repo.update_time_session(
                 self.session.id,
                 data["name"],
                 data["category"],
+                data["duration_seconds"],
             )
             self.on_change()
 
@@ -480,7 +482,7 @@ class SessionCard(QWidget):
             QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            db.delete_time_session(self.session.id)
+            time_repo.delete_time_session(self.session.id)
             self.on_change()
 
 
@@ -538,10 +540,10 @@ class TimerPage(QWidget):
 
     # ─ آمار ──────────────────────────────────────────────────────────────────
     def _stats_row(self):
-        total_today = db.get_total_time_today()
-        weekly      = db.get_weekly_activity()
+        total_today = time_repo.get_total_time_today()
+        weekly      = time_repo.get_weekly_activity()
         total_week  = sum(h for _, h in weekly)
-        dist        = db.get_time_distribution()
+        dist        = time_repo.get_time_distribution()
         top_cat     = max(dist, key=lambda x: x[1])[0] if dist else "—"
         daily_avg   = round(total_week / 7, 1) if total_week else 0
 
@@ -692,7 +694,7 @@ class TimerPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(14)
 
-        weekly_data = db.get_weekly_activity()
+        weekly_data = time_repo.get_weekly_activity()
         left = make_card()
         ll = QVBoxLayout(left)
         ll.setContentsMargins(20, 18, 20, 18)
@@ -716,7 +718,7 @@ class TimerPage(QWidget):
             legend.addLayout(rl)
         ll.addLayout(legend)
 
-        dist_data = db.get_time_distribution()
+        dist_data = time_repo.get_time_distribution()
         cat_colors = {"Study": ACCENT2, "Work": BLUE, "Fitness": GREEN, "Personal": ORANGE, "Other": RED}
         donut_data = [(cat, hrs, cat_colors.get(cat, ACCENT)) for cat, hrs in dist_data]
 
@@ -752,7 +754,7 @@ class TimerPage(QWidget):
 
     # ─ Recent Sessions ────────────────────────────────────────────────────────
     def _recent_sessions(self):
-        sessions = db.get_recent_sessions(limit=10)
+        sessions = time_repo.get_recent_sessions(limit=10)
         section = QWidget()
         section.setStyleSheet("background: transparent;")
         lay = QVBoxLayout(section)
@@ -820,7 +822,7 @@ class TimerPage(QWidget):
         # زمان واقعی که گذشته
         elapsed = self._target - self._seconds if self._mode == self.MODE_COUNTDOWN else self._seconds
         if elapsed >= 10:  # حداقل ۱۰ ثانیه
-            db.add_time_session(
+            time_repo.add_time_session(
                 name=self._session_name,
                 category=self._session_category,
                 duration_seconds=elapsed,
@@ -897,7 +899,7 @@ class TimerPage(QWidget):
         msg.exec()
 
         # ذخیره خودکار
-        db.add_time_session(
+        time_repo.add_time_session(
             name=self._session_name,
             category=self._session_category,
             duration_seconds=self._target,

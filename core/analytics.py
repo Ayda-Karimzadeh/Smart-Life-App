@@ -6,6 +6,7 @@ from database.repository import (
     analytics_repo,
 )
 from core.streak_engine import weekly_streak as streak_weekly_streak
+from core.dates import start_of_week, WEEKDAY_LABELS_SHORT
 
 # Consistency Score
 def consistency_score(habit_id: int, days: int = 30) -> float:
@@ -65,16 +66,13 @@ def productivity_score(target_focus_hours: int = 4) -> int:
 
 # Weekly Report
 def weekly_report() -> dict:
-    # گزارش کامل هفته جاری
-
-    today      = date.today()
-    weekday    = today.weekday()   # 0=Mon
-    week_start = today - timedelta(days=weekday)
+    today = date.today()
+    week_start = start_of_week(today)
 
     habits = habit_repo.get_all_habits()
     tasks  = task_repo.get_all_tasks()
 
-    day_names    = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    day_names    = WEEKDAY_LABELS_SHORT
     habit_scores = []
     focus_hours  = []
     tasks_done   = []
@@ -148,7 +146,7 @@ def strengths_and_weaknesses() -> dict:
 # توابع کمکی داخلی
 def _habits_done_on(habits, target_date: date) -> int:
     """تعداد عادت‌هایی که در یه روز خاص انجام شدن"""
-    return habit_repo.get_habits_done_count_on_date(habits, target_date)
+    return habit_repo.get_habits_done_count_on_date(target_date)
 
 def _focus_on(target_date: date) -> float:
     """ساعت‌های Focus یه روز خاص"""

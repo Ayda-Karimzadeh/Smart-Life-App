@@ -101,9 +101,9 @@ class Header(QWidget):
 
     def refresh_stats(self):
         """آپدیت streak و score در هدر"""
-        habits = db.get_all_habits()
+        habits = habit_repo.get_all_habits()
         max_streak = max(
-            (db.get_current_streak(h.id) for h in habits), default=0
+            (habit_repo.get_current_streak(h.id) for h in habits), default=0
         ) if habits else 0
         self.streak_lbl.setText(f"🔥  Streak  {max_streak} days")
 
