@@ -15,6 +15,7 @@ from assets.style import (
 )
 from database.repository import goal_repo
 from ui.dialogs import AddGoalDialog, AddMilestoneDialog
+from core.language_manager import tr
 
 repo = goal_repo
 
@@ -84,11 +85,11 @@ class GoalCard(QWidget):
 
         if days_left is not None:
             if days_left < 0:
-                days_text = f"📅 {abs(days_left)} days overdue"
+                days_text = f"📅 {abs(days_left)} {tr('days_overdue')}"
             elif days_left == 0:
-                days_text = "📅 Due today"
+                days_text = f"📅 {tr('due_today')}"
             else:
-                days_text = f"📅 {days_left} days left"
+                days_text = f"📅 {days_left} {tr('days_left')}"
             days_lbl = QLabel(days_text)
             days_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
             tags.addWidget(days_lbl)
@@ -105,7 +106,7 @@ class GoalCard(QWidget):
         pct_lbl = QLabel(f"{progress}%")
         pct_lbl.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {color}; background: transparent;")
         pct_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        complete_lbl = QLabel("Complete")
+        complete_lbl = QLabel(tr("progress").capitalize())
         complete_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         complete_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
         pct_col.addWidget(pct_lbl)
@@ -147,12 +148,12 @@ class GoalCard(QWidget):
         # ─ Milestones ─
         done_count = sum(1 for m in milestones if m.done)
         ms_header = QHBoxLayout()
-        ms_lbl = QLabel("Milestones")
+        ms_lbl = QLabel(tr("milestones").capitalize())
         ms_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         ms_count = QLabel(f"{done_count} of {len(milestones)} completed")
         ms_count.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
 
-        add_ms_btn = QPushButton("+ Add")
+        add_ms_btn = QPushButton("+ " + tr("add"))
         add_ms_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_ms_btn.setStyleSheet(f"""
             QPushButton {{
@@ -348,9 +349,9 @@ class GoalsPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("🎯", str(total), "Active Goals", "In progress", ACCENT2, True),
-            ("✅", f"{avg_progress}%", "Average Progress", "Across all goals", GREEN, False),
-            ("🏆", str(completed), "Completed", "This year", ORANGE, False),
+            ("🎯", str(total), tr("goals").capitalize(), "In progress", ACCENT2, True),
+            ("✅", f"{avg_progress}%", "Average " + tr("progress").capitalize(), "Across all goals", GREEN, False),
+            ("🏆", str(completed), tr("progress").capitalize(), "This year", ORANGE, False),
             ("📈", "+0%", "Progress Rate", "vs last month", BLUE, False),
         ]
 

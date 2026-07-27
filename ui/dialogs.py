@@ -9,6 +9,7 @@ from assets.style import (
     BG_CARD, BG_CARD2, TEXT_PRIMARY, TEXT_MUTED,
     ACCENT, ACCENT2
 )
+from core.language_manager import tr
 
 
 # ─── استایل مشترک برای input ها ──────────────────────────────────────────────
@@ -45,7 +46,7 @@ class AddHabitDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Add New Habit")
+        self.setWindowTitle(tr("add_habit"))
         self.setFixedWidth(380)
         self.result_data = None
 
@@ -60,31 +61,31 @@ class AddHabitDialog(QDialog):
         lay.setContentsMargins(24, 24, 24, 24)
         lay.setSpacing(14)
 
-        title = QLabel("Add New Habit")
+        title = QLabel(tr("add_habit"))
         title.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {TEXT_PRIMARY};")
         lay.addWidget(title)
 
         # ─ نام عادت ─
-        lay.addWidget(self._labeled("Habit Name", self._name_input()))
+        lay.addWidget(self._labeled(tr("habit_name"), self._name_input()))
 
         # ─ آیکون ─
-        lay.addWidget(self._labeled("Icon", self._icon_input()))
+        lay.addWidget(self._labeled(tr("icon"), self._icon_input()))
 
         # ─ دسته‌بندی ─
-        lay.addWidget(self._labeled("Category", self._category_input()))
+        lay.addWidget(self._labeled(tr("category"), self._category_input()))
 
         # ─ تکرار ─
         freq_row = QHBoxLayout()
         freq_row.setSpacing(10)
-        freq_row.addWidget(self._labeled("Frequency", self._frequency_input()), 1)
-        freq_row.addWidget(self._labeled("Times / week", self._count_input()), 1)
+        freq_row.addWidget(self._labeled(tr("frequency"), self._frequency_input()), 1)
+        freq_row.addWidget(self._labeled(tr("times_per_week"), self._count_input()), 1)
         lay.addLayout(freq_row)
 
         # ─ دکمه‌ها ─
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
@@ -99,7 +100,7 @@ class AddHabitDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        add_btn = QPushButton("Add Habit")
+        add_btn = QPushButton(tr("add_habit_btn"))
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.setStyleSheet(f"""
             QPushButton {{
@@ -135,7 +136,7 @@ class AddHabitDialog(QDialog):
     # ─ ورودی‌ها ──────────────────────────────────────────────────────────────
     def _name_input(self):
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("e.g. Morning Meditation")
+        self.name_edit.setPlaceholderText(tr("ph_habit_name"))
         self.name_edit.setStyleSheet(INPUT_STYLE)
         return self.name_edit
 
@@ -153,7 +154,7 @@ class AddHabitDialog(QDialog):
 
     def _frequency_input(self):
         self.freq_combo = QComboBox()
-        self.freq_combo.addItems(["Daily", "Weekly"])
+        self.freq_combo.addItems([tr("daily"), tr("weekly")])
         self.freq_combo.setStyleSheet(INPUT_STYLE)
         self.freq_combo.currentTextChanged.connect(self._on_freq_changed)
         return self.freq_combo
@@ -167,7 +168,7 @@ class AddHabitDialog(QDialog):
         return self.count_spin
 
     def _on_freq_changed(self, text):
-        if text == "Daily":
+        if text == tr("daily"):
             self.count_spin.setValue(7)
             self.count_spin.setEnabled(False)
         else:
@@ -185,7 +186,7 @@ class AddHabitDialog(QDialog):
             "name": name,
             "icon": self.icon_combo.currentText(),
             "category": self.category_combo.currentText(),
-            "frequency_type": self.freq_combo.currentText().lower(),
+            "frequency_type": "daily" if self.freq_combo.currentText() == tr("daily") else "weekly",
             "frequency_count": self.count_spin.value(),
         }
         self.accept()
@@ -203,7 +204,7 @@ class AddTaskDialog(QDialog):
         self.task = task  # اگه None باشه = حالت Add, اگه مقدار داشته باشه = حالت Edit
         is_edit = task is not None
 
-        self.setWindowTitle("Edit Task" if is_edit else "Add New Task")
+        self.setWindowTitle(tr("edit_task") if is_edit else tr("add_task"))
         self.setFixedWidth(380)
         self.result_data = None
 
@@ -218,28 +219,28 @@ class AddTaskDialog(QDialog):
         lay.setContentsMargins(24, 24, 24, 24)
         lay.setSpacing(14)
 
-        title = QLabel("Edit Task" if is_edit else "Add New Task")
+        title = QLabel(tr("edit_task") if is_edit else tr("add_task"))
         title.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {TEXT_PRIMARY};")
         lay.addWidget(title)
 
         # ─ نام تسک ─
-        lay.addWidget(self._labeled("Task Name", self._name_input()))
+        lay.addWidget(self._labeled(tr("task_name"), self._name_input()))
 
         # ─ توضیحات ─
-        lay.addWidget(self._labeled("Description", self._desc_input()))
+        lay.addWidget(self._labeled(tr("description"), self._desc_input()))
 
         # ─ دسته‌بندی + اولویت ─
         row1 = QHBoxLayout()
         row1.setSpacing(10)
-        row1.addWidget(self._labeled("Category", self._category_input()), 1)
-        row1.addWidget(self._labeled("Priority", self._priority_input()), 1)
+        row1.addWidget(self._labeled(tr("category"), self._category_input()), 1)
+        row1.addWidget(self._labeled(tr("priority"), self._priority_input()), 1)
         lay.addLayout(row1)
 
         # ─ تاریخ + زمان ─
         row2 = QHBoxLayout()
         row2.setSpacing(10)
-        row2.addWidget(self._labeled("Due Date", self._date_input()), 1)
-        row2.addWidget(self._labeled("Due Time", self._time_input()), 1)
+        row2.addWidget(self._labeled(tr("due_date"), self._date_input()), 1)
+        row2.addWidget(self._labeled(tr("due_time"), self._time_input()), 1)
         lay.addLayout(row2)
 
         # ─ اگه حالت Edit باشه، فیلدها رو با مقدار فعلی پر کن ─
@@ -250,7 +251,7 @@ class AddTaskDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
@@ -265,7 +266,7 @@ class AddTaskDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        add_btn = QPushButton("Save Changes" if is_edit else "Add Task")
+        add_btn = QPushButton(tr("save_changes") if is_edit else tr("add_task_btn"))
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.setStyleSheet(f"""
             QPushButton {{
@@ -301,13 +302,13 @@ class AddTaskDialog(QDialog):
     # ─ ورودی‌ها ──────────────────────────────────────────────────────────────
     def _name_input(self):
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("e.g. Complete project proposal")
+        self.name_edit.setPlaceholderText(tr("ph_task_name"))
         self.name_edit.setStyleSheet(INPUT_STYLE)
         return self.name_edit
 
     def _desc_input(self):
         self.desc_edit = QLineEdit()
-        self.desc_edit.setPlaceholderText("Short description...")
+        self.desc_edit.setPlaceholderText(tr("ph_task_desc"))
         self.desc_edit.setStyleSheet(INPUT_STYLE)
         return self.desc_edit
 
@@ -319,7 +320,7 @@ class AddTaskDialog(QDialog):
 
     def _priority_input(self):
         self.priority_combo = QComboBox()
-        self.priority_combo.addItems(self.PRIORITIES)
+        self.priority_combo.addItems([tr("prio_high"), tr("prio_medium"), tr("prio_low")])
         self.priority_combo.setStyleSheet(INPUT_STYLE)
         return self.priority_combo
 
@@ -345,11 +346,18 @@ class AddTaskDialog(QDialog):
             self.name_edit.setStyleSheet(INPUT_STYLE + f"QLineEdit {{ border: 1px solid #e05c5c; }}")
             return
 
+        # Map translated priority back to English
+        prio_map = {
+            tr("prio_high"): "High",
+            tr("prio_medium"): "Medium",
+            tr("prio_low"): "Low"
+        }
+
         self.result_data = {
             "name": name,
             "description": self.desc_edit.text().strip(),
             "category": self.category_combo.currentText(),
-            "priority": self.priority_combo.currentText(),
+            "priority": prio_map.get(self.priority_combo.currentText(), "Medium"),
             "due_date": self.date_edit.date().toString("yyyy-MM-dd"),
             "due_time": self.time_edit.time().toString("HH:mm"),
         }
@@ -364,7 +372,14 @@ class AddTaskDialog(QDialog):
         if idx >= 0:
             self.category_combo.setCurrentIndex(idx)
 
-        idx = self.priority_combo.findText(task.priority)
+        # Map English priority to translated
+        prio_map = {
+            "High": tr("prio_high"),
+            "Medium": tr("prio_medium"),
+            "Low": tr("prio_low")
+        }
+        translated_prio = prio_map.get(task.priority, tr("prio_medium"))
+        idx = self.priority_combo.findText(translated_prio)
         if idx >= 0:
             self.priority_combo.setCurrentIndex(idx)
 
@@ -387,7 +402,7 @@ class AddGoalDialog(QDialog):
         self.goal = goal
         is_edit = goal is not None
 
-        self.setWindowTitle("Edit Goal" if is_edit else "Add New Goal")
+        self.setWindowTitle(tr("edit_goal") if is_edit else tr("add_goal"))
         self.setFixedWidth(380)
         self.result_data = None
 
@@ -402,25 +417,25 @@ class AddGoalDialog(QDialog):
         lay.setContentsMargins(24, 24, 24, 24)
         lay.setSpacing(14)
 
-        title = QLabel("Edit Goal" if is_edit else "Add New Goal")
+        title = QLabel(tr("edit_goal") if is_edit else tr("add_goal"))
         title.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {TEXT_PRIMARY};")
         lay.addWidget(title)
 
         # ─ نام هدف ─
-        lay.addWidget(self._labeled("Goal Name", self._name_input()))
+        lay.addWidget(self._labeled(tr("goal_name"), self._name_input()))
 
         # ─ توضیحات ─
-        lay.addWidget(self._labeled("Description", self._desc_input()))
+        lay.addWidget(self._labeled(tr("description"), self._desc_input()))
 
         # ─ آیکون + دسته‌بندی ─
         row1 = QHBoxLayout()
         row1.setSpacing(10)
-        row1.addWidget(self._labeled("Icon", self._icon_input()), 1)
-        row1.addWidget(self._labeled("Category", self._category_input()), 1)
+        row1.addWidget(self._labeled(tr("icon"), self._icon_input()), 1)
+        row1.addWidget(self._labeled(tr("category"), self._category_input()), 1)
         lay.addLayout(row1)
 
         # ─ مهلت ─
-        lay.addWidget(self._labeled("Deadline", self._deadline_input()))
+        lay.addWidget(self._labeled(tr("deadline"), self._deadline_input()))
 
         if is_edit:
             self._fill_from_goal(goal)
@@ -429,7 +444,7 @@ class AddGoalDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
@@ -444,7 +459,7 @@ class AddGoalDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        add_btn = QPushButton("Save Changes" if is_edit else "Add Goal")
+        add_btn = QPushButton(tr("save_changes") if is_edit else tr("add_goal_btn"))
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.setStyleSheet(f"""
             QPushButton {{
@@ -480,13 +495,13 @@ class AddGoalDialog(QDialog):
     # ─ ورودی‌ها ──────────────────────────────────────────────────────────────
     def _name_input(self):
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("e.g. Learn Full-Stack Web Development")
+        self.name_edit.setPlaceholderText(tr("ph_goal_name"))
         self.name_edit.setStyleSheet(INPUT_STYLE)
         return self.name_edit
 
     def _desc_input(self):
         self.desc_edit = QLineEdit()
-        self.desc_edit.setPlaceholderText("Short description...")
+        self.desc_edit.setPlaceholderText(tr("ph_goal_desc"))
         self.desc_edit.setStyleSheet(INPUT_STYLE)
         return self.desc_edit
 
@@ -549,7 +564,7 @@ class AddMilestoneDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Add Milestone")
+        self.setWindowTitle(tr("add_milestone_btn"))
         self.setFixedWidth(320)
         self.result_data = None
 
@@ -564,19 +579,19 @@ class AddMilestoneDialog(QDialog):
         lay.setContentsMargins(24, 24, 24, 24)
         lay.setSpacing(14)
 
-        title = QLabel("Add Milestone")
+        title = QLabel(tr("add_milestone_btn"))
         title.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {TEXT_PRIMARY};")
         lay.addWidget(title)
 
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("e.g. Complete React fundamentals")
+        self.name_edit.setPlaceholderText(tr("ph_milestone"))
         self.name_edit.setStyleSheet(INPUT_STYLE)
         lay.addWidget(self.name_edit)
 
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
@@ -591,7 +606,7 @@ class AddMilestoneDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        add_btn = QPushButton("Add")
+        add_btn = QPushButton(tr("add"))
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.setStyleSheet(f"""
             QPushButton {{
@@ -629,7 +644,7 @@ class EditSessionDialog(QDialog):
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.session = session
-        self.setWindowTitle("Edit Session")
+        self.setWindowTitle(tr("edit_session"))
         self.setFixedWidth(320)
         self.result_data = None
 
@@ -639,7 +654,7 @@ class EditSessionDialog(QDialog):
         lay.setContentsMargins(24, 24, 24, 24)
         lay.setSpacing(14)
 
-        title = QLabel("Edit Session")
+        title = QLabel(tr("edit_session"))
         title.setStyleSheet(f"font-size: 17px; font-weight: bold; color: {TEXT_PRIMARY};")
         lay.addWidget(title)
 
@@ -659,14 +674,14 @@ class EditSessionDialog(QDialog):
             }}
         """
 
-        name_lbl = QLabel("Session Name")
+        name_lbl = QLabel(tr("session_name"))
         name_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
         self.name_edit = QLineEdit(session.name)
         self.name_edit.setStyleSheet(INPUT)
         lay.addWidget(name_lbl)
         lay.addWidget(self.name_edit)
 
-        cat_lbl = QLabel("Category")
+        cat_lbl = QLabel(tr("category"))
         cat_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
         self.cat_combo = QComboBox()
         self.cat_combo.addItems(self.CATEGORIES)
@@ -680,7 +695,7 @@ class EditSessionDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
@@ -692,7 +707,7 @@ class EditSessionDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        save_btn = QPushButton("Save")
+        save_btn = QPushButton(tr("save"))
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.setStyleSheet(f"""
             QPushButton {{
@@ -714,4 +729,102 @@ class EditSessionDialog(QDialog):
             "name": name,
             "category": self.cat_combo.currentText(),
         }
+        self.accept()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+class SettingsDialog(QDialog):
+    """دیالوگ تنظیمات برنامه"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        from core.language_manager import tr, get_language_manager
+        self.tr_func = tr
+        self.lang_mgr = get_language_manager()
+        
+        self.setWindowTitle(self.tr_func("settings_title"))
+        self.setFixedWidth(400)
+        self.result_data = None
+
+        self.setStyleSheet(f"""
+            QDialog {{
+                background: {BG_CARD};
+                color: {TEXT_PRIMARY};
+            }}
+        """)
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 24, 24, 24)
+        lay.setSpacing(16)
+
+        title = QLabel(self.tr_func("settings_title"))
+        title.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {TEXT_PRIMARY};")
+        lay.addWidget(title)
+
+        # Language selection
+        lang_label = QLabel(self.tr_func("language"))
+        lang_label.setStyleSheet(LABEL_STYLE)
+        lay.addWidget(lang_label)
+
+        self.lang_combo = QComboBox()
+        self.lang_combo.addItems([self.tr_func("english"), self.tr_func("persian")])
+        self.lang_combo.setStyleSheet(INPUT_STYLE)
+        
+        # Load current language
+        current_lang = self.lang_mgr.get_current_language()
+        if current_lang == "fa":
+            self.lang_combo.setCurrentIndex(1)
+        else:
+            self.lang_combo.setCurrentIndex(0)
+        
+        lay.addWidget(self.lang_combo)
+
+        lay.addStretch()
+
+        # Buttons
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+
+        close_btn = QPushButton(self.tr_func("close"))
+        close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {TEXT_MUTED};
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 10px;
+                padding: 10px 0;
+                font-size: 13px;
+            }}
+            QPushButton:hover {{ background: rgba(255,255,255,0.05); }}
+        """)
+        close_btn.clicked.connect(self.reject)
+
+        save_btn = QPushButton(self.tr_func("save"))
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {ACCENT};
+                color: white;
+                border: none;
+                border-radius: 10px;
+                padding: 10px 0;
+                font-size: 13px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{ background: {ACCENT2}; }}
+        """)
+        save_btn.clicked.connect(self._handle_save)
+
+        btn_row.addWidget(close_btn, 1)
+        btn_row.addWidget(save_btn, 1)
+        lay.addLayout(btn_row)
+
+    def _handle_save(self):
+        # Save language selection
+        if self.lang_combo.currentIndex() == 1:
+            self.lang_mgr.set_language("fa")
+        else:
+            self.lang_mgr.set_language("en")
+        
         self.accept()

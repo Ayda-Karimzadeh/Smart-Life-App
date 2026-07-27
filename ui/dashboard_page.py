@@ -16,7 +16,9 @@ from database.repository import (
     habit_repo,
     task_repo,
     analytics_repo,
+    settings_repo,
 )
+from core.language_manager import tr
 
 
 # ─── نمودار دایره‌ای ──────────────────────────────────────────────────────────
@@ -91,6 +93,18 @@ def _fmt_time(secs):
     return f"{h}h {m}m" if h else f"{m}m"
 
 
+def _needs_getting_started() -> bool:
+    """هنوز هیچ فعالیتی ثبت نشده — به‌جای درصد صفر، راهنمای شروع نشون بده."""
+    if analytics_repo.has_any_habit_logs() or analytics_repo.has_any_time_sessions():
+        return False
+    return True
+
+
+def _display_name() -> str:
+    name = settings_repo.get_user_name().strip()
+    return name or "there"
+
+
 # ─── صفحه: Dashboard ─────────────────────────────────────────────────────────
 class DashboardPage(QWidget):
     def __init__(self):
@@ -114,21 +128,24 @@ class DashboardPage(QWidget):
         layout.setSpacing(18)
         layout.setContentsMargins(28, 24, 28, 28)
         layout.addWidget(self._banner())
-        layout.addWidget(self._stats_row())
-        layout.addWidget(self._charts_row())
+        if _needs_getting_started():
+            layout.addWidget(self._getting_started())
+            layout.addWidget(self._today_habits())
+        else:
+            layout.addWidget(self._stats_row())
+            layout.addWidget(self._charts_row())
+            layout.addWidget(self._habit_streaks())
         layout.addWidget(self._tasks_goals_row())
-        layout.addWidget(self._habit_streaks())
         layout.addStretch()
         self.scroll.setWidget(content)
 
     # ─ بنر ───────────────────────────────────────────────────────────────────
     def _banner(self):
-        # محاسبه streak کلی (بیشترین streak بین همه عادت‌ها)
         habits = habit_repo.get_all_habits()
         max_streak = max((habit_repo.get_current_streak(h.id) for h in habits), default=0) if habits else 0
-
-        # سطح بر اساس streak
         level = max(1, max_streak // 5)
+        name = _display_name()
+        getting_started = _needs_getting_started()
 
         card = make_card(color="#1a1530")
         card.setMinimumHeight(150)
@@ -136,17 +153,35 @@ class DashboardPage(QWidget):
         lay.setContentsMargins(28, 22, 28, 22)
         lay.setSpacing(10)
 
-        title = QLabel(f"{_greeting()}, Alex! ✨")
-        title.setStyleSheet(f"font-size: 26px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+        if getting_started:
+            title = QLabel(f"{_greeting()}, {name} ✨")
+            sub = QLabel(
+                "خوش اومدی! عادت‌هات آماده‌ان — "
+                "اولین‌هاشون رو تیک بزن تا پیشرفتت اینجا دیده بشه."
+            )
+        elif max_streak > 0:
+            title = QLabel(f"{_greeting()}, {name} ✨")
+            sub = QLabel("You're doing amazing! Keep pushing forward on your journey to greatness.")
+        else:
+            title = QLabel(f"{_greeting()}, {name} ✨")
+            sub = QLabel("Every small step counts. Mark a habit done today to start your streak.")
 
-        sub = QLabel("You're doing amazing! Keep pushing forward on your journey to greatness.")
+        title.setStyleSheet(f"font-size: 26px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
         sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
 
         badges = QHBoxLayout()
-        for icon, txt, col in [
-            ("🔥", f"{max_streak} day streak", ORANGE),
-            ("🏆", f"Level {level} Achiever", ACCENT2)
-        ]:
+        if getting_started:
+            badge_items = [
+                ("🌱", f"{len(habits)} habits ready", GREEN),
+                ("🎯", "Let's begin", ACCENT2),
+            ]
+        else:
+            badge_items = [
+                ("🔥", f"{max_streak} day streak", ORANGE),
+                ("🏆", f"Level {level} Achiever", ACCENT2),
+            ]
+
+        for icon, txt, col in badge_items:
             btn = QPushButton(f"  {icon}  {txt}")
             btn.setStyleSheet(f"""
                 QPushButton {{
@@ -163,6 +198,97 @@ class DashboardPage(QWidget):
         lay.addWidget(sub)
         lay.addLayout(badges)
         return card
+
+    def _getting_started(self):
+        card = make_card(color="#1a2530")
+        card.setMinimumHeight(140)
+        lay = QVBoxLayout(card)
+        lay.setContentsMargins(24, 20, 24, 20)
+        lay.setSpacing(12)
+
+        title = QLabel("🚀  Getting Started")
+        title.setStyleSheet(f"font-size: 17px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        lay.addWidget(title)
+
+        steps = [
+            ("1", "Go to Habits and check off what you did today"),
+            ("2", "Add a task or start a focus timer"),
+            ("3", "Come back here — your stats will fill in automatically"),
+        ]
+        for num, text in steps:
+            row = QHBoxLayout()
+            num_lbl = QLabel(num)
+            num_lbl.setFixedSize(26, 26)
+            num_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            num_lbl.setStyleSheet(f"""
+                background: rgba(124,92,191,0.35); color: {ACCENT2};
+                border-radius: 13px; font-size: 12px; font-weight: bold;
+            """)
+            txt_lbl = QLabel(text)
+            txt_lbl.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
+            row.addWidget(num_lbl)
+            row.addWidget(txt_lbl, 1)
+            lay.addLayout(row)
+
+        return card
+
+    def _today_habits(self):
+        habits = habit_repo.get_all_habits()
+
+        section = QWidget()
+        section.setStyleSheet("background: transparent;")
+        lay = QVBoxLayout(section)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(12)
+
+        title = QLabel("Today's Habits")
+        title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        hint = QLabel("Tap a habit in the Habits page to mark it done")
+        hint.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
+        lay.addWidget(title)
+        lay.addWidget(hint)
+
+        if not habits:
+            empty = QLabel(tr("no_habits_yet"))
+            empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent; padding: 8px 0;")
+            lay.addWidget(empty)
+            return section
+
+        row = QWidget()
+        row.setStyleSheet("background: transparent;")
+        rl = QHBoxLayout(row)
+        rl.setContentsMargins(0, 0, 0, 0)
+        rl.setSpacing(14)
+
+        for h in habits[:4]:
+            done = habit_repo.is_habit_done_today(h.id)
+            card = make_card(color="#1a2a1a" if done else BG_CARD2)
+            cl = QVBoxLayout(card)
+            cl.setContentsMargins(16, 14, 16, 14)
+            cl.setSpacing(6)
+
+            top = QHBoxLayout()
+            icon_lbl = QLabel(h.icon)
+            icon_lbl.setStyleSheet("font-size: 22px; background: transparent;")
+            status = QLabel("Done" if done else "Pending")
+            status.setStyleSheet(
+                f"font-size: 11px; font-weight: 600; color: {GREEN if done else TEXT_MUTED}; background: transparent;"
+            )
+            top.addWidget(icon_lbl)
+            top.addStretch()
+            top.addWidget(status)
+
+            n = QLabel(h.name)
+            n.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
+            cl.addLayout(top)
+            cl.addWidget(n)
+            rl.addWidget(card)
+
+        for _ in range(max(0, 4 - len(habits[:4]))):
+            rl.addStretch(1)
+
+        lay.addWidget(row)
+        return section
 
     # ─ ۴ کارت آمار ───────────────────────────────────────────────────────────
     def _stats_row(self):
@@ -322,7 +448,7 @@ class DashboardPage(QWidget):
         ll.addLayout(header)
 
         if not tasks_today:
-            empty = QLabel("No tasks due today")
+            empty = QLabel(tr("no_tasks_today"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             ll.addWidget(empty)
         else:
@@ -365,7 +491,7 @@ class DashboardPage(QWidget):
         COLORS = [ACCENT2, BLUE, ACCENT, GREEN, ORANGE]
 
         if not goals:
-            empty = QLabel("No goals yet")
+            empty = QLabel(tr("no_goals_yet"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             rl.addWidget(empty)
         else:
@@ -416,7 +542,7 @@ class DashboardPage(QWidget):
         lay.addWidget(title)
 
         if not habits:
-            empty = QLabel("No habits yet — add some in Habits page!")
+            empty = QLabel(tr("no_habits_add"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             lay.addWidget(empty)
             return section

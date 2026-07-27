@@ -17,6 +17,7 @@ from database.repository import (
     analytics_repo,
 )
 from ui.dialogs import AddTaskDialog
+from core.language_manager import tr
 
 PRIO_COLORS = {
     "High":   RED,
@@ -88,7 +89,8 @@ class TaskCard(QWidget):
             info.addWidget(desc_lbl)
 
         prio_col = PRIO_COLORS.get(task.priority, TEXT_MUTED)
-        prio_lbl = QLabel(task.priority)
+        prio_text = tr(f"prio_{task.priority.lower()}")
+        prio_lbl = QLabel(prio_text)
         prio_lbl.setStyleSheet(f"""
             font-size: 11px; font-weight: 600;
             color: {prio_col};
@@ -274,10 +276,10 @@ class TasksPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("✅", str(len(pending)),   "Pending Tasks", "To be completed", ACCENT2, True),
-            ("☑️", str(len(completed)), "Completed",     "Great progress!", GREEN,   False),
-            ("📅", str(len(due_today)), "Due Today",     "Focus on these",  BLUE,    False),
-            ("🚩", str(len(high_prio)), "High Priority", "Needs attention", RED,     False),
+            ("✅", str(len(pending)),   tr("tasks").capitalize() + " Pending", "To be completed", ACCENT2, True),
+            ("☑️", str(len(completed)), tr("progress").capitalize(),     "Great progress!", GREEN,   False),
+            ("📅", str(len(due_today)), tr("due_today"),     "Focus on these",  BLUE,    False),
+            ("🚩", str(len(high_prio)), tr("prio_high") + " " + tr("priority"), "Needs attention", RED,     False),
         ]
 
         for icon, val, title, sub, col, highlight in items:
@@ -348,7 +350,7 @@ class TasksPage(QWidget):
 
         lay.addStretch()
 
-        add_btn = QPushButton("+ Add Task")
+        add_btn = QPushButton("+ " + tr("add") + " " + tr("tasks").capitalize())
         add_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {ACCENT};

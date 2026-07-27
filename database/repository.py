@@ -167,6 +167,36 @@ class AnalyticsRepository(TimeSessionRepository):
     def get_focus_duration_in_range(self, start_date, end_date):
         return db.get_focus_duration_in_range(start_date, end_date)
 
+    def has_any_habit_logs(self):
+        return db.has_any_habit_logs()
+
+    def has_any_time_sessions(self):
+        return db.has_any_time_sessions()
+
+
+# ==========================================================
+# App Settings
+# ==========================================================
+
+class SettingsRepository:
+    def get(self, key: str, default: str = "") -> str:
+        return db.get_setting(key, default)
+
+    def set(self, key: str, value: str) -> None:
+        db.set_setting(key, value)
+
+    def get_user_name(self) -> str:
+        return self.get("user_name", "")
+
+    def set_user_name(self, name: str) -> None:
+        self.set("user_name", name)
+
+    def is_onboarding_completed(self) -> bool:
+        return self.get("onboarding_completed") == "1"
+
+    def mark_onboarding_completed(self) -> None:
+        self.set("onboarding_completed", "1")
+
 
 # Singleton instances
 goal_repo = GoalRepository()
@@ -174,3 +204,4 @@ habit_repo = HabitRepository()
 task_repo = TaskRepository()
 time_repo = TimeSessionRepository()
 analytics_repo = AnalyticsRepository()
+settings_repo = SettingsRepository()

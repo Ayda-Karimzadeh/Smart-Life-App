@@ -21,6 +21,7 @@ from core.streak_engine import (
     weekly_streak, week_status, predict_streak_break
 )
 from ui.dialogs import AddHabitDialog
+from core.language_manager import tr
 
 
 # ─── WeekBar ──────────────────────────────────────────────────────────────────
@@ -66,7 +67,7 @@ class HabitCard(QWidget):
         total_week     = ws.get("target", habit.frequency_count)
         on_track       = ws.get("on_track", True)
 
-        freq_text = "Daily" if habit.frequency_type == "daily" else f"{habit.frequency_count}x / week"
+        freq_text = tr("daily") if habit.frequency_type == "daily" else f"{habit.frequency_count}{tr('times_per_week')}"
 
         # رنگ پیش‌بینی
         pred_color = {
@@ -168,16 +169,16 @@ class HabitCard(QWidget):
         streak_row = QHBoxLayout()
 
         cur_col = QVBoxLayout()
-        cur_lbl = QLabel("Daily Streak")
+        cur_lbl = QLabel(tr("daily") + " " + tr("streak"))
         cur_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
-        cur_val = QLabel(f"🔥 {cur_streak} days")
+        cur_val = QLabel(f"🔥 {cur_streak} {tr('days')}")
         cur_val.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {ORANGE}; background: transparent;")
         cur_col.addWidget(cur_lbl)
         cur_col.addWidget(cur_val)
 
         week_str_col = QVBoxLayout()
         week_str_col.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        wsl = QLabel("Weekly Streak")
+        wsl = QLabel(tr("weekly") + " " + tr("streak"))
         wsl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         wsl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         wsv = QLabel(f"📅 {w_streak} weeks")
@@ -188,7 +189,7 @@ class HabitCard(QWidget):
 
         best_col = QVBoxLayout()
         best_col.setAlignment(Qt.AlignmentFlag.AlignRight)
-        best_lbl = QLabel("Best Streak")
+        best_lbl = QLabel("Best " + tr("streak"))
         best_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         best_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
         best_val = QLabel(f"{best_str} days")
@@ -296,10 +297,10 @@ class HabitsPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("✅", f"{today_pct}%", "Today's Completion", f"{done_today} of {total} habits", ACCENT, True),
-            ("🔥", str(longest),    "Longest Streak",      longest_name,                    ORANGE, False),
-            ("📈", f"{weekly_avg}%","Weekly Average",      "Across all habits",              GREEN,  False),
-            ("🏆", str(total),      "Active Habits",       "Building consistency",           ORANGE, False),
+            ("✅", f"{today_pct}%", tr("daily") + " " + tr("progress"), f"{done_today} of {total} habits", ACCENT, True),
+            ("🔥", str(longest),    "Longest " + tr("streak"),      longest_name,                    ORANGE, False),
+            ("📈", f"{weekly_avg}%", tr("weekly") + " " + tr("score"),      "Across all habits",              GREEN,  False),
+            ("🏆", str(total),      tr("habits").capitalize(),       "Building consistency",           ORANGE, False),
         ]
 
         for icon, val, title, sub, col, highlight in items:

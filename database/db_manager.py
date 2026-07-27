@@ -465,3 +465,52 @@ def get_focus_duration_in_range(start_date: str, end_date: str) -> float:
 
     finally:
         conn.close()
+
+
+# ════════════════════════════════════════════════════════════════
+# APP SETTINGS
+# ════════════════════════════════════════════════════════════════
+
+def get_setting(key: str, default: str = "") -> str:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT value FROM app_settings WHERE key = ?",
+            (key,),
+        ).fetchone()
+        return row[0] if row else default
+    finally:
+        conn.close()
+
+
+def set_setting(key: str, value: str) -> None:
+    conn = get_connection()
+    try:
+        conn.execute(
+            """
+            INSERT INTO app_settings (key, value) VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            """,
+            (key, value),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def has_any_habit_logs() -> bool:
+    conn = get_connection()
+    try:
+        row = conn.execute("SELECT COUNT(*) FROM habit_logs").fetchone()
+        return (row[0] or 0) > 0
+    finally:
+        conn.close()
+
+
+def has_any_time_sessions() -> bool:
+    conn = get_connection()
+    try:
+        row = conn.execute("SELECT COUNT(*) FROM time_sessions").fetchone()
+        return (row[0] or 0) > 0
+    finally:
+        conn.close()

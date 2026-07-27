@@ -22,6 +22,7 @@ from database.repository import (
     analytics_repo,
     time_repo,
 )
+from core.language_manager import tr
 
 
 # ─── نمودار میله‌ای ───────────────────────────────────────────────────────────
@@ -126,7 +127,7 @@ class StartSessionDialog(QDialog):
         lay.setContentsMargins(24, 24, 24, 24)
         lay.setSpacing(14)
 
-        title = QLabel("Start Focus Session")
+        title = QLabel(tr("start_timer"))
         title.setStyleSheet(f"font-size: 17px; font-weight: bold; color: {TEXT_PRIMARY};")
         lay.addWidget(title)
 
@@ -204,7 +205,7 @@ class StartSessionDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        start_btn = QPushButton("▶  Start")
+        start_btn = QPushButton("▶  " + tr("start"))
         start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         start_btn.setStyleSheet(f"""
             QPushButton {{
@@ -633,7 +634,7 @@ class TimerPage(QWidget):
         btn_row.setSpacing(12)
 
         # دکمه Start Session (باز کردن دیالوگ)
-        self.start_btn = QPushButton("▶  Start Session")
+        self.start_btn = QPushButton("▶  " + tr("start") + " " + tr("session_name"))
         self.start_btn.setFixedHeight(46)
         self.start_btn.setMinimumWidth(160)
         self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -641,7 +642,7 @@ class TimerPage(QWidget):
         self.start_btn.clicked.connect(self._handle_start_btn)
 
         # دکمه Stop
-        self.stop_btn = QPushButton("⏹  Stop & Save")
+        self.stop_btn = QPushButton("⏹  " + tr("stop_timer") + " & " + tr("save"))
         self.stop_btn.setFixedHeight(46)
         self.stop_btn.setMinimumWidth(140)
         self.stop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -761,12 +762,12 @@ class TimerPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(10)
 
-        title = QLabel("Recent Sessions")
+        title = QLabel(tr("recent_sessions"))
         title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(title)
 
         if not sessions:
-            empty = QLabel("هنوز session ای ثبت نشده. تایمر رو شروع کن!")
+            empty = QLabel(tr("no_sessions_today"))
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent; padding: 20px;")
             lay.addWidget(empty)

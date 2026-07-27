@@ -55,3 +55,8 @@ CREATE TABLE IF NOT EXISTS time_sessions (
     session_date TEXT DEFAULT (date('now')),
     created_at   TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);

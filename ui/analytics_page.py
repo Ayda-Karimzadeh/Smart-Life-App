@@ -25,6 +25,7 @@ from database.repository import (
     analytics_repo,
 )
 from core.dates import start_of_week, end_of_week
+from core.language_manager import tr
 
 
 # ─── نمودار خطی با نقاط ──────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ class LineChartDot(QWidget):
 class RadarChart(QWidget):
     def __init__(self, labels=None, values=None, parent=None):
         super().__init__(parent)
-        self.labels = labels or ["Habits", "Goals", "Tasks", "Time", "Streak"]
+        self.labels = labels or [tr("habits").capitalize(), tr("goals").capitalize(), tr("tasks").capitalize(), "Time", tr("streak").capitalize()]
         self.values = values or [0, 0, 0, 0, 0]
         self.setMinimumSize(250, 250)
 
@@ -487,7 +488,7 @@ class AnalyticsPage(QWidget):
         rl = QVBoxLayout(right)
         rl.setContentsMargins(20, 18, 20, 18)
         rl.setSpacing(12)
-        t2 = QLabel("Weekly Focus Hours")
+        t2 = QLabel(tr("weekly") + " " + tr("focus_time"))
         t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         rl.addWidget(t2)
         rl.addWidget(LineChartDot(focus_trend, trend_labels, GREEN, True))
@@ -544,7 +545,7 @@ class AnalyticsPage(QWidget):
         tr.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         rl2.addWidget(tr)
         rl2.addWidget(RadarChart(
-            labels=["Habits", "Goals", "Tasks", "Focus", "Streak"],
+            labels=[tr("habits").capitalize(), tr("goals").capitalize(), tr("tasks").capitalize(), "Focus", tr("streak").capitalize()],
             values=radar_values
         ))
 
@@ -553,7 +554,7 @@ class AnalyticsPage(QWidget):
         cl2 = QVBoxLayout(compare_card)
         cl2.setContentsMargins(20, 18, 20, 18)
         cl2.setSpacing(12)
-        tc = QLabel("Focus Hours: This Week vs Last")
+        tc = QLabel(tr("focus_time") + ": " + tr("weekly") + " vs Last")
         tc.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         cl2.addWidget(tc)
         cl2.addWidget(CompareBarChart(week_labels, this_week_hours, last_week_hours))

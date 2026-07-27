@@ -9,25 +9,6 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor
 
 from database.db_manager import init_db
-from database.repository import habit_repo
-
-
-# ─── Seed Data — داده‌های اولیه اگه دیتابیس خالیه ───────────────────────────
-def seed_data():
-    """اگه دیتابیس خالیه، چند عادت نمونه اضافه می‌کنه."""
-    if habit_repo.get_all_habits():
-        return
-
-    default_habits = [
-        ("Morning Meditation", "🧘", "Mindfulness", "daily",  7),
-        ("Exercise",           "💪", "Fitness",     "daily",  7),
-        ("Reading",            "📚", "Personal Growth", "daily", 7),
-        ("Drink 8 Glasses",    "💧", "Health",      "daily",  7),
-        ("Practice Guitar",    "🎸", "Skills",      "weekly", 3),
-    ]
-
-    for name, icon, cat, freq_type, freq_count in default_habits:
-        habit_repo.add_habit(name, icon, cat, freq_type, freq_count)
 
 
 # ─── Splash Screen ────────────────────────────────────────────────────────────
@@ -87,14 +68,6 @@ def main():
 
     init_db()
 
-    splash.showMessage("Loading your data...",
-                       Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter,
-                       QColor("#888899"))
-    app.processEvents()
-
-    seed_data()
-
-    # ─ ساخت پنجره اصلی ─
     splash.showMessage("Starting app...",
                        Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter,
                        QColor("#888899"))
@@ -103,8 +76,13 @@ def main():
     from ui.main_window import MainWindow
     window = MainWindow()
 
-    # بستن splash و نمایش پنجره اصلی
-    QTimer.singleShot(800, lambda: (splash.finish(window), window.show()))
+    # بستن splash، نمایش پنجره، سپس onboarding (در صورت نیاز)
+    def _launch():
+        splash.finish(window)
+        window.show()
+        window.maybe_run_onboarding()
+
+    QTimer.singleShot(800, _launch)
 
     sys.exit(app.exec())
 
