@@ -541,9 +541,9 @@ class AnalyticsPage(QWidget):
         rl2 = QVBoxLayout(radar_card)
         rl2.setContentsMargins(20, 18, 20, 18)
         rl2.setSpacing(12)
-        tr = QLabel("Performance Radar")
-        tr.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        rl2.addWidget(tr)
+        radar_title = QLabel("Performance Radar")
+        radar_title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        rl2.addWidget(radar_title)
         rl2.addWidget(RadarChart(
             labels=[tr("habits").capitalize(), tr("goals").capitalize(), tr("tasks").capitalize(), "Focus", tr("streak").capitalize()],
             values=radar_values
