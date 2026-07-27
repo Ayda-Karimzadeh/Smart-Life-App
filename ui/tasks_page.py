@@ -401,10 +401,22 @@ class TasksPage(QWidget):
         lay.addWidget(t)
 
         if not tasks:
-            empty = QLabel("تسکی وجود ندارد")
+            empty_container = QWidget()
+            empty_container.setStyleSheet("background: transparent;")
+            empty_lay = QVBoxLayout(empty_container)
+            empty_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_lay.setSpacing(8)
+            empty_lay.setContentsMargins(20, 30, 20, 30)
+
+            icon = QLabel("📋")
+            icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            icon.setStyleSheet("font-size: 32px; background: transparent;")
+            empty_lay.addWidget(icon)
+
+            empty = QLabel(tr("no_tasks_add"))
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            empty.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent; padding: 20px;")
-            lay.addWidget(empty)
+            empty.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
+            lay.addWidget(empty_container)
         else:
             for task in tasks:
                 lay.addWidget(TaskCard(task, on_toggle=self.refresh))

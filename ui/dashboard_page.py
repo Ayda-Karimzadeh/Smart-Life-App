@@ -95,9 +95,15 @@ def _fmt_time(secs):
 
 def _needs_getting_started() -> bool:
     """هنوز هیچ فعالیتی ثبت نشده — به‌جای درصد صفر، راهنمای شروع نشون بده."""
-    if analytics_repo.has_any_habit_logs() or analytics_repo.has_any_time_sessions():
-        return False
-    return True
+    habits = habit_repo.get_all_habits()
+    goals = goal_repo.get_all_goals()
+    tasks = task_repo.get_all_tasks()
+    
+    # If user has data but no activity yet, show getting started
+    has_data = habits or goals or tasks
+    has_activity = analytics_repo.has_any_habit_logs() or analytics_repo.has_any_time_sessions()
+    
+    return has_data and not has_activity
 
 
 def _display_name() -> str:
@@ -127,17 +133,54 @@ class DashboardPage(QWidget):
         layout = QVBoxLayout(content)
         layout.setSpacing(18)
         layout.setContentsMargins(28, 24, 28, 28)
-        layout.addWidget(self._banner())
-        if _needs_getting_started():
-            layout.addWidget(self._getting_started())
-            layout.addWidget(self._today_habits())
+        
+        habits = habit_repo.get_all_habits()
+        goals = goal_repo.get_all_goals()
+        tasks = task_repo.get_all_tasks()
+        has_any_data = habits or goals or tasks
+        
+        if not has_any_data:
+            layout.addWidget(self._empty_state())
         else:
-            layout.addWidget(self._stats_row())
-            layout.addWidget(self._charts_row())
-            layout.addWidget(self._habit_streaks())
-        layout.addWidget(self._tasks_goals_row())
+            layout.addWidget(self._banner())
+            if _needs_getting_started():
+                layout.addWidget(self._getting_started())
+                layout.addWidget(self._today_habits())
+            else:
+                layout.addWidget(self._stats_row())
+                layout.addWidget(self._charts_row())
+                layout.addWidget(self._habit_streaks())
+            layout.addWidget(self._tasks_goals_row())
+        
         layout.addStretch()
         self.scroll.setWidget(content)
+
+    # ─ Empty State ─────────────────────────────────────────────────────────────
+    def _empty_state(self):
+        empty_container = QWidget()
+        empty_container.setStyleSheet("background: transparent;")
+        empty_lay = QVBoxLayout(empty_container)
+        empty_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        empty_lay.setSpacing(16)
+        empty_lay.setContentsMargins(40, 100, 40, 100)
+
+        icon = QLabel("🏠")
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setStyleSheet("font-size: 72px; background: transparent;")
+        empty_lay.addWidget(icon)
+
+        title = QLabel(tr("welcome"))
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet(f"font-size: 24px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        empty_lay.addWidget(title)
+
+        desc = QLabel(tr("onboarding_desc"))
+        desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        desc.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
+        desc.setWordWrap(True)
+        empty_lay.addWidget(desc)
+
+        return empty_container
 
     # ─ بنر ───────────────────────────────────────────────────────────────────
     def _banner(self):

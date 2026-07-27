@@ -767,10 +767,30 @@ class TimerPage(QWidget):
         lay.addWidget(title)
 
         if not sessions:
-            empty = QLabel(tr("no_sessions_today"))
-            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            empty.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent; padding: 20px;")
-            lay.addWidget(empty)
+            empty_container = QWidget()
+            empty_container.setStyleSheet("background: transparent;")
+            empty_lay = QVBoxLayout(empty_container)
+            empty_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_lay.setSpacing(8)
+            empty_lay.setContentsMargins(20, 40, 20, 40)
+
+            icon = QLabel("⏱️")
+            icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            icon.setStyleSheet("font-size: 36px; background: transparent;")
+            empty_lay.addWidget(icon)
+
+            title = QLabel(tr("empty_timer_title"))
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+            empty_lay.addWidget(title)
+
+            desc = QLabel(tr("empty_timer_desc"))
+            desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            desc.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
+            desc.setWordWrap(True)
+            empty_lay.addWidget(desc)
+
+            lay.addWidget(empty_container)
             return section
 
         for s in sessions:

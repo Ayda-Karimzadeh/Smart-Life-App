@@ -779,6 +779,31 @@ class SettingsDialog(QDialog):
         
         lay.addWidget(self.lang_combo)
 
+        lay.addSpacing(12)
+
+        # Clear demo data button
+        from database.demo_data import clear_demo_data
+        clear_demo_btn = QPushButton(self.tr_func("clear_demo"))
+        clear_demo_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        clear_demo_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(224,92,92,0.15);
+                color: #e05c5c;
+                border: 1px solid rgba(224,92,92,0.3);
+                border-radius: 8px;
+                padding: 10px 0;
+                font-size: 13px;
+            }}
+            QPushButton:hover {{ background: rgba(224,92,92,0.25); }}
+        """)
+        clear_demo_btn.clicked.connect(self._handle_clear_demo)
+        lay.addWidget(clear_demo_btn)
+
+        clear_desc = QLabel(self.tr_func("clear_demo_desc"))
+        clear_desc.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED};")
+        clear_desc.setWordWrap(True)
+        lay.addWidget(clear_desc)
+
         lay.addStretch()
 
         # Buttons
@@ -819,6 +844,27 @@ class SettingsDialog(QDialog):
         btn_row.addWidget(close_btn, 1)
         btn_row.addWidget(save_btn, 1)
         lay.addLayout(btn_row)
+
+    def _handle_clear_demo(self):
+        """Handle clearing demo data."""
+        from PyQt6.QtWidgets import QMessageBox
+        from database.demo_data import clear_demo_data
+        
+        reply = QMessageBox.question(
+            self,
+            self.tr_func("clear_demo"),
+            self.tr_func("clear_demo_desc") + "\n\n" + "Are you sure?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            clear_demo_data()
+            QMessageBox.information(
+                self,
+                "Done",
+                "Demo data cleared successfully."
+            )
 
     def _handle_save(self):
         # Save language selection

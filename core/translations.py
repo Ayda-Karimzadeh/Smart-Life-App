@@ -80,6 +80,9 @@ TRANSLATIONS = {
         "theme": "Theme",
         "dark": "Dark",
         "light": "Light",
+        "data": "Data",
+        "clear_demo": "Clear Demo Data",
+        "clear_demo_desc": "Remove all sample data added during onboarding",
         
         # Categories
         "cat_mindfulness": "Mindfulness",
@@ -119,6 +122,16 @@ TRANSLATIONS = {
         "no_tasks_add": "No tasks yet — add your first task!",
         "no_sessions_today": "No sessions today",
         "no_data_available": "No data available",
+        "empty_habits_title": "Start Your Journey",
+        "empty_habits_desc": "Build consistency with daily habits. Small steps lead to big changes!",
+        "empty_goals_title": "Set Your Targets",
+        "empty_goals_desc": "Define what you want to achieve. Break big dreams into milestones.",
+        "empty_tasks_title": "Stay Organized",
+        "empty_tasks_desc": "Track your to-dos and priorities. Focus on what matters most.",
+        "empty_timer_title": "Track Your Focus",
+        "empty_timer_desc": "Measure your productive time. Every minute counts toward your goals.",
+        "empty_analytics_title": "Your Progress Awaits",
+        "empty_analytics_desc": "Start tracking to see your growth patterns and insights.",
         
         # Time tracking
         "start_timer": "Start Timer",
@@ -168,6 +181,10 @@ TRANSLATIONS = {
         "lets_go": "Let's Go! 🚀",
         "select_habit_error": "Select a habit",
         "select_habit_error_desc": "Select at least one habit to get started.",
+        "demo_data_title": "Try Demo Data?",
+        "demo_data_desc": "Load sample habits, goals, and tasks to see how the app works. You can clear it anytime from settings.",
+        "load_demo": "Load Demo Data",
+        "skip_demo": "Start Fresh",
     },
     
     "fa": {
@@ -245,6 +262,9 @@ TRANSLATIONS = {
         "theme": "تم",
         "dark": "تاریک",
         "light": "روشن",
+        "data": "داده‌ها",
+        "clear_demo": "پاک کردن داده نمونه",
+        "clear_demo_desc": "حذف تمام داده‌های نمونه اضافه شده در شروع",
         
         # Categories
         "cat_mindfulness": "ذهن‌آگاهی",
@@ -284,6 +304,16 @@ TRANSLATIONS = {
         "no_tasks_add": "هنوز تسکی ندارید — اولین تسک خود را اضافه کنید!",
         "no_sessions_today": "امروز جلسه‌ای ثبت نشده",
         "no_data_available": "داده‌ای موجود نیست",
+        "empty_habits_title": "سفر خود را شروع کنید",
+        "empty_habits_desc": "با عادت‌های روزانه ثبات بسازید. قدم‌های کوچک منجر به تغییرات بزرگ می‌شوند!",
+        "empty_goals_title": "اهداف خود را تعیین کنید",
+        "empty_goals_desc": "آنچه می‌خواهید به آن برسید را تعریف کنید. رویاهای بزرگ را به مایلستون‌ها تقسیم کنید.",
+        "empty_tasks_title": "منظم بمانید",
+        "empty_tasks_desc": "کارها و اولویت‌های خود را پیگیری کنید. روی چیزهای مهم تمرکز کنید.",
+        "empty_timer_title": "تمرکز خود را پیگیری کنید",
+        "empty_timer_desc": "زمان مولد خود را اندازه بگیرید. هر دقیقه به سمت اهداف شما می‌شمارد.",
+        "empty_analytics_title": "پیشرفت شما در انتظار است",
+        "empty_analytics_desc": "برای دیدن الگوهای رشد و بینش خود، شروع به پیگیری کنید.",
         
         # Time tracking
         "start_timer": "شروع تایمر",
@@ -333,6 +363,10 @@ TRANSLATIONS = {
         "lets_go": "بزن بریم! 🚀",
         "select_habit_error": "یک عادت انتخاب کن",
         "select_habit_error_desc": "حداقل یک عادت انتخاب کن تا شروع کنی.",
+        "demo_data_title": "داده نمونه رو امتحان کنی؟",
+        "demo_data_desc": "نمونه عادت‌ها، اهداف و تسک‌ها رو بار کن تا ببینی برنامه چطور کار می‌کنه. هر وقت از تنظیمات می‌تونی پاکشون کنی.",
+        "load_demo": "بارگذاری داده نمونه",
+        "skip_demo": "شروع تازه",
     }
 }
 

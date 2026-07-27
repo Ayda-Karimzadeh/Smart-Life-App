@@ -389,10 +389,30 @@ class HabitsPage(QWidget):
             lay.addWidget(row)
 
         if not habits:
-            empty = QLabel("هنوز عادتی ثبت نشده. یکی اضافه کن!")
-            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            empty.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent; padding: 40px;")
-            lay.addWidget(empty)
+            empty_container = QWidget()
+            empty_container.setStyleSheet("background: transparent;")
+            empty_lay = QVBoxLayout(empty_container)
+            empty_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_lay.setSpacing(12)
+            empty_lay.setContentsMargins(40, 60, 40, 60)
+
+            icon = QLabel("🌱")
+            icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            icon.setStyleSheet("font-size: 48px; background: transparent;")
+            empty_lay.addWidget(icon)
+
+            title = QLabel(tr("empty_habits_title"))
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setStyleSheet(f"font-size: 18px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+            empty_lay.addWidget(title)
+
+            desc = QLabel(tr("empty_habits_desc"))
+            desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            desc.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
+            desc.setWordWrap(True)
+            empty_lay.addWidget(desc)
+
+            lay.addWidget(empty_container)
 
         # دکمه Add
         add_card = QFrame()

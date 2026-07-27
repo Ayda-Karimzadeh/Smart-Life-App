@@ -276,21 +276,53 @@ class AnalyticsPage(QWidget):
         layout.setSpacing(18)
         layout.setContentsMargins(28, 24, 28, 28)
 
-        layout.addWidget(self._stats_row())
+        # Show empty state if no data at all
+        if not self._habits and not self._goals and not self._tasks:
+            layout.addWidget(self._empty_state())
+            layout.addStretch()
+        else:
+            layout.addWidget(self._stats_row())
 
-        insights = self._insights()
-        if insights:
-            layout.addWidget(insights)
+            insights = self._insights()
+            if insights:
+                layout.addWidget(insights)
 
-        layout.addWidget(self._trend_charts())
+            layout.addWidget(self._trend_charts())
 
-        if self._habits or self._tasks:
-            layout.addWidget(self._radar_compare_row())
+            if self._habits or self._tasks:
+                layout.addWidget(self._radar_compare_row())
 
-        layout.addWidget(self._performance_banner())
-        layout.addStretch()
+            layout.addWidget(self._performance_banner())
+            layout.addStretch()
 
         self.scroll.setWidget(content)
+
+    # ─ Empty State ─────────────────────────────────────────────────────────────
+    def _empty_state(self):
+        empty_container = QWidget()
+        empty_container.setStyleSheet("background: transparent;")
+        empty_lay = QVBoxLayout(empty_container)
+        empty_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        empty_lay.setSpacing(12)
+        empty_lay.setContentsMargins(40, 80, 40, 80)
+
+        icon = QLabel("📊")
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setStyleSheet("font-size: 64px; background: transparent;")
+        empty_lay.addWidget(icon)
+
+        title = QLabel(tr("empty_analytics_title"))
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet(f"font-size: 20px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        empty_lay.addWidget(title)
+
+        desc = QLabel(tr("empty_analytics_desc"))
+        desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        desc.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
+        desc.setWordWrap(True)
+        empty_lay.addWidget(desc)
+
+        return empty_container
 
     # ─ ۴ کارت آمار ───────────────────────────────────────────────────────────
     def _stats_row(self):
