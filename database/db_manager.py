@@ -9,19 +9,15 @@ db_manager.py
 import sqlite3
 import os
 from datetime import date, timedelta
-
 from database.models import Habit, Goal, Milestone, Task, TimeSession
 from core.dates import start_of_week, WEEKDAY_LABELS_SHORT
-
-# مسیر فایل دیتابیس
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "data", "smart_life.db")
-SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
-
+from config.paths import DB_PATH, SCHEMA_PATH
 
 def get_connection():
-    """یه اتصال جدید به دیتابیس برمی‌گردونه"""
-    conn = sqlite3.connect(DB_PATH)
+    print("DB_PATH =", DB_PATH)
+    print("DB Exists =", DB_PATH.exists())
+
+    conn = sqlite3.connect(str(DB_PATH))
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
@@ -30,7 +26,7 @@ def init_db():
     """دیتابیس و جداول رو می‌سازه (اگه وجود نداشته باشن)"""
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_connection()
-    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+    with SCHEMA_PATH.open("r", encoding="utf-8") as f:
         conn.executescript(f.read())
     conn.commit()
     conn.close()
