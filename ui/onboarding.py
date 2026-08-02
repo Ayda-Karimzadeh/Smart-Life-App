@@ -12,8 +12,6 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE
 )
 from database.repository import habit_repo, goal_repo, settings_repo
-from core.language_manager import tr
-from database.demo_data import seed_demo_data
 
 
 # ─── داده‌های پیشنهادی ────────────────────────────────────────────────────────
@@ -79,7 +77,7 @@ class WelcomePage(QWidget):
         icon.setStyleSheet(f"font-size: 56px; color: {ACCENT2}; background: transparent;")
         lay.addWidget(icon)
 
-        title = QLabel(tr("welcome"))
+        title = QLabel("Welcome to\nSmart Life Dashboard")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet(f"""
             font-size: 28px; font-weight: bold;
@@ -88,20 +86,23 @@ class WelcomePage(QWidget):
         """)
         lay.addWidget(title)
 
-        sub = QLabel(tr("onboarding_desc"))
+        sub = QLabel(
+            "یه داشبورد شخصی برای مدیریت عادت‌ها، اهداف و وقتت.\n"
+            "بذار با هم شروع کنیم — فقط ۳ مرحله‌ست!"
+        )
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
         lay.addWidget(sub)
 
         # اسم کاربر
         lay.addSpacing(10)
-        name_lbl = QLabel(tr("your_name"))
+        name_lbl = QLabel("اسمت چیه؟")
         name_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         name_lbl.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
         lay.addWidget(name_lbl)
 
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText(tr("name_placeholder"))
+        self.name_edit.setPlaceholderText("مثلاً: Alex")
         self.name_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.name_edit.setMaximumWidth(300)
         self.name_edit.setStyleSheet(f"""
@@ -130,12 +131,12 @@ class HabitsPage(QWidget):
         lay.setContentsMargins(40, 30, 40, 30)
         lay.setSpacing(16)
 
-        title = QLabel(tr("select_habits"))
+        title = QLabel("چه عادت‌هایی می‌خوای شروع کنی؟")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(title)
 
-        sub = QLabel(tr("select_habits_sub"))
+        sub = QLabel("حداقل یکی انتخاب کن — بعداً می‌تونی تغییرشون بدی")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
         lay.addWidget(sub)
@@ -248,12 +249,12 @@ class GoalsPage(QWidget):
         lay.setContentsMargins(40, 30, 40, 30)
         lay.setSpacing(16)
 
-        title = QLabel(tr("select_goals"))
+        title = QLabel("یه هدف بزرگ داری؟")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(title)
 
-        sub = QLabel(tr("select_goals_sub"))
+        sub = QLabel("می‌تونی بیشتر از یکی انتخاب کنی یا رد کنی")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
         lay.addWidget(sub)
@@ -361,76 +362,21 @@ class ReadyPage(QWidget):
         icon.setStyleSheet("font-size: 60px; background: transparent;")
         lay.addWidget(icon)
 
-        self.title = QLabel(tr("ready").format(name=name))
+        self.title = QLabel(f"آماده‌ای، {name}!")
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(self.title)
 
-        sub = QLabel(tr("ready_sub"))
+        sub = QLabel(
+            "عادت‌ها و اهدافت ذخیره شدن.\n"
+            "هر روز یه قدم کوچیک — نتایج بزرگ می‌سازه!"
+        )
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
         lay.addWidget(sub)
 
     def update_name(self, name):
-        self.title.setText(tr("ready").format(name=name))
-
-
-# ─── صفحه ۵: داده نمونه ───────────────────────────────────────────────────────
-class DemoDataPage(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setStyleSheet("background: transparent;")
-        self.load_demo = False  # User's choice
-
-        lay = QVBoxLayout(self)
-        lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.setSpacing(20)
-        lay.setContentsMargins(60, 40, 60, 40)
-
-        icon = QLabel("✨")
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setStyleSheet("font-size: 56px; background: transparent;")
-        lay.addWidget(icon)
-
-        title = QLabel(tr("demo_data_title"))
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setStyleSheet(f"font-size: 24px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
-        lay.addWidget(title)
-
-        sub = QLabel(tr("demo_data_desc"))
-        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
-        sub.setWordWrap(True)
-        lay.addWidget(sub)
-
-        # Buttons
-        btn_row = QHBoxLayout()
-        btn_row.setSpacing(12)
-        btn_row.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        skip_btn = QPushButton(tr("skip_demo"))
-        skip_btn.setStyleSheet(GHOST_BTN)
-        skip_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        skip_btn.clicked.connect(lambda: self._choose(False))
-        skip_btn.setFixedWidth(140)
-
-        load_btn = QPushButton(tr("load_demo"))
-        load_btn.setStyleSheet(BTN_STYLE(ACCENT, ACCENT2))
-        load_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        load_btn.clicked.connect(lambda: self._choose(True))
-        load_btn.setFixedWidth(160)
-
-        btn_row.addWidget(skip_btn)
-        btn_row.addWidget(load_btn)
-        lay.addLayout(btn_row)
-
-    def _choose(self, load_demo):
-        self.load_demo = load_demo
-        # Signal parent to proceed
-        self.parent().parent()._go_next()
-
-    def get_choice(self):
-        return self.load_demo
+        self.title.setText(f"آماده‌ای، {name}!")
 
 
 # ─── Onboarding Dialog اصلی ──────────────────────────────────────────────────
@@ -460,13 +406,11 @@ class OnboardingDialog(QDialog):
         self.page_habits  = HabitsPage()
         self.page_goals   = GoalsPage()
         self.page_ready   = ReadyPage()
-        self.page_demo    = DemoDataPage()
 
         self.stack.addWidget(self.page_welcome)   # 0
         self.stack.addWidget(self.page_habits)    # 1
         self.stack.addWidget(self.page_goals)     # 2
         self.stack.addWidget(self.page_ready)     # 3
-        self.stack.addWidget(self.page_demo)      # 4
 
         main.addWidget(self.stack, 1)
 
@@ -477,7 +421,7 @@ class OnboardingDialog(QDialog):
         dots_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         dots_lay.setSpacing(8)
         self.dots = []
-        for i in range(5):
+        for i in range(4):
             dot = QLabel("●")
             dot.setStyleSheet(f"font-size: 10px; color: {TEXT_MUTED}; background: transparent;")
             dots_lay.addWidget(dot)
@@ -491,13 +435,13 @@ class OnboardingDialog(QDialog):
         btn_lay.setContentsMargins(40, 10, 40, 24)
         btn_lay.setSpacing(12)
 
-        self.back_btn = QPushButton(tr("back"))
+        self.back_btn = QPushButton("← Back")
         self.back_btn.setStyleSheet(GHOST_BTN)
         self.back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.back_btn.clicked.connect(self._go_back)
         self.back_btn.hide()
 
-        self.next_btn = QPushButton(tr("lets_start"))
+        self.next_btn = QPushButton("شروع کنیم →")
         self.next_btn.setStyleSheet(BTN_STYLE(ACCENT, ACCENT2))
         self.next_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.next_btn.clicked.connect(self._go_next)
@@ -518,8 +462,8 @@ class OnboardingDialog(QDialog):
         if self._current == 1 and not self.page_habits.get_selected_habits():
             QMessageBox.information(
                 self,
-                tr("select_habit_error"),
-                tr("select_habit_error_desc"),
+                "یک عادت انتخاب کن",
+                "حداقل یک عادت انتخاب کن تا شروع کنی.",
             )
             return
 
@@ -544,7 +488,7 @@ class OnboardingDialog(QDialog):
         self.back_btn.setVisible(self._current > 0)
 
         # متن دکمه Next
-        labels = [tr("lets_start"), tr("next"), tr("next"), tr("next"), tr("lets_go")]
+        labels = ["شروع کنیم →", "بعدی →", "بعدی →", "بزن بریم! 🚀"]
         self.next_btn.setText(labels[self._current])
 
     def _update_dots(self):
@@ -568,10 +512,6 @@ class OnboardingDialog(QDialog):
         for icon, name, cat, days in self.page_goals.get_selected_goals():
             deadline = (today + timedelta(days=days)).isoformat()
             goal_repo.add_goal(name, f"Work towards: {name}", icon, cat, deadline)
-
-        # Load demo data if user chose to
-        if self.page_demo.get_choice():
-            seed_demo_data()
 
         settings_repo.mark_onboarding_completed()
         self.accept()

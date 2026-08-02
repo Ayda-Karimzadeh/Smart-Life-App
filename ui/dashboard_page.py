@@ -18,7 +18,6 @@ from database.repository import (
     analytics_repo,
     settings_repo,
 )
-from core.language_manager import tr
 
 
 # ─── نمودار دایره‌ای ──────────────────────────────────────────────────────────
@@ -95,15 +94,9 @@ def _fmt_time(secs):
 
 def _needs_getting_started() -> bool:
     """هنوز هیچ فعالیتی ثبت نشده — به‌جای درصد صفر، راهنمای شروع نشون بده."""
-    habits = habit_repo.get_all_habits()
-    goals = goal_repo.get_all_goals()
-    tasks = task_repo.get_all_tasks()
-    
-    # If user has data but no activity yet, show getting started
-    has_data = habits or goals or tasks
-    has_activity = analytics_repo.has_any_habit_logs() or analytics_repo.has_any_time_sessions()
-    
-    return has_data and not has_activity
+    if analytics_repo.has_any_habit_logs() or analytics_repo.has_any_time_sessions():
+        return False
+    return True
 
 
 def _display_name() -> str:
@@ -133,54 +126,17 @@ class DashboardPage(QWidget):
         layout = QVBoxLayout(content)
         layout.setSpacing(18)
         layout.setContentsMargins(28, 24, 28, 28)
-        
-        habits = habit_repo.get_all_habits()
-        goals = goal_repo.get_all_goals()
-        tasks = task_repo.get_all_tasks()
-        has_any_data = habits or goals or tasks
-        
-        if not has_any_data:
-            layout.addWidget(self._empty_state())
+        layout.addWidget(self._banner())
+        if _needs_getting_started():
+            layout.addWidget(self._getting_started())
+            layout.addWidget(self._today_habits())
         else:
-            layout.addWidget(self._banner())
-            if _needs_getting_started():
-                layout.addWidget(self._getting_started())
-                layout.addWidget(self._today_habits())
-            else:
-                layout.addWidget(self._stats_row())
-                layout.addWidget(self._charts_row())
-                layout.addWidget(self._habit_streaks())
-            layout.addWidget(self._tasks_goals_row())
-        
+            layout.addWidget(self._stats_row())
+            layout.addWidget(self._charts_row())
+            layout.addWidget(self._habit_streaks())
+        layout.addWidget(self._tasks_goals_row())
         layout.addStretch()
         self.scroll.setWidget(content)
-
-    # ─ Empty State ─────────────────────────────────────────────────────────────
-    def _empty_state(self):
-        empty_container = QWidget()
-        empty_container.setStyleSheet("background: transparent;")
-        empty_lay = QVBoxLayout(empty_container)
-        empty_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        empty_lay.setSpacing(16)
-        empty_lay.setContentsMargins(40, 100, 40, 100)
-
-        icon = QLabel("🏠")
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setStyleSheet("font-size: 72px; background: transparent;")
-        empty_lay.addWidget(icon)
-
-        title = QLabel(tr("welcome"))
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setStyleSheet(f"font-size: 24px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        empty_lay.addWidget(title)
-
-        desc = QLabel(tr("onboarding_desc"))
-        desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        desc.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
-        desc.setWordWrap(True)
-        empty_lay.addWidget(desc)
-
-        return empty_container
 
     # ─ بنر ───────────────────────────────────────────────────────────────────
     def _banner(self):
@@ -292,7 +248,7 @@ class DashboardPage(QWidget):
         lay.addWidget(hint)
 
         if not habits:
-            empty = QLabel(tr("no_habits_yet"))
+            empty = QLabel("No habits yet — add some in the Habits page")
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent; padding: 8px 0;")
             lay.addWidget(empty)
             return section
@@ -491,7 +447,7 @@ class DashboardPage(QWidget):
         ll.addLayout(header)
 
         if not tasks_today:
-            empty = QLabel(tr("no_tasks_today"))
+            empty = QLabel("No tasks due today")
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             ll.addWidget(empty)
         else:
@@ -534,7 +490,7 @@ class DashboardPage(QWidget):
         COLORS = [ACCENT2, BLUE, ACCENT, GREEN, ORANGE]
 
         if not goals:
-            empty = QLabel(tr("no_goals_yet"))
+            empty = QLabel("No goals yet")
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             rl.addWidget(empty)
         else:
@@ -585,7 +541,7 @@ class DashboardPage(QWidget):
         lay.addWidget(title)
 
         if not habits:
-            empty = QLabel(tr("no_habits_add"))
+            empty = QLabel("No habits yet — add some in Habits page!")
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             lay.addWidget(empty)
             return section

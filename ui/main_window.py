@@ -24,14 +24,13 @@ from database.repository import (
     task_repo,
     analytics_repo,
 )
-from core.language_manager import tr
 
 
 # ─── Header ───────────────────────────────────────────────────────────────────
 class Header(QWidget):
-    PAGE_KEYS = [
-        "dashboard", "habits", "goals",
-        "tasks", "time_tracking", "analytics"
+    PAGE_NAMES = [
+        "Dashboard", "Habits", "Goals",
+        "Tasks", "Time Tracking", "Analytics"
     ]
 
     def __init__(self):
@@ -45,7 +44,7 @@ class Header(QWidget):
         lay = QHBoxLayout(self)
         lay.setContentsMargins(28, 0, 28, 0)
 
-        self.title = QLabel(tr("dashboard"))
+        self.title = QLabel("Dashboard")
         self.title.setStyleSheet(
             f"font-size: 20px; font-weight: bold; "
             f"color: {TEXT_PRIMARY}; background: transparent;"
@@ -68,7 +67,7 @@ class Header(QWidget):
             (habit_repo.get_current_streak(h.id) for h in habits), default=0
         ) if habits else 0
 
-        self.streak_lbl = QLabel(f"🔥  {tr('streak')}  {max_streak} {tr('days')}")
+        self.streak_lbl = QLabel(f"🔥  Streak  {max_streak} days")
         self.streak_lbl.setStyleSheet(f"""
             background: {BG_CARD};
             color: {ORANGE};
@@ -81,7 +80,7 @@ class Header(QWidget):
         # Productivity score
         from core.analytics import productivity_score
         score = productivity_score()
-        self.score_lbl = QLabel(f"🏆  {tr('score')}  {score}%")
+        self.score_lbl = QLabel(f"🏆  Score  {score}%")
         self.score_lbl.setStyleSheet(f"""
             background: {BG_CARD};
             color: {ACCENT2};
@@ -98,7 +97,7 @@ class Header(QWidget):
         lay.addWidget(self.score_lbl)
 
     def set_page(self, idx):
-        self.title.setText(tr(self.PAGE_KEYS[idx]))
+        self.title.setText(self.PAGE_NAMES[idx])
 
     def refresh_stats(self):
         """آپدیت streak و score در هدر"""
@@ -106,15 +105,11 @@ class Header(QWidget):
         max_streak = max(
             (habit_repo.get_current_streak(h.id) for h in habits), default=0
         ) if habits else 0
-        self.streak_lbl.setText(f"🔥  {tr('streak')}  {max_streak} {tr('days')}")
+        self.streak_lbl.setText(f"🔥  Streak  {max_streak} days")
 
         from core.analytics import productivity_score
         score = productivity_score()
-        self.score_lbl.setText(f"🏆  {tr('score')}  {score}%")
-
-    def update_translations(self):
-        """Update all text with current language translations"""
-        self.refresh_stats()
+        self.score_lbl.setText(f"🏆  Score  {score}%")
 
 
 # ─── MainWindow ───────────────────────────────────────────────────────────────
@@ -165,7 +160,7 @@ class MainWindow(QMainWindow):
             self.stack.addWidget(p)
 
         # Sidebar
-        self.sidebar = Sidebar(self._switch_page, self._open_settings)
+        self.sidebar = Sidebar(self._switch_page)
 
         body.addWidget(self.sidebar)
         body.addWidget(self.stack, 1)
@@ -181,21 +176,6 @@ class MainWindow(QMainWindow):
         page = self.stack.currentWidget()
         if hasattr(page, "refresh"):
             page.refresh()
-
-    def _open_settings(self):
-        """Open settings dialog"""
-        from ui.dialogs import SettingsDialog
-        dlg = SettingsDialog(self)
-        if dlg.exec():
-            # Language changed, update all translations
-            self._update_all_translations()
-
-    def _update_all_translations(self):
-        """Update all UI elements with current language translations"""
-        self.header.update_translations()
-        self.header.set_page(self.stack.currentIndex())
-        self.sidebar.update_translations()
-        self.refresh_all()
 
     def maybe_run_onboarding(self):
         """اولین اجرا: onboarding رو نشون بده."""
