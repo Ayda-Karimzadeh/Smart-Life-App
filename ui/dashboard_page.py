@@ -18,7 +18,7 @@ from database.repository import (
     analytics_repo,
     settings_repo,
 )
-
+from core.language_manager import tr
 
 # ─── نمودار دایره‌ای ──────────────────────────────────────────────────────────
 class CircleChart(QWidget):
@@ -240,15 +240,15 @@ class DashboardPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(12)
 
-        title = QLabel("Today's Habits")
+        title = QLabel(tr("todays_habits"))
         title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        hint = QLabel("Tap a habit in the Habits page to mark it done")
+        hint = QLabel(tr("tap_habit_to_mark_done"))
         hint.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
         lay.addWidget(title)
         lay.addWidget(hint)
 
         if not habits:
-            empty = QLabel("No habits yet — add some in the Habits page")
+            empty = QLabel(tr("no_habits_yet"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent; padding: 8px 0;")
             lay.addWidget(empty)
             return section
@@ -502,13 +502,13 @@ class DashboardPage(QWidget):
                 gl.setContentsMargins(14, 12, 14, 12)
                 gl.setSpacing(6)
                 top = QHBoxLayout()
-                n = QLabel(f"{goal.icon} {goal.name}")
+                n = QLabel(f"{goal.icon} {tr(goal.name)}")
                 n.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
                 p = QLabel(f"{pct}%")
                 p.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {col}; background: transparent;")
                 top.addWidget(n, 1)
                 top.addWidget(p)
-                cat_lbl = QLabel(goal.category)
+                cat_lbl = QLabel(tr(goal.category))
                 cat_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
                 bar = QProgressBar()
                 bar.setRange(0, 100)
@@ -566,7 +566,7 @@ class DashboardPage(QWidget):
             top = QHBoxLayout()
             fire = QLabel("🔥" if done else "🩶")
             fire.setStyleSheet("font-size: 18px; background: transparent;")
-            days_lbl = QLabel(f"{streak} days")
+            days_lbl = QLabel(f"{streak} {tr('days')}")
             days_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {col}; background: transparent;")
             top.addWidget(fire)
             top.addStretch()

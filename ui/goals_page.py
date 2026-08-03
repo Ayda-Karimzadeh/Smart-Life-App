@@ -150,7 +150,7 @@ class GoalCard(QWidget):
         ms_header = QHBoxLayout()
         ms_lbl = QLabel(tr("milestones").capitalize())
         ms_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        ms_count = QLabel(f"{done_count} of {len(milestones)} completed")
+        ms_count = QLabel(tr("milestones_completed").format(done=done_count,total=len(milestones),))
         ms_count.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
 
         add_ms_btn = QPushButton("+ " + tr("add"))
@@ -184,7 +184,7 @@ class GoalCard(QWidget):
                 grid.addWidget(self._milestone_widget(m), i // 2, i % 2)
             lay.addLayout(grid)
         else:
-            empty = QLabel("هنوز مایلستونی اضافه نشده")
+            empty = QLabel(tr("no_milestones"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             lay.addWidget(empty)
 
@@ -275,8 +275,8 @@ class GoalCard(QWidget):
 
     def _handle_delete(self):
         reply = QMessageBox.question(
-            self, "Delete Goal",
-            f"Are you sure you want to delete '{self.goal.name}'? This will also delete its milestones.",
+            self, tr("delete_goal"),
+            tr("delete_goal_confirm").format(name=self.goal.name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -349,10 +349,10 @@ class GoalsPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("🎯", str(total), tr("goals").capitalize(), "In progress", ACCENT2, True),
-            ("✅", f"{avg_progress}%", "Average " + tr("progress").capitalize(), "Across all goals", GREEN, False),
-            ("🏆", str(completed), tr("progress").capitalize(), "This year", ORANGE, False),
-            ("📈", "+0%", "Progress Rate", "vs last month", BLUE, False),
+            ("🎯", str(total), tr("goals").capitalize(), tr("goals_in_progress"), ACCENT2, True),
+            ("✅", f"{avg_progress}%", tr("average_progress"), tr("across_all_goals"), GREEN, False),
+            ("🏆", str(completed), tr("progress").capitalize(), tr("completed_this_year"), ORANGE, False),
+            ("📈", "+0%", tr("progress_rate"), tr("vs_last_month"), BLUE, False),
         ]
 
         for icon, val, title, sub, col, highlight in items:
@@ -429,7 +429,7 @@ class GoalsPage(QWidget):
         add_card.setCursor(Qt.CursorShape.PointingHandCursor)
         add_card.setStyleSheet("QFrame { background: transparent; border: 2px dashed rgba(255,255,255,0.12); border-radius: 14px; }")
         add_lay = QVBoxLayout(add_card)
-        add_btn = QLabel("+ Add New Goal")
+        add_btn = QLabel(tr("add_new_goal"))
         add_btn.setAlignment(Qt.AlignmentFlag.AlignCenter)
         add_btn.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
         add_lay.addWidget(add_btn)

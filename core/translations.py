@@ -165,6 +165,14 @@ TRANSLATIONS = {
         "add_milestone_btn": "Add Milestone",
         
         # Onboarding
+        "days": "days",
+        "goal_learn_something": "Learn something",
+        "goal_get_fit": "Get fit",
+        "goal_save_money": "Save money",
+        "goal_read_books": "Read books",
+        "goal_side_project": "Build a side project",
+        "goal_new_language": "Learn a new language",
+
         "habit_meditation": "Morning Meditation",
         "habit_exercise": "Exercise",
         "habit_reading": "Reading",
@@ -178,7 +186,7 @@ TRANSLATIONS = {
         "welcome": "Welcome to\nSmart Life Dashboard",
         "onboarding_desc": "A personal dashboard for managing your habits, goals and time.\nLet's get started — just 3 steps!",
         "your_name": "What's your name?",
-        "name_placeholder": "e.g. Alex",
+        "name_placeholder": "e.g. Sara",
         "select_habits": "Which habits do you want to start?",
         "select_habits_sub": "Select at least one — you can change them later",
         "select_goals": "Do you have a big goal?",
@@ -196,6 +204,28 @@ TRANSLATIONS = {
         "load_demo": "Load Demo Data",
         "skip_demo": "Start Fresh",
         "continue": "Continue →",
+        "delete_goal": "Delete Goal",
+        "delete_goal_confirm": "Are you sure you want to delete '{name}'? This will also delete its milestones.",
+
+        "milestones_completed": "{done} of {total} completed",
+
+        "no_milestones": "No milestones yet",
+
+        "goals_in_progress": "In Progress",
+
+        "average_progress": "Average Progress",
+
+        "across_all_goals": "Across all goals",
+
+        "completed_this_year": "This year",
+
+        "progress_rate": "Progress Rate",
+
+        "vs_last_month": "vs last month",
+
+        "add_new_goal": "+ Add New Goal",
+        "default_name": "Sara",
+        "goal_learn_something": "Learn something",
     },
     
     "fa": {
@@ -358,6 +388,20 @@ TRANSLATIONS = {
         "add_milestone_btn": "افزودن مایلستون",
         
         # Onboarding
+        "days": "روز",
+        "goal_learn_something": "یادگیری یک مهارت جدید",
+        "goal_get_fit": "تناسب اندام",
+        "goal_save_money": "پس‌انداز پول",
+        "goal_read_books": "کتاب خواندن",
+        "goal_side_project": "ساخت پروژه شخصی",
+        "goal_new_language": "یادگیری زبان جدید",
+
+        "cat_learning": "یادگیری",
+        "cat_fitness": "تناسب اندام",
+        "cat_finance": "مالی",
+        "cat_personal_growth": "رشد فردی",
+        "cat_career": "شغلی",
+
         "habit_meditation": "مدیتیشن صبحگاهی",
         "habit_exercise": "ورزش",
         "habit_reading": "مطالعه",
@@ -371,7 +415,7 @@ TRANSLATIONS = {
         "welcome": "به داشبورد\nزندگی هوشمند خوش آمدید",
         "onboarding_desc": "یه داشبورد شخصی برای مدیریت عادت‌ها، اهداف و وقتت.\nبذار با هم شروع کنیم — فقط ۳ مرحله‌ست!",
         "your_name": "اسمت چیه؟",
-        "name_placeholder": "مثلاً: Alex",
+        "name_placeholder": "مثلاً: سارا",
         "select_habits": "چه عادت‌هایی می‌خوای شروع کنی؟",
         "select_habits_sub": "حداقل یکی انتخاب کن — بعداً می‌تونی تغییرشون بدی",
         "select_goals": "یه هدف بزرگ داری؟",
@@ -389,6 +433,40 @@ TRANSLATIONS = {
         "load_demo": "بارگذاری داده نمونه",
         "skip_demo": "شروع تازه",
         "continue": "ادامه →",
+
+        "delete_goal": "حذف هدف",
+
+        "delete_goal_confirm":
+        "آیا مطمئن هستید که می‌خواهید «{name}» را حذف کنید؟ تمام مایلستون‌های آن نیز حذف خواهند شد.",
+
+        "milestones_completed":
+        "{done} از {total} انجام شده",
+
+        "no_milestones":
+        "هنوز مایلستونی اضافه نشده",
+
+        "goals_in_progress":
+        "در حال انجام",
+
+        "average_progress":
+        "میانگین پیشرفت",
+
+        "across_all_goals":
+        "بین تمام اهداف",
+
+        "completed_this_year":
+        "امسال",
+
+        "progress_rate":
+        "نرخ پیشرفت",
+
+        "vs_last_month":
+        "نسبت به ماه قبل",
+
+        "add_new_goal":
+        "+ افزودن هدف جدید",
+        "default_name": "سارا",
+        
     }
 }
 

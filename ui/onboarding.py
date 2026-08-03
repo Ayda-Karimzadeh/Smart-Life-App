@@ -92,17 +92,18 @@ SUGGESTED_HABITS = [
 ]
 
 SUGGESTED_GOALS = [
+
     {
         "icon": "🎯",
         "name": "goal_learn_something",
         "category": "cat_learning",
         "days": 90,
         "milestones": [
-            ("Choose a topic", 3),
-            ("Complete beginner lessons", 21),
-            ("Practice consistently", 45),
-            ("Build a small project", 75),
-            ("Master the basics", 90),
+            ("ms_choose_topic", 3),
+            ("ms_beginner_lessons", 21),
+            ("ms_practice_consistently", 45),
+            ("ms_build_small_project", 75),
+            ("ms_master_basics", 90),
         ],
     },
 
@@ -112,11 +113,11 @@ SUGGESTED_GOALS = [
         "category": "cat_fitness",
         "days": 180,
         "milestones": [
-            ("Create a workout routine", 7),
-            ("Exercise for one month", 30),
-            ("Improve endurance", 60),
-            ("Reach your first fitness milestone", 120),
-            ("Maintain the habit for 6 months", 180),
+            ("ms_create_workout_plan", 7),
+            ("ms_complete_first_month", 30),
+            ("ms_improve_endurance", 60),
+            ("ms_reach_first_fitness_goal", 120),
+            ("ms_keep_consistency", 180),
         ],
     },
 
@@ -126,11 +127,11 @@ SUGGESTED_GOALS = [
         "category": "cat_finance",
         "days": 365,
         "milestones": [
-            ("Set a savings target", 7),
-            ("Save your first amount", 30),
-            ("Reach 25% of your goal", 120),
-            ("Reach 50% of your goal", 240),
-            ("Achieve your savings goal", 365),
+            ("ms_set_saving_target", 7),
+            ("ms_save_first_amount", 30),
+            ("ms_save_25_percent", 120),
+            ("ms_save_50_percent", 240),
+            ("ms_reach_saving_goal", 365),
         ],
     },
 
@@ -140,11 +141,11 @@ SUGGESTED_GOALS = [
         "category": "cat_personal_growth",
         "days": 365,
         "milestones": [
-            ("Finish your first book", 30),
-            ("Finish 3 books", 90),
-            ("Finish 6 books", 180),
-            ("Finish 9 books", 270),
-            ("Finish 12 books", 365),
+            ("ms_finish_first_book", 30),
+            ("ms_finish_three_books", 90),
+            ("ms_finish_six_books", 180),
+            ("ms_finish_nine_books", 270),
+            ("ms_finish_twelve_books", 365),
         ],
     },
 
@@ -154,11 +155,11 @@ SUGGESTED_GOALS = [
         "category": "cat_career",
         "days": 180,
         "milestones": [
-            ("Choose a project idea", 7),
-            ("Plan the project", 21),
-            ("Build the MVP", 60),
-            ("Launch the first version", 120),
-            ("Improve based on feedback", 180),
+            ("ms_choose_project_idea", 7),
+            ("ms_plan_project", 21),
+            ("ms_build_mvp", 60),
+            ("ms_launch_first_version", 120),
+            ("ms_improve_from_feedback", 180),
         ],
     },
 
@@ -168,13 +169,14 @@ SUGGESTED_GOALS = [
         "category": "cat_learning",
         "days": 365,
         "milestones": [
-            ("Learn the alphabet and basics", 14),
-            ("Learn 500 words", 90),
-            ("Have a simple conversation", 180),
-            ("Reach A2 level", 270),
-            ("Reach B1 level", 365),
+            ("ms_learn_alphabet", 14),
+            ("ms_learn_500_words", 90),
+            ("ms_first_conversation", 180),
+            ("ms_reach_a2", 270),
+            ("ms_reach_b1", 365),
         ],
     },
+
 ]
 
 BTN_STYLE = lambda color, hover: f"""
@@ -547,7 +549,7 @@ class WelcomePage(QWidget):
 
     def get_name(self):
         name = self.name_edit.text().strip()
-        return name if name else "Alex"
+        return name if name else tr("default_name")
 
 
 # ─── صفحه ۲: انتخاب عادت‌ها ─────────────────────────────────────────────────
@@ -1001,7 +1003,7 @@ class GoalsPage(QWidget):
         name_lbl = QLabel(tr(goal["name"]))
         name_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         detail = QLabel(
-            f"{tr(goal['category'])} • {goal['days']} days"
+            f"{tr(goal['category'])} • {goal['days']} {tr('days')}"
         )
         detail.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         info.addWidget(name_lbl)
@@ -1394,16 +1396,14 @@ class OnboardingDialog(QDialog):
         )
 
 
-        for icon, name, cat, freq_type, freq_count in (
-            self.page_habits.get_selected_habits()
-        ):
+        for habit in self.page_habits.get_selected_habits():
 
             habit_repo.add_habit(
-                name,
-                icon,
-                cat,
-                freq_type,
-                freq_count
+                habit["name"],
+                habit["icon"],
+                habit["category"],
+                habit["frequency"],
+                habit["count"]
             )
 
 
