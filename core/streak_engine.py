@@ -135,7 +135,7 @@ def week_status(habit_id: int) -> dict:
         (ws + timedelta(days=i)).isoformat() in log_dates
         for i in range(7)
     ]
-    remaining = max(target - done, 0)
+    remaining = max(int(target) - done, 0)
     days_left = (we - today).days + 1
     pct = round(done / target * 100) if target else 0
     on_track = days_left >= remaining

@@ -12,6 +12,7 @@ from assets.style import (
     ACCENT, ACCENT2, GREEN, ORANGE, BLUE
 )
 from database.repository import habit_repo, goal_repo, settings_repo
+from datetime import date, timedelta
 
 from core.language_manager import tr
 
@@ -91,12 +92,89 @@ SUGGESTED_HABITS = [
 ]
 
 SUGGESTED_GOALS = [
-    ("🎯", "Learn Something New",    "Learning",  90),
-    ("💪", "Get Fit",                "Fitness",   180),
-    ("💰", "Save Money",             "Finance",   365),
-    ("📖", "Read 12 Books",          "Personal",  365),
-    ("🚀", "Build a Side Project",   "Career",    180),
-    ("🌍", "Learn a New Language",   "Learning",  365),
+    {
+        "icon": "🎯",
+        "name": "goal_learn_something",
+        "category": "cat_learning",
+        "days": 90,
+        "milestones": [
+            ("Choose a topic", 3),
+            ("Complete beginner lessons", 21),
+            ("Practice consistently", 45),
+            ("Build a small project", 75),
+            ("Master the basics", 90),
+        ],
+    },
+
+    {
+        "icon": "💪",
+        "name": "goal_get_fit",
+        "category": "cat_fitness",
+        "days": 180,
+        "milestones": [
+            ("Create a workout routine", 7),
+            ("Exercise for one month", 30),
+            ("Improve endurance", 60),
+            ("Reach your first fitness milestone", 120),
+            ("Maintain the habit for 6 months", 180),
+        ],
+    },
+
+    {
+        "icon": "💰",
+        "name": "goal_save_money",
+        "category": "cat_finance",
+        "days": 365,
+        "milestones": [
+            ("Set a savings target", 7),
+            ("Save your first amount", 30),
+            ("Reach 25% of your goal", 120),
+            ("Reach 50% of your goal", 240),
+            ("Achieve your savings goal", 365),
+        ],
+    },
+
+    {
+        "icon": "📖",
+        "name": "goal_read_books",
+        "category": "cat_personal_growth",
+        "days": 365,
+        "milestones": [
+            ("Finish your first book", 30),
+            ("Finish 3 books", 90),
+            ("Finish 6 books", 180),
+            ("Finish 9 books", 270),
+            ("Finish 12 books", 365),
+        ],
+    },
+
+    {
+        "icon": "🚀",
+        "name": "goal_side_project",
+        "category": "cat_career",
+        "days": 180,
+        "milestones": [
+            ("Choose a project idea", 7),
+            ("Plan the project", 21),
+            ("Build the MVP", 60),
+            ("Launch the first version", 120),
+            ("Improve based on feedback", 180),
+        ],
+    },
+
+    {
+        "icon": "🌍",
+        "name": "goal_new_language",
+        "category": "cat_learning",
+        "days": 365,
+        "milestones": [
+            ("Learn the alphabet and basics", 14),
+            ("Learn 500 words", 90),
+            ("Have a simple conversation", 180),
+            ("Reach A2 level", 270),
+            ("Reach B1 level", 365),
+        ],
+    },
 ]
 
 BTN_STYLE = lambda color, hover: f"""
@@ -124,7 +202,7 @@ CARD_CHECK_STYLE = lambda selected: f"""
         border-radius: 12px;
     }}
 """
-# صفحه1: انتخاب زبان
+# صفحه 0: انتخاب زبان
 class LanguagePage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -363,7 +441,7 @@ class LanguagePage(QWidget):
 
         return self.selected_language
 
-# ─── صفحه 2: خوش‌آمدگویی ────────────────────────────────────────────────────
+# ─── صفحه 1: خوش‌آمدگویی ────────────────────────────────────────────────────
 class WelcomePage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -860,15 +938,15 @@ class GoalsPage(QWidget):
         lay.setContentsMargins(40, 30, 40, 30)
         lay.setSpacing(16)
 
-        title = QLabel("یه هدف بزرگ داری؟")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
-        lay.addWidget(title)
+        self.title = QLabel()
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+        lay.addWidget(self.title)
 
-        sub = QLabel("می‌تونی بیشتر از یکی انتخاب کنی یا رد کنی")
-        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
-        lay.addWidget(sub)
+        self.sub = QLabel()
+        self.sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
+        lay.addWidget(self.sub)
 
         grid_widget = QWidget()
         grid_widget.setStyleSheet("background: transparent;")
@@ -888,16 +966,23 @@ class GoalsPage(QWidget):
                 if idx >= len(SUGGESTED_GOALS):
                     row_lay.addStretch()
                     break
-                icon, name, cat, days = SUGGESTED_GOALS[idx]
-                card = self._make_goal_card(idx, icon, name, cat, days)
+                goal = SUGGESTED_GOALS[idx]
+                card = self._make_goal_card(idx, goal)
                 row_lay.addWidget(card)
 
             grid_lay.addWidget(row_w)
 
         lay.addWidget(grid_widget)
+
+        self.retranslate_ui()
+
         lay.addStretch()
 
-    def _make_goal_card(self, idx, icon, name, cat, days):
+    def retranslate_ui(self):
+        self.title.setText(tr("select_goals"))
+        self.sub.setText(tr("select_goals_sub"))
+
+    def _make_goal_card(self, idx, goal):
         frame = QFrame()
         frame.setStyleSheet(CARD_CHECK_STYLE(False))
         frame.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -907,15 +992,17 @@ class GoalsPage(QWidget):
         lay.setContentsMargins(14, 12, 14, 12)
         lay.setSpacing(10)
 
-        icon_lbl = QLabel(icon)
+        icon_lbl = QLabel(goal["icon"])
         icon_lbl.setStyleSheet("font-size: 24px; background: transparent;")
         icon_lbl.setFixedWidth(32)
 
         info = QVBoxLayout()
         info.setSpacing(2)
-        name_lbl = QLabel(name)
+        name_lbl = QLabel(tr(goal["name"]))
         name_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        detail = QLabel(f"{cat}  •  {days} days")
+        detail = QLabel(
+            f"{tr(goal['category'])} • {goal['days']} days"
+        )
         detail.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         info.addWidget(name_lbl)
         info.addWidget(detail)
@@ -1300,8 +1387,6 @@ class OnboardingDialog(QDialog):
 
     def _finish(self):
 
-        from datetime import date,timedelta
-
         name = self.page_welcome.get_name()
 
         settings_repo.set_user_name(
@@ -1309,7 +1394,7 @@ class OnboardingDialog(QDialog):
         )
 
 
-        for icon,name,cat,freq_type,freq_count in (
+        for icon, name, cat, freq_type, freq_count in (
             self.page_habits.get_selected_habits()
         ):
 
@@ -1324,23 +1409,30 @@ class OnboardingDialog(QDialog):
 
         today = date.today()
 
-        for icon,name,cat,days in (
-            self.page_goals.get_selected_goals()
-        ):
+
+        for goal in self.page_goals.get_selected_goals():
 
             deadline = (
                 today +
-                timedelta(days=days)
+                timedelta(days=goal["days"])
             ).isoformat()
 
 
-            goal_repo.add_goal(
-                name,
-                f"Work towards: {name}",
-                icon,
-                cat,
+            goal_id = goal_repo.add_goal(
+                goal["name"],
+                f"Work towards: {goal['name']}",
+                goal["icon"],
+                goal["category"],
                 deadline
             )
+
+
+            for milestone_name, days in goal["milestones"]:
+
+                goal_repo.add_milestone(
+                    goal_id,
+                    milestone_name
+                )
 
 
         settings_repo.mark_onboarding_completed()

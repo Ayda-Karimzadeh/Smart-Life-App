@@ -176,12 +176,23 @@ def count_habit_logs_in_range(habit_id, start_date, end_date):
 
 def add_goal(name, description, icon, category, deadline=None):
     conn = get_connection()
-    conn.execute(
-        "INSERT INTO goals (name, description, icon, category, deadline) VALUES (?, ?, ?, ?, ?)",
+
+    cursor = conn.execute(
+        """
+        INSERT INTO goals 
+        (name, description, icon, category, deadline)
+        VALUES (?, ?, ?, ?, ?)
+        """,
         (name, description, icon, category, deadline)
     )
+
     conn.commit()
+
+    goal_id = cursor.lastrowid
+
     conn.close()
+
+    return goal_id
 
 
 def get_all_goals():
@@ -217,10 +228,16 @@ def delete_milestone(milestone_id):
 
 def add_milestone(goal_id, name, sort_order=0):
     conn = get_connection()
+
     conn.execute(
-        "INSERT INTO milestones (goal_id, name, sort_order) VALUES (?, ?, ?)",
+        """
+        INSERT INTO milestones 
+        (goal_id, name, sort_order)
+        VALUES (?, ?, ?)
+        """,
         (goal_id, name, sort_order)
     )
+
     conn.commit()
     conn.close()
 
