@@ -165,6 +165,16 @@ TRANSLATIONS = {
         "add_milestone_btn": "Add Milestone",
         
         # Onboarding
+        "habit_meditation": "Morning Meditation",
+        "habit_exercise": "Exercise",
+        "habit_reading": "Reading",
+        "habit_water": "Drink 8 Glasses",
+        "habit_sleep": "Sleep by 11 PM",
+        "habit_skill": "Practice a Skill",
+        "habit_journal": "Journaling",
+        "habit_walk": "Morning Walk",
+        "choose_language": "Choose your language",
+        "choose_language_sub": "You can change it later from Settings.",
         "welcome": "Welcome to\nSmart Life Dashboard",
         "onboarding_desc": "A personal dashboard for managing your habits, goals and time.\nLet's get started — just 3 steps!",
         "your_name": "What's your name?",
@@ -185,6 +195,7 @@ TRANSLATIONS = {
         "demo_data_desc": "Load sample habits, goals, and tasks to see how the app works. You can clear it anytime from settings.",
         "load_demo": "Load Demo Data",
         "skip_demo": "Start Fresh",
+        "continue": "Continue →",
     },
     
     "fa": {
@@ -347,6 +358,16 @@ TRANSLATIONS = {
         "add_milestone_btn": "افزودن مایلستون",
         
         # Onboarding
+        "habit_meditation": "مدیتیشن صبحگاهی",
+        "habit_exercise": "ورزش",
+        "habit_reading": "مطالعه",
+        "habit_water": "نوشیدن ۸ لیوان آب",
+        "habit_sleep": "خواب قبل از ۱۱ شب",
+        "habit_skill": "تمرین یک مهارت",
+        "habit_journal": "نوشتن روزانه",
+        "habit_walk": "پیاده‌روی صبحگاهی",
+        "choose_language": "زبان برنامه را انتخاب کنید",
+        "choose_language_sub": "بعداً می‌توانید از تنظیمات آن را تغییر دهید.",
         "welcome": "به داشبورد\nزندگی هوشمند خوش آمدید",
         "onboarding_desc": "یه داشبورد شخصی برای مدیریت عادت‌ها، اهداف و وقتت.\nبذار با هم شروع کنیم — فقط ۳ مرحله‌ست!",
         "your_name": "اسمت چیه؟",
@@ -367,6 +388,7 @@ TRANSLATIONS = {
         "demo_data_desc": "نمونه عادت‌ها، اهداف و تسک‌ها رو بار کن تا ببینی برنامه چطور کار می‌کنه. هر وقت از تنظیمات می‌تونی پاکشون کنی.",
         "load_demo": "بارگذاری داده نمونه",
         "skip_demo": "شروع تازه",
+        "continue": "ادامه →",
     }
 }
 
