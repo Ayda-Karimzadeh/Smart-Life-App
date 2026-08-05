@@ -942,7 +942,7 @@ class HabitsPage(QWidget):
             card.category_label.setText(
                 tr(card.habit["category"])
             )
-            
+
 # ─── صفحه ۳: انتخاب هدف ─────────────────────────────────────────────────────
 class GoalsPage(QWidget):
     def __init__(self, parent=None):
@@ -1036,6 +1036,11 @@ class GoalsPage(QWidget):
         lay.addWidget(check)
 
         frame.mousePressEvent = lambda e, i=idx, f=frame, c=check: self._toggle(i, f, c)
+
+        frame.name_label = name_lbl
+        frame.detail_label = detail
+        frame.goal = goal
+
         return frame
 
     def _toggle(self, idx, frame, check):

@@ -1,5 +1,3 @@
-import re
-
 from PyQt6.QtWidgets import (
     QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QScrollArea, QFrame, QProgressBar, QGridLayout,

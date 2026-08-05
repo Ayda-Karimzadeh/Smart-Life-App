@@ -3,13 +3,15 @@ language_manager.py
 ─────────────────────────────────────────────────────────────
 Manages language selection and persistence
 """
-
+from PyQt6.QtCore import QObject, pyqtSignal
 from database.db_manager import get_setting, set_setting
 from core.translations import t, TRANSLATIONS
 
 
-class LanguageManager:
+class LanguageManager(QObject):
     """Manages application language settings"""
+
+    language_changed = pyqtSignal(str)
     
     SUPPORTED_LANGUAGES = {
         "en": "English",
@@ -17,8 +19,10 @@ class LanguageManager:
     }
     
     def __init__(self):
+        super().__init__()
         self._current_language = None
         self._load_language()
+        
     
     def _load_language(self):
         """Load language from database settings"""
@@ -39,6 +43,9 @@ class LanguageManager:
         
         self._current_language = lang_code
         set_setting("language", lang_code)
+
+        self.language_changed.emit(lang_code)
+        
         return True
     
     def translate(self, key: str) -> str:

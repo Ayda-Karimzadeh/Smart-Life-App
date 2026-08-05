@@ -24,9 +24,9 @@ class Sidebar(QWidget):
         lay.setSpacing(4)
 
         # لوگو
-        self.logo = QLabel("✦  Smart Life")
+        self.logo = QLabel(f"✦  {tr('app_short_name')}")
         self.logo.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {TEXT_PRIMARY}; padding: 8px 12px 4px 12px;")
-        self.sub = QLabel("Dashboard")
+        self.sub = QLabel(tr("dashboard"))
         self.sub.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; padding: 0 12px 18px 12px;")
         lay.addWidget(self.logo)
         lay.addWidget(self.sub)
@@ -53,11 +53,11 @@ class Sidebar(QWidget):
         lay.addStretch()
 
         # Settings button
-        settings_btn = QPushButton(f"  ⚙️   {tr('settings')}")
-        settings_btn.setCheckable(False)
-        settings_btn.setFixedHeight(42)
-        settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        settings_btn.setStyleSheet("""
+        self.settings_btn = QPushButton(f"  ⚙️   {tr('settings')}")
+        self.settings_btn.setCheckable(False)
+        self.settings_btn.setFixedHeight(42)
+        self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.settings_btn.setStyleSheet("""
             QPushButton {
                 background: transparent;
                 color: #888899;
@@ -74,8 +74,8 @@ class Sidebar(QWidget):
             }
         """)
         if self.on_settings:
-            settings_btn.clicked.connect(self.on_settings)
-        lay.addWidget(settings_btn)
+            self.settings_btn.clicked.connect(self.on_settings)
+        lay.addWidget(self.settings_btn)
 
         # ساعت
         self.clock = QLabel()
@@ -91,10 +91,15 @@ class Sidebar(QWidget):
 
     def update_translations(self):
         """Update all text with current language translations"""
+
+        self.logo.setText(f"✦  {tr('app_short_name')}")
         self.sub.setText(tr("dashboard"))
+
         for i, (icon, key) in enumerate(zip(self.page_icons, self.page_keys)):
             self.buttons[i].setText(f"  {icon}   {tr(key)}")
 
+        self.settings_btn.setText(f"  ⚙️   {tr('settings')}")
+        
     def _update_clock(self):
         self.clock.setText(QTime.currentTime().toString("hh:mm:ss"))
 

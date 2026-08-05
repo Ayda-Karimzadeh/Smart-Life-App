@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QLabel, QStackedWidget
 )
 from PyQt6.QtCore import Qt
+from core.language_manager import tr
 
 from assets.style import (
     GLOBAL_STYLE, BG_MAIN, BG_CARD,
@@ -24,14 +25,18 @@ from database.repository import (
     task_repo,
     analytics_repo,
 )
-
+from core.language_manager import get_language_manager
 
 # ─── Header ───────────────────────────────────────────────────────────────────
 class Header(QWidget):
-    PAGE_NAMES = [
-        "Dashboard", "Habits", "Goals",
-        "Tasks", "Time Tracking", "Analytics"
-    ]
+    PAGE_KEYS = [
+    "dashboard",
+    "habits",
+    "goals",
+    "tasks",
+    "time_tracking",
+    "analytics"
+]
 
     def __init__(self):
         super().__init__()
@@ -44,7 +49,7 @@ class Header(QWidget):
         lay = QHBoxLayout(self)
         lay.setContentsMargins(28, 0, 28, 0)
 
-        self.title = QLabel("Dashboard")
+        self.title = QLabel(tr("dashboard"))
         self.title.setStyleSheet(
             f"font-size: 20px; font-weight: bold; "
             f"color: {TEXT_PRIMARY}; background: transparent;"
@@ -97,7 +102,7 @@ class Header(QWidget):
         lay.addWidget(self.score_lbl)
 
     def set_page(self, idx):
-        self.title.setText(self.PAGE_NAMES[idx])
+        self.title.setText(tr(self.PAGE_KEYS[idx]))
 
     def refresh_stats(self):
         """آپدیت streak و score در هدر"""
@@ -166,6 +171,51 @@ class MainWindow(QMainWindow):
         body.addWidget(self.stack, 1)
         root.addLayout(body, 1)
 
+        self.language_manager = get_language_manager()
+
+        self.language_manager.language_changed.connect(
+        self.language_changed
+        )
+
+    def language_changed(self, lang):
+        print("Language changed:", lang)
+
+        self.rebuild_pages()
+
+    def rebuild_pages(self):
+
+        self.stack.removeWidget(self.dashboard_page)
+        self.stack.removeWidget(self.habits_page)
+        self.stack.removeWidget(self.goals_page)
+        self.stack.removeWidget(self.tasks_page)
+        self.stack.removeWidget(self.timer_page)
+        self.stack.removeWidget(self.analytics_page)
+
+
+        self.dashboard_page = DashboardPage()
+        self.habits_page = HabitsPage()
+        self.goals_page = GoalsPage()
+        self.tasks_page = TasksPage()
+        self.timer_page = TimerPage()
+        self.analytics_page = AnalyticsPage()
+
+
+        pages = [
+            self.dashboard_page,
+            self.habits_page,
+            self.goals_page,
+            self.tasks_page,
+            self.timer_page,
+            self.analytics_page,
+        ]
+
+
+        for page in pages:
+            self.stack.addWidget(page)
+
+
+        self.stack.setCurrentIndex(0)
+
     def _switch_page(self, idx):
         """سوئیچ بین صفحه‌ها + refresh صفحه مقصد"""
         self.stack.setCurrentIndex(idx)
@@ -190,7 +240,11 @@ class MainWindow(QMainWindow):
 
     def refresh_all(self):
         """بعد از onboarding یا تغییرات بزرگ، همه صفحه‌ها رو آپدیت کن."""
+
+        self.sidebar.update_translations()
+
         self.header.refresh_stats()
+
         for i in range(self.stack.count()):
             page = self.stack.widget(i)
             if hasattr(page, "refresh"):

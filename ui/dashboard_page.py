@@ -82,9 +82,13 @@ class LineChart(QWidget):
 
 def _greeting():
     h = datetime.now().hour
-    if h < 12:   return "Good morning"
-    elif h < 17: return "Good afternoon"
-    else:        return "Good evening"
+
+    if h < 12:
+        return tr("good_morning")
+    elif h < 17:
+        return tr("good_afternoon")
+    else:
+        return tr("good_evening")
 
 def _fmt_time(secs):
     h = int(secs // 3600)
@@ -154,16 +158,14 @@ class DashboardPage(QWidget):
 
         if getting_started:
             title = QLabel(f"{_greeting()}, {name} ✨")
-            sub = QLabel(
-                "خوش اومدی! عادت‌هات آماده‌ان — "
-                "اولین‌هاشون رو تیک بزن تا پیشرفتت اینجا دیده بشه."
-            )
+            sub = QLabel(tr("welcome_first_time"))
         elif max_streak > 0:
             title = QLabel(f"{_greeting()}, {name} ✨")
-            sub = QLabel("You're doing amazing! Keep pushing forward on your journey to greatness.")
+            sub = QLabel(tr("amazing_keep_going"))
+
         else:
             title = QLabel(f"{_greeting()}, {name} ✨")
-            sub = QLabel("Every small step counts. Mark a habit done today to start your streak.")
+            sub = QLabel(tr("every_small_step"))
 
         title.setStyleSheet(f"font-size: 26px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
         sub.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED}; background: transparent;")
@@ -171,13 +173,13 @@ class DashboardPage(QWidget):
         badges = QHBoxLayout()
         if getting_started:
             badge_items = [
-                ("🌱", f"{len(habits)} habits ready", GREEN),
-                ("🎯", "Let's begin", ACCENT2),
+                ("🌱", f"{len(habits)} {tr('habits_ready')}", GREEN),
+                ("🎯", tr("lets_begin"), ACCENT2),
             ]
         else:
             badge_items = [
-                ("🔥", f"{max_streak} day streak", ORANGE),
-                ("🏆", f"Level {level} Achiever", ACCENT2),
+                ("🔥", f"{max_streak} {tr('day_streak')}", ORANGE),
+                ("🏆", f"{tr('level')} {level} {tr('achiever')}", ACCENT2),
             ]
 
         for icon, txt, col in badge_items:
@@ -205,15 +207,16 @@ class DashboardPage(QWidget):
         lay.setContentsMargins(24, 20, 24, 20)
         lay.setSpacing(12)
 
-        title = QLabel("🚀  Getting Started")
+        title = QLabel("🚀  " + tr("getting_started"))
         title.setStyleSheet(f"font-size: 17px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(title)
 
         steps = [
-            ("1", "Go to Habits and check off what you did today"),
-            ("2", "Add a task or start a focus timer"),
-            ("3", "Come back here — your stats will fill in automatically"),
+            ("1", tr("go_to_habits_check_off")),
+            ("2", tr("add_task_or_timer")),
+            ("3", tr("stats_fill_automatically")),
         ]
+        
         for num, text in steps:
             row = QHBoxLayout()
             num_lbl = QLabel(num)
@@ -277,7 +280,7 @@ class DashboardPage(QWidget):
             top.addStretch()
             top.addWidget(status)
 
-            n = QLabel(h.name)
+            n = QLabel(tr(h.name))
             n.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
             cl.addLayout(top)
             cl.addWidget(n)
@@ -314,13 +317,24 @@ class DashboardPage(QWidget):
 
         items = [
             ("📈", f"{daily_pct}%",
-             "Daily Progress",   "Habit completion today", GREEN,  ""),
+             tr("daily_progress"),
+             tr("habit_completion_today"),
+             GREEN, ""),
+
             ("✅", f"{done_today}/{total_habits}",
-             "Habits Completed", "Keep it up!",            GREEN,  ""),
+             tr("habits_completed"),
+             tr("keep_it_up"),
+             GREEN, ""),
+
             ("🎯", str(active_goals),
-             "Active Goals",     "In progress",            BLUE,   ""),
-            ("⏱",  _fmt_time(focus_today),
-             "Focus Time Today", "Tracked sessions",       ORANGE, ""),
+             tr("active_goals"),
+             tr("in_progress"),
+             BLUE, ""),
+
+            ("⏱", _fmt_time(focus_today),
+             tr("focus_time_today"),
+             tr("tracked_sessions"),
+             ORANGE, ""),
         ]
 
         for icon, val, title, sub, col, badge in items:
@@ -383,11 +397,11 @@ class DashboardPage(QWidget):
         ll = QVBoxLayout(left)
         ll.setContentsMargins(20, 18, 20, 18)
         ll.setSpacing(12)
-        title_lbl = QLabel("Today's Overview")
+        title_lbl = QLabel(tr("todays_overview"))
         title_lbl.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         ll.addWidget(title_lbl)
         circles = QHBoxLayout()
-        for val, lbl, col in [(daily_score, "Daily Score", ACCENT2), (weekly_avg, "Weekly Avg", BLUE)]:
+        for val, lbl, col in [(daily_score, tr("daily_score"), ACCENT2), (weekly_avg, tr("weekly_avg"), BLUE)]:
             vbox = QVBoxLayout()
             vbox.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             c = CircleChart(val, col)
@@ -406,9 +420,9 @@ class DashboardPage(QWidget):
         rl.setContentsMargins(20, 18, 20, 18)
         rl.setSpacing(12)
         rtop = QHBoxLayout()
-        t2 = QLabel("Weekly Activity")
+        t2 = QLabel(tr("weekly_activity"))
         t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        ps = QLabel("Focus Hours")
+        ps = QLabel(tr("focus_hours"))
         ps.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
         rtop.addWidget(t2)
         rtop.addStretch()
@@ -440,14 +454,14 @@ class DashboardPage(QWidget):
         ll.setContentsMargins(20, 18, 20, 18)
         ll.setSpacing(12)
         header = QHBoxLayout()
-        t = QLabel("Today's Tasks")
+        t = QLabel(tr("todays_tasks"))
         t.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         header.addWidget(t)
         header.addStretch()
         ll.addLayout(header)
 
         if not tasks_today:
-            empty = QLabel("No tasks due today")
+            empty = QLabel(tr("no_tasks_due_today"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             ll.addWidget(empty)
         else:
@@ -477,20 +491,29 @@ class DashboardPage(QWidget):
         rl = QVBoxLayout(right)
         rl.setContentsMargins(20, 18, 20, 18)
         rl.setSpacing(12)
+
         rheader = QHBoxLayout()
-        t2 = QLabel("Active Goals")
-        t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        view_all = QLabel("View All →")
-        view_all.setStyleSheet(f"font-size: 12px; color: {ACCENT2}; background: transparent;")
+
+        t2 = QLabel(tr("active_goals"))
+        t2.setStyleSheet(
+            f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;"
+        )
+
+        view_all = QLabel(tr("view_all"))
+        view_all.setStyleSheet(
+            f"font-size: 12px; color: {ACCENT2}; background: transparent;"
+        )
+
         rheader.addWidget(t2)
         rheader.addStretch()
         rheader.addWidget(view_all)
-        rl.addLayout(rheader)
 
+        rl.addLayout(rheader)
+        
         COLORS = [ACCENT2, BLUE, ACCENT, GREEN, ORANGE]
 
         if not goals:
-            empty = QLabel("No goals yet")
+            empty = QLabel(tr("no_goals_yet"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             rl.addWidget(empty)
         else:
@@ -536,7 +559,7 @@ class DashboardPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(12)
 
-        title = QLabel("Habit Streaks")
+        title = QLabel(tr("habit_streaks"))
         title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(title)
 
@@ -572,9 +595,9 @@ class DashboardPage(QWidget):
             top.addStretch()
             top.addWidget(days_lbl)
 
-            n = QLabel(h.name)
+            n = QLabel(tr(h.name))
             n.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
-            status = QLabel("Completed today" if done else "Not completed yet")
+            status = QLabel(tr("completed_today") if done else tr("not_completed_yet"))
             status.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
 
             cl.addLayout(top)
