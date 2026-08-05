@@ -843,6 +843,9 @@ class HabitsPage(QWidget):
             self.toggle_card(i,f,c)
         )
 
+        frame.name_label = name
+        frame.category_label = category
+        frame.habit = habit
 
         return frame
 
@@ -929,6 +932,17 @@ class HabitsPage(QWidget):
         self.subtitle.setText(
             tr("select_habits_sub")
         )
+
+        for card in self.cards:
+
+            card.name_label.setText(
+                tr(card.habit["name"])
+            )
+
+            card.category_label.setText(
+                tr(card.habit["category"])
+            )
+            
 # ─── صفحه ۳: انتخاب هدف ─────────────────────────────────────────────────────
 class GoalsPage(QWidget):
     def __init__(self, parent=None):
@@ -1050,8 +1064,11 @@ class GoalsPage(QWidget):
 class ReadyPage(QWidget):
     def __init__(self, name="Alex", parent=None):
         super().__init__(parent)
+
         self.name = name
+
         self.setStyleSheet("background: transparent;")
+
         lay = QVBoxLayout(self)
         lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.setSpacing(20)
@@ -1059,25 +1076,45 @@ class ReadyPage(QWidget):
 
         icon = QLabel("🚀")
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setStyleSheet("font-size: 60px; background: transparent;")
+        icon.setStyleSheet("font-size:60px; background:transparent;")
         lay.addWidget(icon)
 
-        self.title = QLabel(f"آماده‌ای، {name}!")
+        self.title = QLabel()
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.title.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+        self.title.setStyleSheet(
+            f"""
+            font-size:28px;
+            font-weight:bold;
+            color:{TEXT_PRIMARY};
+            background:transparent;
+            """
+        )
         lay.addWidget(self.title)
 
-        sub = QLabel(
-            "عادت‌ها و اهدافت ذخیره شدن.\n"
-            "هر روز یه قدم کوچیک — نتایج بزرگ می‌سازه!"
+        self.sub = QLabel()
+        self.sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.sub.setStyleSheet(
+            f"""
+            font-size:14px;
+            color:{TEXT_MUTED};
+            background:transparent;
+            """
         )
-        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
-        lay.addWidget(sub)
+        lay.addWidget(self.sub)
+
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        self.title.setText(
+            tr("ready_title").format(name=self.name)
+        )
+        self.sub.setText(
+            tr("ready_desc")
+        )
 
     def update_name(self, name):
-        self.title.setText(f"آماده‌ای، {name}!")
-
+        self.name = name
+        self.retranslate_ui()
 
 # ─── Onboarding Dialog اصلی ──────────────────────────────────────────────────
 class OnboardingDialog(QDialog):
@@ -1250,18 +1287,11 @@ class OnboardingDialog(QDialog):
         # انتخاب زبان
         if self._current == 0:
 
-            from core.language_manager import (
-                get_language_manager
-            )
+            from core.language_manager import get_language_manager
 
-            language = (
-                self.page_language
-                .get_language()
-            )
+            language = self.page_language.get_language()
 
-            get_language_manager().set_language(
-                language
-            )
+            get_language_manager().set_language(language)
 
             self.retranslate_ui()
 
@@ -1329,9 +1359,12 @@ class OnboardingDialog(QDialog):
     def retranslate_ui(self):
         self.page_language.retranslate_ui()
         self.page_welcome.retranslate_ui()
+        self.page_habits.retranslate_ui()
+        self.page_goals.retranslate_ui()
+        self.page_ready.retranslate_ui()
 
         self.back_btn.setText(
-            tr("back")
+        tr("back")
         )
 
         self._update_ui()
@@ -1419,11 +1452,11 @@ class OnboardingDialog(QDialog):
 
 
             goal_id = goal_repo.add_goal(
-                goal["name"],
-                f"Work towards: {goal['name']}",
-                goal["icon"],
-                goal["category"],
-                deadline
+                name=goal["name"],
+                description="",
+                icon=goal["icon"],
+                category=goal["category"],
+                deadline=deadline,
             )
 
 

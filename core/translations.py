@@ -226,6 +226,8 @@ TRANSLATIONS = {
         "add_new_goal": "+ Add New Goal",
         "default_name": "Sara",
         "goal_learn_something": "Learn something",
+        "ready_title": "Ready, {name}!",
+        "ready_desc": "Your habits and goals have been saved.\nSmall steps every day create big results!",
     },
     
     "fa": {
@@ -466,6 +468,9 @@ TRANSLATIONS = {
         "add_new_goal":
         "+ افزودن هدف جدید",
         "default_name": "سارا",
+
+        "ready_title": "آماده‌ای، {name}!",
+        "ready_desc": "عادت‌ها و اهدافت ذخیره شدن.\nهر روز یه قدم کوچیک، نتایج بزرگ می‌سازه!",
         
     }
 }

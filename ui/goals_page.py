@@ -75,7 +75,7 @@ class GoalCard(QWidget):
 
         tags = QHBoxLayout()
         tags.setSpacing(8)
-        cat_lbl = QLabel(goal.category)
+        cat_lbl = QLabel(tr(goal.category))
         cat_lbl.setStyleSheet(f"""
             font-size: 11px; color: {TEXT_PRIMARY};
             background: rgba(255,255,255,0.12);
@@ -106,7 +106,7 @@ class GoalCard(QWidget):
         pct_lbl = QLabel(f"{progress}%")
         pct_lbl.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {color}; background: transparent;")
         pct_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        complete_lbl = QLabel(tr("progress").capitalize())
+        complete_lbl = QLabel(tr("progress"))
         complete_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         complete_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
         pct_col.addWidget(pct_lbl)
@@ -148,7 +148,7 @@ class GoalCard(QWidget):
         # ─ Milestones ─
         done_count = sum(1 for m in milestones if m.done)
         ms_header = QHBoxLayout()
-        ms_lbl = QLabel(tr("milestones").capitalize())
+        ms_lbl = QLabel(tr("milestones"))
         ms_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         ms_count = QLabel(tr("milestones_completed").format(done=done_count,total=len(milestones),))
         ms_count.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
@@ -237,7 +237,7 @@ class GoalCard(QWidget):
         """)
         chk.clicked.connect(lambda: self._handle_toggle_milestone(milestone.id))
 
-        nm = QLabel(milestone.name)
+        nm = QLabel(tr(milestone.name))
         nm.setWordWrap(True)
         nm.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         nm.setStyleSheet(f"""
@@ -349,9 +349,9 @@ class GoalsPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("🎯", str(total), tr("goals").capitalize(), tr("goals_in_progress"), ACCENT2, True),
+            ("🎯", str(total), tr("goals"), tr("goals_in_progress"), ACCENT2, True),
             ("✅", f"{avg_progress}%", tr("average_progress"), tr("across_all_goals"), GREEN, False),
-            ("🏆", str(completed), tr("progress").capitalize(), tr("completed_this_year"), ORANGE, False),
+            ("🏆", str(completed), tr("progress"), tr("completed_this_year"), ORANGE, False),
             ("📈", "+0%", tr("progress_rate"), tr("vs_last_month"), BLUE, False),
         ]
 
