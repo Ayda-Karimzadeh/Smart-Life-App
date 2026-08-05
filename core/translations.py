@@ -271,9 +271,16 @@ TRANSLATIONS = {
         "view_all": "View All →",
         "active_goals": "Active Goals",
         "view_all": "View All →",
+        "streak": "Streak",
+        "score": "Score",
+        "days": "days",
     },
     
     "fa": {
+        # Header
+        "streak": "استریک",
+        "score": "امتیاز",
+        "days": "روز",
         # Dashboard
         "todays_overview": "نمای کلی امروز",
         "daily_score": "امتیاز روزانه",

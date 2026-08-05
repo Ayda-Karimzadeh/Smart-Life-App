@@ -1,5 +1,5 @@
 from datetime import date
-
+from ui.dialogs import SettingsDialog
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QStackedWidget
@@ -72,7 +72,11 @@ class Header(QWidget):
             (habit_repo.get_current_streak(h.id) for h in habits), default=0
         ) if habits else 0
 
-        self.streak_lbl = QLabel(f"🔥  Streak  {max_streak} days")
+        self.streak_value = max_streak
+
+        self.streak_lbl = QLabel(
+            f"🔥  {tr('streak')}  {self.streak_value} {tr('days')}"
+        )
         self.streak_lbl.setStyleSheet(f"""
             background: {BG_CARD};
             color: {ORANGE};
@@ -85,7 +89,11 @@ class Header(QWidget):
         # Productivity score
         from core.analytics import productivity_score
         score = productivity_score()
-        self.score_lbl = QLabel(f"🏆  Score  {score}%")
+        self.score_value = score
+
+        self.score_lbl = QLabel(
+            f"🏆  {tr('score')}  {self.score_value}%"
+        )
         self.score_lbl.setStyleSheet(f"""
             background: {BG_CARD};
             color: {ACCENT2};
@@ -100,6 +108,17 @@ class Header(QWidget):
         lay.addWidget(self.streak_lbl)
         lay.addSpacing(10)
         lay.addWidget(self.score_lbl)
+
+    def update_translations(self):
+        self.title.setText(tr(self.PAGE_KEYS[0]))
+
+        self.streak_lbl.setText(
+            f"🔥  {tr('streak')}  {self.streak_value} {tr('days')}"
+        )
+
+        self.score_lbl.setText(
+            f"🏆  {tr('score')}  {self.score_value}%"
+        )
 
     def set_page(self, idx):
         self.title.setText(tr(self.PAGE_KEYS[idx]))
@@ -165,7 +184,10 @@ class MainWindow(QMainWindow):
             self.stack.addWidget(p)
 
         # Sidebar
-        self.sidebar = Sidebar(self._switch_page)
+        self.sidebar = Sidebar(
+            self._switch_page,
+            self.open_settings
+        )
 
         body.addWidget(self.sidebar)
         body.addWidget(self.stack, 1)
@@ -180,9 +202,19 @@ class MainWindow(QMainWindow):
     def language_changed(self, lang):
         print("Language changed:", lang)
 
+        self.sidebar.update_translations()
+        self.header.update_translations()
+
         self.rebuild_pages()
 
+    def open_settings(self):
+        dlg = SettingsDialog(self)
+        dlg.exec()
+
+
     def rebuild_pages(self):
+
+        current_index = self.stack.currentIndex()
 
         self.stack.removeWidget(self.dashboard_page)
         self.stack.removeWidget(self.habits_page)
@@ -191,14 +223,12 @@ class MainWindow(QMainWindow):
         self.stack.removeWidget(self.timer_page)
         self.stack.removeWidget(self.analytics_page)
 
-
         self.dashboard_page = DashboardPage()
         self.habits_page = HabitsPage()
         self.goals_page = GoalsPage()
         self.tasks_page = TasksPage()
         self.timer_page = TimerPage()
         self.analytics_page = AnalyticsPage()
-
 
         pages = [
             self.dashboard_page,
@@ -209,12 +239,10 @@ class MainWindow(QMainWindow):
             self.analytics_page,
         ]
 
-
         for page in pages:
             self.stack.addWidget(page)
 
-
-        self.stack.setCurrentIndex(0)
+        self.stack.setCurrentIndex(current_index)
 
     def _switch_page(self, idx):
         """سوئیچ بین صفحه‌ها + refresh صفحه مقصد"""

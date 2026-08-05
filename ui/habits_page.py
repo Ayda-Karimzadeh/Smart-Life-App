@@ -92,12 +92,12 @@ class HabitCard(QWidget):
 
         info = QVBoxLayout()
         info.setSpacing(4)
-        name_lbl = QLabel(habit.name)
+        name_lbl = QLabel(tr(habit.name))
         name_lbl.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
 
         tags = QHBoxLayout()
         tags.setSpacing(6)
-        for tag in [habit.category, freq_text]:
+        for tag in [tr(habit.category), freq_text]:
             t = QLabel(tag)
             t.setStyleSheet(f"font-size: 11px; color: {GREEN}; background: rgba(62,207,142,0.12); border-radius: 6px; padding: 2px 8px;")
             tags.addWidget(t)
@@ -227,7 +227,9 @@ class HabitCard(QWidget):
     def _handle_delete(self):
         reply = QMessageBox.question(
             self, "Delete Habit",
-            f"Are you sure you want to delete '{self.habit.name}'?\nThis will also delete all its history.",
+            tr("delete_habit_confirm").format(
+                name=tr(self.habit.name)
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -276,7 +278,11 @@ class HabitsPage(QWidget):
         # طولانی‌ترین streak
         best_per   = [(h, best_daily_streak(h.id)) for h in habits]
         top_habit, longest = max(best_per, key=lambda x: x[1]) if best_per else (None, 0)
-        longest_name = top_habit.name if top_habit and longest > 0 else "—"
+        longest_name = (
+            tr(top_habit.name)
+            if top_habit and longest > 0
+            else "—"
+        )
 
         # میانگین هفتگی
         if habits:
@@ -342,7 +348,9 @@ class HabitsPage(QWidget):
 
         for cat in categories:
             active = cat == self.selected_category
-            btn = QPushButton(cat)
+            btn = QPushButton(
+                tr(cat) if cat != "All" else tr("all")
+            )
             btn.setCheckable(True)
             btn.setChecked(active)
             btn.setStyleSheet(f"""
@@ -420,7 +428,7 @@ class HabitsPage(QWidget):
         add_card.setCursor(Qt.CursorShape.PointingHandCursor)
         add_card.setStyleSheet("QFrame { background: transparent; border: 2px dashed rgba(255,255,255,0.12); border-radius: 14px; }")
         add_lay = QVBoxLayout(add_card)
-        add_lbl = QLabel("+ Add New Habit")
+        add_lbl = QLabel("+ " + tr("add_new_habit"))
         add_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         add_lbl.setStyleSheet(f"font-size: 14px; color: {TEXT_MUTED}; background: transparent;")
         add_lay.addWidget(add_lbl)

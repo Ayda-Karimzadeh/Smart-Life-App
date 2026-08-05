@@ -65,7 +65,7 @@ class GoalCard(QWidget):
 
         info = QVBoxLayout()
         info.setSpacing(4)
-        name_lbl = QLabel(goal.name)
+        name_lbl = QLabel(tr(goal.name))
         name_lbl.setStyleSheet(f"font-size: 17px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
         desc_lbl = QLabel(goal.description)
         desc_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
@@ -274,7 +274,9 @@ class GoalCard(QWidget):
     def _handle_delete(self):
         reply = QMessageBox.question(
             self, tr("delete_goal"),
-            tr("delete_goal_confirm").format(name=self.goal.name),
+            tr("delete_goal_confirm").format(
+                name=tr(self.goal.name)
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )

@@ -949,6 +949,7 @@ class GoalsPage(QWidget):
         super().__init__(parent)
         self.setStyleSheet("background: transparent;")
         self.selected = set()
+        self.cards = []
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(40, 30, 40, 30)
@@ -984,6 +985,7 @@ class GoalsPage(QWidget):
                     break
                 goal = SUGGESTED_GOALS[idx]
                 card = self._make_goal_card(idx, goal)
+                self.cards.append(card)
                 row_lay.addWidget(card)
 
             grid_lay.addWidget(row_w)
@@ -998,6 +1000,17 @@ class GoalsPage(QWidget):
         self.title.setText(tr("select_goals"))
         self.sub.setText(tr("select_goals_sub"))
 
+        for card in self.cards:
+            card.name_label.setText(
+                tr(card.goal["name"])
+            )
+
+            card.detail_label.setText(
+                f"{tr(card.goal['category'])} • "
+                f"{card.goal['days']} {tr('days')}"
+            )
+
+    
     def _make_goal_card(self, idx, goal):
         frame = QFrame()
         frame.setStyleSheet(CARD_CHECK_STYLE(False))
