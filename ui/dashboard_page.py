@@ -165,7 +165,11 @@ class DashboardPage(QWidget):
             layout.addWidget(self._stats_row())
             layout.addWidget(self._charts_row())
             layout.addWidget(self._habit_streaks())
-        layout.addWidget(self._tasks_goals_row())
+
+        tasks_goals = self._tasks_goals_row()
+        if tasks_goals is not None:
+            layout.addWidget(tasks_goals)
+
         layout.addStretch()
         self.scroll.setWidget(content)
 
@@ -178,6 +182,10 @@ class DashboardPage(QWidget):
     def _toggle_show_all_goals(self):
         self._show_all_goals = not self._show_all_goals
         self.refresh()
+
+    def _toggle_task(self, task_id):
+        task_repo.toggle_task(task_id)
+        QTimer.singleShot(100, self.refresh)
 
     # ─ بنر ───────────────────────────────────────────────────────────────────
     def _banner(self):
@@ -421,12 +429,15 @@ class DashboardPage(QWidget):
              tr("active_goals"),
              tr("in_progress"),
              BLUE, ""),
-
-            ("⏱", _fmt_time(focus_today),
-             tr("focus_time_today"),
-             tr("tracked_sessions"),
-             ORANGE, ""),
         ]
+
+        if focus_today > 0:
+            items.append((
+                "⏱", _fmt_time(focus_today),
+                tr("focus_time_today"),
+                tr("tracked_sessions"),
+                ORANGE, ""
+            ))
 
         for icon, val, title, sub, col, badge in items:
             card = make_card()
@@ -473,9 +484,9 @@ class DashboardPage(QWidget):
         else:
             weekly_avg = 0
 
-        # نمودار خطی هفتگی از time_sessions
         weekly_data = analytics_repo.get_weekly_activity()
         chart_data  = [v for _, v in weekly_data]
+        has_focus_data = any(v > 0 for v in chart_data)
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -483,7 +494,7 @@ class DashboardPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(14)
 
-        # Today's Overview
+        # Today's Overview (همیشه نشون داده می‌شه)
         left = make_card()
         ll = QVBoxLayout(left)
         ll.setContentsMargins(20, 18, 20, 18)
@@ -505,32 +516,40 @@ class DashboardPage(QWidget):
         ll.addLayout(circles)
         left.setMinimumWidth(280)
 
-        # Weekly Activity
-        right = make_card()
-        rl = QVBoxLayout(right)
-        rl.setContentsMargins(20, 18, 20, 18)
-        rl.setSpacing(12)
-        rtop = QHBoxLayout()
-        t2 = QLabel(tr("weekly_activity"))
-        t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        ps = QLabel(tr("focus_hours"))
-        ps.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
-        rtop.addWidget(t2)
-        rtop.addStretch()
-        rtop.addWidget(ps)
-        chart = LineChart(data=chart_data, color=ACCENT2)
-        chart.setMinimumHeight(160)
-        rl.addLayout(rtop)
-        rl.addWidget(chart)
+        if has_focus_data:
+            # Weekly Activity — فقط اگه داده‌ای برای نشون دادن هست
+            right = make_card()
+            rl = QVBoxLayout(right)
+            rl.setContentsMargins(20, 18, 20, 18)
+            rl.setSpacing(12)
+            rtop = QHBoxLayout()
+            t2 = QLabel(tr("weekly_activity"))
+            t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+            ps = QLabel(tr("focus_hours"))
+            ps.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
+            rtop.addWidget(t2)
+            rtop.addStretch()
+            rtop.addWidget(ps)
+            chart = LineChart(data=chart_data, color=ACCENT2)
+            chart.setMinimumHeight(160)
+            rl.addLayout(rtop)
+            rl.addWidget(chart)
 
-        lay.addWidget(left, 1)
-        lay.addWidget(right, 2)
+            lay.addWidget(left, 1)
+            lay.addWidget(right, 2)
+        else:
+            lay.addWidget(left)
+
         return row
 
     # ─ Tasks + Goals ──────────────────────────────────────────────────────────
     def _tasks_goals_row(self):
         today = date.today().isoformat()
         tasks_today = [t for t in task_repo.get_all_tasks() if t.due_date == today]
+        all_goals   = goal_repo.get_all_goals()
+
+        if not tasks_today and not all_goals:
+            return None   # هیچی برای نشون دادن نیست
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -538,33 +557,40 @@ class DashboardPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(14)
 
-        # Today's Tasks
-        left = make_card()
-        ll = QVBoxLayout(left)
-        ll.setContentsMargins(20, 18, 20, 18)
-        ll.setSpacing(12)
-        header = QHBoxLayout()
-        t = QLabel(tr("todays_tasks"))
-        t.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        header.addWidget(t)
-        header.addStretch()
-        ll.addLayout(header)
+        left = None
+        if tasks_today:
+            left = make_card()
+            ll = QVBoxLayout(left)
+            ll.setContentsMargins(20, 18, 20, 18)
+            ll.setSpacing(8)
+            header = QHBoxLayout()
+            t = QLabel(tr("todays_tasks"))
+            t.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+            header.addWidget(t)
+            header.addStretch()
+            ll.addLayout(header)
 
-        if not tasks_today:
-            empty = QLabel(tr("no_tasks_due_today"))
-            empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
-            ll.addWidget(empty)
-        else:
             for task in tasks_today[:4]:
-                card = make_card(color="#1a2a1a" if task.done else BG_CARD2)
+                card = ClickableCard(
+                    clicked_callback=lambda task_id=task.id: self._toggle_task(task_id)
+                )
+                card.setStyleSheet(f"""
+                    QFrame {{
+                        background: {"#1a2a1a" if task.done else BG_CARD2};
+                        border-radius: 14px;
+                    }}
+                    QFrame:hover {{
+                        background: {"#223822" if task.done else "#252538"};
+                    }}
+                """)
                 cl = QHBoxLayout(card)
-                cl.setContentsMargins(14, 10, 14, 10)
-                cl.setSpacing(12)
+                cl.setContentsMargins(12, 6, 12, 6)
+                cl.setSpacing(10)
                 check = QLabel("●")
-                check.setStyleSheet(f"font-size: 18px; color: {GREEN if task.done else TEXT_MUTED}; background: transparent;")
-                check.setFixedWidth(22)
+                check.setStyleSheet(f"font-size: 14px; color: {GREEN if task.done else TEXT_MUTED}; background: transparent;")
+                check.setFixedWidth(18)
                 info = QVBoxLayout()
-                info.setSpacing(2)
+                info.setSpacing(0)
                 name_lbl = QLabel(task.name)
                 name_lbl.setStyleSheet(f"font-size: 13px; color: {TEXT_MUTED if task.done else TEXT_PRIMARY}; background: transparent; {'text-decoration: line-through;' if task.done else ''}")
                 time_lbl = QLabel(task.due_time or "")
@@ -576,44 +602,35 @@ class DashboardPage(QWidget):
                 cl.addLayout(info, 1)
                 ll.addWidget(card)
 
-        # Active Goals
-        right = make_card()
-        rl = QVBoxLayout(right)
-        rl.setContentsMargins(20, 18, 20, 18)
-        rl.setSpacing(12)
+            ll.addStretch()   # ← جلوی کش‌اومدن کارت‌ها رو می‌گیره، مهم نیست چند تا تسک داریم
 
-        rheader = QHBoxLayout()
+        right = None
+        if all_goals:
+            right = make_card()
+            rl = QVBoxLayout(right)
+            rl.setContentsMargins(20, 18, 20, 18)
+            rl.setSpacing(12)
 
-        t2 = QLabel(tr("active_goals"))
-        t2.setStyleSheet(
-            f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;"
-        )
-        rheader.addWidget(t2)
-        rheader.addStretch()
+            rheader = QHBoxLayout()
+            t2 = QLabel(tr("active_goals"))
+            t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+            rheader.addWidget(t2)
+            rheader.addStretch()
 
-        all_goals = goal_repo.get_all_goals()
-        if len(all_goals) > 3:
-            toggle_text = tr("show_less") if self._show_all_goals else tr("view_all")
-            view_all = ClickableLabel(
-                toggle_text,
-                clicked_callback=self._toggle_show_all_goals
-            )
-            view_all.setStyleSheet(
-                f"font-size: 12px; color: {ACCENT2}; background: transparent;"
-            )
-            rheader.addWidget(view_all)
+            if len(all_goals) > 3:
+                toggle_text = tr("show_less") if self._show_all_goals else tr("view_all")
+                view_all = ClickableLabel(
+                    toggle_text,
+                    clicked_callback=self._toggle_show_all_goals
+                )
+                view_all.setStyleSheet(f"font-size: 12px; color: {ACCENT2}; background: transparent;")
+                rheader.addWidget(view_all)
 
-        rl.addLayout(rheader)
+            rl.addLayout(rheader)
 
-        goals = all_goals if self._show_all_goals else all_goals[:3]
+            goals = all_goals if self._show_all_goals else all_goals[:3]
+            COLORS = [ACCENT2, BLUE, ACCENT, GREEN, ORANGE]
 
-        COLORS = [ACCENT2, BLUE, ACCENT, GREEN, ORANGE]
-
-        if not goals:
-            empty = QLabel(tr("no_goals_yet"))
-            empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
-            rl.addWidget(empty)
-        else:
             for i, goal in enumerate(goals):
                 pct = goal_repo.get_goal_progress_percent(goal.id)
                 col = COLORS[i % len(COLORS)]
@@ -641,9 +658,13 @@ class DashboardPage(QWidget):
                 gl.addWidget(bar)
                 rl.addWidget(gc)
 
-        rl.addStretch()
-        lay.addWidget(left, 1)
-        lay.addWidget(right, 1)
+            rl.addStretch()
+
+        if left:
+            lay.addWidget(left, 1)
+        if right:
+            lay.addWidget(right, 1)
+
         return row
 
     # ─ Habit Streaks (اصلاح‌شده: حالا کارت‌ها قابل کلیک هستند) ────────────────
