@@ -94,6 +94,18 @@ class ClickableCard(QFrame):
 
         super().mousePressEvent(event)
 
+class ClickableLabel(QLabel):
+    def __init__(self, text="", clicked_callback=None, parent=None):
+        super().__init__(text, parent)
+        self.clicked_callback = clicked_callback
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.clicked_callback:
+            self.clicked_callback()
+            return
+        super().mousePressEvent(event)
+
 def _greeting():
     h = datetime.now().hour
 
@@ -127,6 +139,7 @@ class DashboardPage(QWidget):
     def __init__(self):
         super().__init__()
         self.setStyleSheet("background: transparent;")
+        self._show_all_goals = False
 
         self.scroll = QScrollArea(self)
         self.scroll.setWidgetResizable(True)
@@ -161,6 +174,10 @@ class DashboardPage(QWidget):
 
         # فقط بعد از تمام شدن event کلیک، Dashboard را refresh کن
         QTimer.singleShot(100, self.refresh)
+
+    def _toggle_show_all_goals(self):
+        self._show_all_goals = not self._show_all_goals
+        self.refresh()
 
     # ─ بنر ───────────────────────────────────────────────────────────────────
     def _banner(self):
@@ -514,7 +531,6 @@ class DashboardPage(QWidget):
     def _tasks_goals_row(self):
         today = date.today().isoformat()
         tasks_today = [t for t in task_repo.get_all_tasks() if t.due_date == today]
-        goals       = goal_repo.get_all_goals()[:3]  # فقط ۳ تا
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -572,18 +588,25 @@ class DashboardPage(QWidget):
         t2.setStyleSheet(
             f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;"
         )
-
-        view_all = QLabel(tr("view_all"))
-        view_all.setStyleSheet(
-            f"font-size: 12px; color: {ACCENT2}; background: transparent;"
-        )
-
         rheader.addWidget(t2)
         rheader.addStretch()
-        rheader.addWidget(view_all)
+
+        all_goals = goal_repo.get_all_goals()
+        if len(all_goals) > 3:
+            toggle_text = tr("show_less") if self._show_all_goals else tr("view_all")
+            view_all = ClickableLabel(
+                toggle_text,
+                clicked_callback=self._toggle_show_all_goals
+            )
+            view_all.setStyleSheet(
+                f"font-size: 12px; color: {ACCENT2}; background: transparent;"
+            )
+            rheader.addWidget(view_all)
 
         rl.addLayout(rheader)
-        
+
+        goals = all_goals if self._show_all_goals else all_goals[:3]
+
         COLORS = [ACCENT2, BLUE, ACCENT, GREEN, ORANGE]
 
         if not goals:

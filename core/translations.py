@@ -274,9 +274,11 @@ TRANSLATIONS = {
         "streak": "Streak",
         "score": "Score",
         "days": "days",
+        "show_less": "Show Less",
     },
     
     "fa": {
+        "show_less": "نمایش کمتر",
         # Header
         "streak": "استریک",
         "score": "امتیاز",
