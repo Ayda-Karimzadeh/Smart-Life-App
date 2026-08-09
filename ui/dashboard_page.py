@@ -86,6 +86,7 @@ class ClickableCard(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def mousePressEvent(self, event):
+        print("CARD CLICKED")
         if event.button() == Qt.MouseButton.LeftButton:
             if self.clicked_callback:
                 self.clicked_callback()
@@ -301,6 +302,7 @@ class DashboardPage(QWidget):
             card = ClickableCard(
                 clicked_callback=lambda habit_id=h.id: self._toggle_habit(habit_id)
             )
+            print("CREATED CARD:", h.id, "CALLBACK:", card.clicked_callback)
 
             card.setStyleSheet(
                f"""
@@ -621,7 +623,7 @@ class DashboardPage(QWidget):
         lay.addWidget(right, 1)
         return row
 
-    # ─ Habit Streaks ─────────────────────────────────────────────────────────
+    # ─ Habit Streaks (اصلاح‌شده: حالا کارت‌ها قابل کلیک هستند) ────────────────
     def _habit_streaks(self):
         habits = habit_repo.get_all_habits()
 
@@ -653,7 +655,24 @@ class DashboardPage(QWidget):
             done   = habit_repo.is_habit_done_today(h.id)
             col    = ORANGE if streak > 0 else TEXT_MUTED
 
-            card = make_card(color="#2a1a0a" if done else BG_CARD2)
+            # قبلاً اینجا make_card بود که غیرقابل‌کلیک بود.
+            # حالا از ClickableCard استفاده می‌کنیم تا با کلیک، toggle بشه.
+            card = ClickableCard(
+                clicked_callback=lambda habit_id=h.id: self._toggle_habit(habit_id)
+            )
+            card.setStyleSheet(
+                f"""
+                QFrame {{
+                    background: {"#2a1a0a" if done else BG_CARD2};
+                    border-radius: 14px;
+                }}
+
+                QFrame:hover {{
+                    background: {"#3a2410" if done else "#252538"};
+                }}
+                """
+            )
+
             cl = QVBoxLayout(card)
             cl.setContentsMargins(16, 14, 16, 14)
             cl.setSpacing(6)
