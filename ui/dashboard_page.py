@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
     QPushButton, QLabel, QScrollArea, QProgressBar, QFrame
 )
-from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtCore import Qt, QPointF,QTimer
 from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QBrush, QPolygonF, QPainterPath
 
 from assets.style import (
@@ -79,6 +79,19 @@ class LineChart(QWidget):
             path.lineTo(x, y)
         p.drawPath(path)
 
+class ClickableCard(QFrame):
+    def __init__(self, clicked_callback=None, parent=None):
+        super().__init__(parent)
+        self.clicked_callback = clicked_callback
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            if self.clicked_callback:
+                self.clicked_callback()
+            return
+
+        super().mousePressEvent(event)
 
 def _greeting():
     h = datetime.now().hour
@@ -141,6 +154,12 @@ class DashboardPage(QWidget):
         layout.addWidget(self._tasks_goals_row())
         layout.addStretch()
         self.scroll.setWidget(content)
+
+    def _toggle_habit(self, habit_id):
+        habit_repo.toggle_habit_today(habit_id)
+
+        # فقط بعد از تمام شدن event کلیک، Dashboard را refresh کن
+        QTimer.singleShot(100, self.refresh)
 
     # ─ بنر ───────────────────────────────────────────────────────────────────
     def _banner(self):
@@ -239,59 +258,112 @@ class DashboardPage(QWidget):
 
         section = QWidget()
         section.setStyleSheet("background: transparent;")
+
         lay = QVBoxLayout(section)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(12)
 
         title = QLabel(tr("todays_habits"))
-        title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        title.setStyleSheet(
+            f"font-size: 15px; font-weight: 600; "
+            f"color: {TEXT_PRIMARY}; background: transparent;"
+        )
+
         hint = QLabel(tr("tap_habit_to_mark_done"))
-        hint.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
+        hint.setStyleSheet(
+            f"font-size: 12px; color: {TEXT_MUTED}; "
+            f"background: transparent;"
+        )
+
         lay.addWidget(title)
         lay.addWidget(hint)
 
         if not habits:
             empty = QLabel(tr("no_habits_yet"))
-            empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent; padding: 8px 0;")
+            empty.setStyleSheet(
+                f"font-size: 12px; color: {TEXT_MUTED}; "
+                f"background: transparent; padding: 8px 0;"
+            )
             lay.addWidget(empty)
             return section
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
+
         rl = QHBoxLayout(row)
         rl.setContentsMargins(0, 0, 0, 0)
         rl.setSpacing(14)
 
         for h in habits[:4]:
             done = habit_repo.is_habit_done_today(h.id)
-            card = make_card(color="#1a2a1a" if done else BG_CARD2)
+
+            # کارت قابل کلیک
+            card = ClickableCard(
+                clicked_callback=lambda habit_id=h.id: self._toggle_habit(habit_id)
+            )
+
+            card.setStyleSheet(
+               f"""
+                QFrame {{
+                    background: {"#1a2a1a" if done else BG_CARD2};
+                    border-radius: 14px;
+                }}
+
+                QFrame:hover {{
+                    background: {"#223822" if done else "#252538"};
+                }}
+                """
+            )
+
             cl = QVBoxLayout(card)
             cl.setContentsMargins(16, 14, 16, 14)
             cl.setSpacing(6)
 
+            # بالای کارت
             top = QHBoxLayout()
+
             icon_lbl = QLabel(h.icon)
-            icon_lbl.setStyleSheet("font-size: 22px; background: transparent;")
+            icon_lbl.setStyleSheet(
+                "font-size: 22px; background: transparent;"
+            )
+
             status = QLabel("Done" if done else "Pending")
             status.setStyleSheet(
-                f"font-size: 11px; font-weight: 600; color: {GREEN if done else TEXT_MUTED}; background: transparent;"
+                f"""
+                font-size: 11px;
+                font-weight: 600;
+                color: {GREEN if done else TEXT_MUTED};
+                background: transparent;
+                """
             )
+
             top.addWidget(icon_lbl)
             top.addStretch()
             top.addWidget(status)
 
+            # نام عادت
             n = QLabel(tr(h.name))
-            n.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
+            n.setStyleSheet(
+                f"""
+                font-size: 13px;
+                font-weight: 500;
+                color: {TEXT_PRIMARY};
+                background: transparent;
+                """
+            )
+
             cl.addLayout(top)
             cl.addWidget(n)
+
             rl.addWidget(card)
 
+        # فضای خالی اگر کمتر از ۴ عادت داشتیم
         for _ in range(max(0, 4 - len(habits[:4]))):
             rl.addStretch(1)
 
         lay.addWidget(row)
-        return section
 
+        return section
     # ─ ۴ کارت آمار ───────────────────────────────────────────────────────────
     def _stats_row(self):
         # داده‌های واقعی
