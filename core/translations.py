@@ -275,9 +275,108 @@ TRANSLATIONS = {
         "score": "Score",
         "days": "days",
         "show_less": "Show Less",
+        #suggestion onboarding goals milestones
+        "goal_learn_something": "Learn Something New",
+        "goal_get_fit": "Get Fit",
+        "goal_save_money": "Save Money",
+        "goal_read_books": "Read 12 Books",
+        "goal_side_project": "Build a Side Project",
+        "goal_new_language": "Learn a New Language",
+
+        "cat_learning": "Learning",
+        "cat_fitness": "Fitness",
+        "cat_finance": "Finance",
+        "cat_personal_growth": "Personal Growth",
+        "cat_career": "Career",
+
+        "ms_choose_topic": "Choose a Topic",
+        "ms_beginner_lessons": "Complete Beginner Lessons",
+        "ms_practice_consistently": "Practice Consistently",
+        "ms_build_small_project": "Build a Small Project",
+        "ms_master_basics": "Master the Basics",
+
+        "ms_create_workout_plan": "Create a Workout Plan",
+        "ms_complete_first_month": "Complete the First Month",
+        "ms_improve_endurance": "Improve Endurance",
+        "ms_reach_first_fitness_goal": "Reach Your First Fitness Goal",
+        "ms_keep_consistency": "Maintain Consistency",
+
+        "ms_set_saving_target": "Set a Savings Target",
+        "ms_save_first_amount": "Save Your First Amount",
+        "ms_save_25_percent": "Save 25% of Your Target",
+        "ms_save_50_percent": "Save 50% of Your Target",
+        "ms_reach_saving_goal": "Reach Your Savings Goal",
+
+        "ms_finish_first_book": "Finish Your First Book",
+        "ms_finish_three_books": "Finish 3 Books",
+        "ms_finish_six_books": "Finish 6 Books",
+        "ms_finish_nine_books": "Finish 9 Books",
+        "ms_finish_twelve_books": "Finish 12 Books",
+
+        "ms_choose_project_idea": "Choose a Project Idea",
+        "ms_plan_project": "Plan the Project",
+        "ms_build_mvp": "Build the MVP",
+        "ms_launch_first_version": "Launch the First Version",
+        "ms_improve_from_feedback": "Improve Based on Feedback",
+
+        "ms_learn_alphabet": "Learn the Alphabet",
+        "ms_learn_500_words": "Learn 500 Words",
+        "ms_first_conversation": "Have Your First Conversation",
+        "ms_reach_a2": "Reach A2 Level",
+        "ms_reach_b1": "Reach B1 Level",
     },
     
     "fa": {
+        #suggestion onboarding goals milestones
+        "goal_learn_something": "یادگیری یک مهارت جدید",
+        "goal_get_fit": "تناسب اندام",
+        "goal_save_money": "پس‌انداز پول",
+        "goal_read_books": "خواندن ۱۲ کتاب",
+        "goal_side_project": "ساخت یک پروژه جانبی",
+        "goal_new_language": "یادگیری یک زبان جدید",
+
+        "cat_learning": "یادگیری",
+        "cat_fitness": "تناسب اندام",
+        "cat_finance": "مالی",
+        "cat_personal_growth": "رشد فردی",
+        "cat_career": "شغلی",
+
+        "ms_choose_topic": "انتخاب موضوع",
+        "ms_beginner_lessons": "تکمیل درس‌های مقدماتی",
+        "ms_practice_consistently": "تمرین منظم",
+        "ms_build_small_project": "ساخت یک پروژه کوچک",
+        "ms_master_basics": "تسلط بر مبانی",
+
+        "ms_create_workout_plan": "ساخت برنامه تمرینی",
+        "ms_complete_first_month": "تکمیل ماه اول",
+        "ms_improve_endurance": "بهبود استقامت",
+        "ms_reach_first_fitness_goal": "رسیدن به اولین هدف تناسب اندام",
+        "ms_keep_consistency": "حفظ استمرار",
+
+        "ms_set_saving_target": "تعیین هدف پس‌انداز",
+        "ms_save_first_amount": "اولین مبلغ را پس‌انداز کن",
+        "ms_save_25_percent": "پس‌انداز ۲۵٪ از هدف",
+        "ms_save_50_percent": "پس‌انداز ۵۰٪ از هدف",
+        "ms_reach_saving_goal": "رسیدن به هدف پس‌انداز",
+
+        "ms_finish_first_book": "خواندن اولین کتاب",
+        "ms_finish_three_books": "خواندن ۳ کتاب",
+        "ms_finish_six_books": "خواندن ۶ کتاب",
+        "ms_finish_nine_books": "خواندن ۹ کتاب",
+        "ms_finish_twelve_books": "خواندن ۱۲ کتاب",
+
+        "ms_choose_project_idea": "انتخاب ایده پروژه",
+        "ms_plan_project": "برنامه‌ریزی پروژه",
+        "ms_build_mvp": "ساخت MVP",
+        "ms_launch_first_version": "انتشار نسخه اول",
+        "ms_improve_from_feedback": "بهبود بر اساس بازخورد",
+
+        "ms_learn_alphabet": "یادگیری الفبا",
+        "ms_learn_500_words": "یادگیری ۵۰۰ کلمه",
+        "ms_first_conversation": "اولین مکالمه",
+        "ms_reach_a2": "رسیدن به سطح A2",
+        "ms_reach_b1": "رسیدن به سطح B1",
+
         "show_less": "نمایش کمتر",
         # Header
         "streak": "استریک",

@@ -64,7 +64,7 @@ class HabitCard(QWidget):
         prediction     = predict_streak_break(habit.id)
         daily_log      = ws.get("daily_log", [False]*7)
         done_week      = ws.get("done", 0)
-        total_week     = ws.get("target", habit.frequency_count)
+        total_week     = ws.get("effective_target", habit.frequency_count)
         on_track       = ws.get("on_track", True)
 
         freq_text = tr("daily") if habit.frequency_type == "daily" else f"{habit.frequency_count}{tr('times_per_week')}"

@@ -125,7 +125,19 @@ def week_status(habit_id: int) -> dict:
     today = date.today()
     ws = start_of_week(today)
     we = end_of_week(today)
-    done = habit_repo.count_logs_in_range(habit_id, ws.isoformat(), today.isoformat())
+
+    created_at = habit_repo.get_habit_created_at(habit_id)
+    try:
+        created_date = datetime.strptime(created_at, "%Y-%m-%d").date() if created_at else ws
+    except ValueError:
+        created_date = ws
+
+    effective_start = max(ws, created_date)
+    days_in_week_for_habit = (we - effective_start).days + 1
+    effective_target = max(min(int(target), days_in_week_for_habit), 1)
+    days_passed = max((today - effective_start).days, 0)
+
+    done = habit_repo.count_logs_in_range(habit_id, effective_start.isoformat(), today.isoformat())
 
     log_dates = set(habit_repo.get_habit_log_dates(
         habit_id, start_date=ws.isoformat(), end_date=we.isoformat()
@@ -135,21 +147,22 @@ def week_status(habit_id: int) -> dict:
         (ws + timedelta(days=i)).isoformat() in log_dates
         for i in range(7)
     ]
-    remaining = max(int(target) - done, 0)
+    remaining = max(effective_target - done, 0)
     days_left = (we - today).days + 1
-    pct = round(done / target * 100) if target else 0
+    pct = round(done / effective_target * 100) if effective_target else 0
     on_track = days_left >= remaining
 
     return {
-        "done":      done,
-        "target":    target,
-        "remaining": remaining,
-        "pct":       pct,
-        "on_track":  on_track,
-        "days_left": days_left,
-        "daily_log": daily_log,
+        "done":             done,
+        "target":           target,
+        "effective_target": effective_target,
+        "remaining":        remaining,
+        "pct":              pct,
+        "on_track":         on_track,
+        "days_left":        days_left,
+        "days_passed":      days_passed,
+        "daily_log":        daily_log,
     }
-
 
 # ════════════════════════════════════════════════════════════
 # گزارش همه عادت‌ها
@@ -186,10 +199,13 @@ def predict_streak_break(habit_id: int) -> str:
     if status["remaining"] == 0:
         return "on_track"
 
+    # اگه حتی با انجام کامل روزهای باقی‌مونده هم نشه به هدف رسید
     if status["days_left"] < status["remaining"]:
         return "broken"
 
-    if status["days_left"] <= status["remaining"] + 1:
+    # عقب بودن از برنامه یعنی روزهای قبل از امروز رو از دست دادی
+    days_passed = status.get("days_passed", 0)
+    if status["done"] < days_passed:
         return "at_risk"
 
     return "on_track"
