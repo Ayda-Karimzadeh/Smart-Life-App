@@ -24,6 +24,21 @@ from database.repository import (
 )
 from core.language_manager import tr
 
+# نگاشت کلید انگلیسیِ ثابت (که در دیتابیس ذخیره می‌شود) به کلید ترجمه
+CATEGORY_TR_KEYS = {
+    "Study": "study",
+    "Work": "work",
+    "Fitness": "fitness",
+    "Personal": "personal",
+    "Other": "other",
+}
+
+
+def translate_category(category: str) -> str:
+    """نام دسته‌بندی ذخیره‌شده به انگلیسی را به زبان جاری برنمی‌گرداند مگر با tr()"""
+    key = CATEGORY_TR_KEYS.get(category)
+    return tr(key) if key else category
+
 
 # ─── نمودار میله‌ای ───────────────────────────────────────────────────────────
 class BarChart(QWidget):
@@ -117,7 +132,7 @@ class StartSessionDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Start Focus Session")
+        self.setWindowTitle(tr("start_focus_session"))
         self.setFixedWidth(360)
         self.result_data = None
 
@@ -144,21 +159,28 @@ class StartSessionDialog(QDialog):
         """
 
         # اسم session
-        lay.addWidget(self._lbl("Session Name"))
+        lay.addWidget(self._lbl(tr("session_name")))
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("e.g. Morning Workout")
+        self.name_edit.setPlaceholderText(tr("session_name_placeholder"))
         self.name_edit.setStyleSheet(INPUT)
         lay.addWidget(self.name_edit)
 
         # دسته‌بندی
-        lay.addWidget(self._lbl("Category"))
+        lay.addWidget(self._lbl(tr("category")))
+
         self.cat_combo = QComboBox()
-        self.cat_combo.addItems(self.CATEGORIES)
+
+        self.cat_combo.addItem(tr("study"), "Study")
+        self.cat_combo.addItem(tr("work"), "Work")
+        self.cat_combo.addItem(tr("fitness"), "Fitness")
+        self.cat_combo.addItem(tr("personal"), "Personal")
+        self.cat_combo.addItem(tr("other"), "Other")
+
         self.cat_combo.setStyleSheet(INPUT)
         lay.addWidget(self.cat_combo)
 
         # preset زمان‌ها
-        lay.addWidget(self._lbl("Duration"))
+        lay.addWidget(self._lbl(tr("duration")))
         preset_row = QHBoxLayout()
         preset_row.setSpacing(8)
         self.preset_btns = []
@@ -175,15 +197,19 @@ class StartSessionDialog(QDialog):
         # ورودی دقیقه دلخواه
         custom_row = QHBoxLayout()
         custom_row.setSpacing(8)
+
         self.min_spin = QSpinBox()
         self.min_spin.setRange(1, 480)
         self.min_spin.setValue(25)
         self.min_spin.setSuffix(" min")
         self.min_spin.setStyleSheet(INPUT)
-        custom_row.addWidget(QLabel("Custom:"))
-        custom_label = QLabel("Custom:")
+
+        custom_label = QLabel(tr("custom_duration"))
         custom_label.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 12px;")
+
+        custom_row.addWidget(custom_label)
         custom_row.addWidget(self.min_spin, 1)
+
         lay.addLayout(custom_row)
 
         # انتخاب پیش‌فرض اول
@@ -193,7 +219,7 @@ class StartSessionDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
@@ -248,7 +274,7 @@ class StartSessionDialog(QDialog):
         name = self.name_edit.text().strip() or self.cat_combo.currentText()
         self.result_data = {
             "name": name,
-            "category": self.cat_combo.currentText(),
+            "category": self.cat_combo.currentData(),
             "minutes": self.min_spin.value(),
         }
         self.accept()
@@ -261,7 +287,7 @@ class EditSessionDialog(QDialog):
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.session = session
-        self.setWindowTitle("Edit Session")
+        self.setWindowTitle(tr("edit_session"))
         self.setFixedWidth(360)
         self.result_data = None
 
@@ -271,7 +297,7 @@ class EditSessionDialog(QDialog):
         lay.setContentsMargins(24, 24, 24, 24)
         lay.setSpacing(14)
 
-        title = QLabel("Edit Session")
+        title = QLabel(tr("edit_session"))
         title.setStyleSheet(f"font-size: 17px; font-weight: bold; color: {TEXT_PRIMARY};")
         lay.addWidget(title)
 
@@ -288,7 +314,7 @@ class EditSessionDialog(QDialog):
         """
 
         # نام
-        name_lbl = QLabel("Session Name")
+        name_lbl = QLabel(tr("session_name"))
         name_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
         self.name_edit = QLineEdit(session.name)
         self.name_edit.setStyleSheet(INPUT)
@@ -296,19 +322,28 @@ class EditSessionDialog(QDialog):
         lay.addWidget(self.name_edit)
 
         # دسته‌بندی
-        cat_lbl = QLabel("Category")
+        cat_lbl = QLabel(tr("category"))
         cat_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
         self.cat_combo = QComboBox()
-        self.cat_combo.addItems(self.CATEGORIES)
-        idx = self.cat_combo.findText(session.category)
+
+        # هر آیتم: متن ترجمه‌شده برای نمایش + کلید انگلیسی ثابت به‌عنوان data
+        self.cat_combo.addItem(tr("study"), "Study")
+        self.cat_combo.addItem(tr("work"), "Work")
+        self.cat_combo.addItem(tr("fitness"), "Fitness")
+        self.cat_combo.addItem(tr("personal"), "Personal")
+        self.cat_combo.addItem(tr("other"), "Other")
+
+        # پیدا کردن ایندکس بر اساس کلید انگلیسی ذخیره‌شده در session، نه متن ترجمه‌شده
+        idx = self.cat_combo.findData(session.category)
         if idx >= 0:
             self.cat_combo.setCurrentIndex(idx)
+
         self.cat_combo.setStyleSheet(INPUT)
         lay.addWidget(cat_lbl)
         lay.addWidget(self.cat_combo)
 
         # مدت زمان (دقیقه و ثانیه جدا)
-        dur_lbl = QLabel("Duration")
+        dur_lbl = QLabel(tr("duration"))
         dur_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED};")
         lay.addWidget(dur_lbl)
 
@@ -335,7 +370,7 @@ class EditSessionDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.setStyleSheet(f"""
             QPushButton {{
@@ -347,7 +382,7 @@ class EditSessionDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        save_btn = QPushButton("Save Changes")
+        save_btn = QPushButton(tr("save_changes"))
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.setStyleSheet(f"""
             QPushButton {{
@@ -373,7 +408,7 @@ class EditSessionDialog(QDialog):
         total_secs = self.min_spin.value() * 60 + self.sec_spin.value()
         self.result_data = {
             "name": name,
-            "category": self.cat_combo.currentText(),
+            "category": self.cat_combo.currentData(),
             "duration_seconds": total_secs,
         }
         self.accept()
@@ -407,7 +442,7 @@ class SessionCard(QWidget):
         info.setSpacing(3)
         n = QLabel(session.name)
         n.setStyleSheet(f"font-size: 14px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        t = QLabel(f"{session.category}  •  {session.session_date}")
+        t = QLabel(f"{translate_category(session.category)}  •  {session.session_date}")
         t.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         info.addWidget(n)
         info.addWidget(t)
@@ -420,7 +455,7 @@ class SessionCard(QWidget):
         d = QLabel(session.duration_str)
         d.setAlignment(Qt.AlignmentFlag.AlignRight)
         d.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        dl = QLabel("Duration")
+        dl = QLabel(tr("duration"))
         dl.setAlignment(Qt.AlignmentFlag.AlignRight)
         dl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
 
@@ -477,8 +512,9 @@ class SessionCard(QWidget):
 
     def _handle_delete(self):
         reply = QMessageBox.question(
-            self, "Delete Session",
-            f"Delete '{self.session.name}'?",
+            self,
+            tr("delete_session"),
+            tr("delete_session_confirm").format(name=self.session.name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -545,7 +581,7 @@ class TimerPage(QWidget):
         weekly      = time_repo.get_weekly_activity()
         total_week  = sum(h for _, h in weekly)
         dist        = time_repo.get_time_distribution()
-        top_cat     = max(dist, key=lambda x: x[1])[0] if dist else "—"
+        top_cat     = translate_category(max(dist, key=lambda x: x[1])[0]) if dist else "—"
         daily_avg   = round(total_week / 7, 1) if total_week else 0
 
         def fmt(secs):
@@ -560,10 +596,10 @@ class TimerPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("⏱",  fmt(total_today),    "Focused Today",  "+30 min vs yesterday", ACCENT2, True),
-            ("📈", f"{total_week:.1f}h", "This Week",      "Across all categories",BLUE,    False),
-            ("📖", top_cat,              "Top Category",   "Most time spent",      ACCENT,  False),
-            ("📅", f"{daily_avg}h",      "Daily Average",  "This week",            GREEN,   False),
+            ("⏱", fmt(total_today), tr("focused_today"), tr("vs_yesterday"), ACCENT2, True),
+            ("📈", f"{total_week:.1f}h", tr("this_week"), tr("across_all_categories"), BLUE, False),
+            ("📖", top_cat, tr("top_category"), tr("most_time_spent"), ACCENT, False),
+            ("📅", f"{daily_avg}h", tr("daily_average"), tr("this_week"), GREEN, False),
         ]
 
         for icon, val, title, sub, col, highlight in items:
@@ -651,7 +687,7 @@ class TimerPage(QWidget):
         self.stop_btn.clicked.connect(self._handle_stop)
 
         # دکمه Reset
-        self.reset_btn = QPushButton("↺  Reset")
+        self.reset_btn = QPushButton("↺  " + tr("reset"))
         self.reset_btn.setFixedHeight(46)
         self.reset_btn.setMinimumWidth(100)
         self.reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -700,7 +736,7 @@ class TimerPage(QWidget):
         ll = QVBoxLayout(left)
         ll.setContentsMargins(20, 18, 20, 18)
         ll.setSpacing(12)
-        t1 = QLabel("Weekly Activity")
+        t1 = QLabel(tr("weekly_activity"))
         t1.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         ll.addWidget(t1)
         ll.addWidget(BarChart(weekly_data))
@@ -712,7 +748,7 @@ class TimerPage(QWidget):
             rl = QHBoxLayout()
             dot = QLabel("■")
             dot.setStyleSheet(f"color: {col}; background: transparent; font-size: 11px;")
-            lbl = QLabel(name)
+            lbl = QLabel(translate_category(name))
             lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
             rl.addWidget(dot)
             rl.addWidget(lbl)
@@ -727,7 +763,7 @@ class TimerPage(QWidget):
         rl2 = QVBoxLayout(right)
         rl2.setContentsMargins(20, 18, 20, 18)
         rl2.setSpacing(12)
-        t2 = QLabel("Time Distribution")
+        t2 = QLabel(tr("time_distribution"))
         t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         rl2.addWidget(t2)
         donut = DonutChart(donut_data)
@@ -739,7 +775,7 @@ class TimerPage(QWidget):
             dot = QLabel("●")
             dot.setStyleSheet(f"color: {col}; background: transparent; font-size: 12px;")
             dot.setFixedWidth(16)
-            n = QLabel(cat)
+            n = QLabel(translate_category(cat))
             n.setStyleSheet(f"font-size: 12px; color: {TEXT_PRIMARY}; background: transparent;")
             v = QLabel(f"{hrs}h")
             v.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
@@ -819,7 +855,7 @@ class TimerPage(QWidget):
 
         # آپدیت UI
         self.session_info_lbl.setText(
-            f"⏱  {self._session_name}  •  {self._session_category}  •  {minutes} min"
+            f"⏱  {self._session_name}  •  {translate_category(self._session_category)}  •  {minutes} min"
         )
         self.progress_bar.setValue(0)
         self.progress_bar.show()
@@ -911,10 +947,12 @@ class TimerPage(QWidget):
         # پیام تبریک
         from PyQt6.QtWidgets import QMessageBox
         msg = QMessageBox(self)
-        msg.setWindowTitle("✅ Session Complete!")
+        msg.setWindowTitle("✅ " + tr("session_complete"))
         msg.setText(
-            f"<b>{self._session_name}</b> finished!<br>"
-            f"Duration: <b>{self._target // 60} minutes</b>"
+            f"<b>{self._session_name}</b> "
+            f"{tr('session_finished')}<br>"
+            f"{tr('duration_minutes')}: "
+            f"<b>{self._target // 60}</b>"
         )
         msg.setStyleSheet(f"QMessageBox {{ background: {BG_CARD}; color: {TEXT_PRIMARY}; }}")
         msg.exec()
