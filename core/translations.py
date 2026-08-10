@@ -357,9 +357,37 @@ TRANSLATIONS = {
         "session_complete": "Session Complete!",
         "session_finished": "finished!",
         "duration_minutes": "Duration",
+        
+        # task_page
+        "delete_task": "Delete Task",
+        "delete_task_confirm": "Are you sure you want to delete '{name}'?",
+        "filter_all_tasks": "All Tasks",
+        "filter_today": "Today",
+        "filter_this_week": "This Week",
+        "pending_tasks": "Pending Tasks",
+        "completed": "Completed",
+        "tasks_pending": "Tasks Pending",
+        "to_be_completed": "To be completed",
+        "great_progress": "Great progress!",
+        "focus_on_these": "Focus on these",
+        "needs_attention": "Needs attention",
     },
     
     "fa": {
+        # task_page
+        "delete_task": "حذف تسک",
+        "delete_task_confirm": "آیا مطمئن هستید که می‌خواهید «{name}» را حذف کنید؟",
+        "filter_all_tasks": "همه تسک‌ها",
+        "filter_today": "امروز",
+        "filter_this_week": "این هفته",
+        "pending_tasks": "تسک‌های در انتظار",
+        "completed": "تکمیل‌شده",
+        "tasks_pending": "تسک‌های در انتظار",
+        "to_be_completed": "باید انجام شود",
+        "great_progress": "پیشرفت عالی!",
+        "focus_on_these": "روی این‌ها تمرکز کن",
+        "needs_attention": "نیاز به توجه دارد",
+
         #timer_page
         "start_focus_session": "شروع جلسه تمرکز",
         "session_name": "نام جلسه",

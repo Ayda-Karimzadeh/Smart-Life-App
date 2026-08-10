@@ -194,8 +194,8 @@ class TaskCard(QWidget):
 
     def _handle_delete(self):
         reply = QMessageBox.question(
-            self, "Delete Task",
-            f"Are you sure you want to delete '{self.task.name}'?",
+            self, tr("delete_task"),
+            tr("delete_task_confirm").format(name=self.task.name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -206,6 +206,14 @@ class TaskCard(QWidget):
 
 # ─── صفحه: Tasks ─────────────────────────────────────────────────────────────
 class TasksPage(QWidget):
+
+    # نگاشت کلید انگلیسیِ ثابت (منطق داخلی فیلتر) به کلید ترجمه برای نمایش
+    FILTER_TR_KEYS = {
+        "All Tasks": "filter_all_tasks",
+        "Today": "filter_today",
+        "This Week": "filter_this_week",
+    }
+
     def __init__(self):
         super().__init__()
         self.setStyleSheet("background: transparent;")
@@ -235,8 +243,8 @@ class TasksPage(QWidget):
         pending = self._filtered_tasks(done=False)
         completed = self._filtered_tasks(done=True)
 
-        layout.addWidget(self._tasks_section(f"Pending Tasks ({len(pending)})", pending))
-        layout.addWidget(self._tasks_section(f"Completed ({len(completed)})", completed))
+        layout.addWidget(self._tasks_section(f"{tr('pending_tasks')} ({len(pending)})", pending))
+        layout.addWidget(self._tasks_section(f"{tr('completed')} ({len(completed)})", completed))
         layout.addStretch()
 
         self.scroll.setWidget(content)
@@ -276,10 +284,10 @@ class TasksPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("✅", str(len(pending)),   tr("tasks").capitalize() + " Pending", "To be completed", ACCENT2, True),
-            ("☑️", str(len(completed)), tr("progress").capitalize(),     "Great progress!", GREEN,   False),
-            ("📅", str(len(due_today)), tr("due_today"),     "Focus on these",  BLUE,    False),
-            ("🚩", str(len(high_prio)), tr("prio_high") + " " + tr("priority"), "Needs attention", RED,     False),
+            ("✅", str(len(pending)),   tr("tasks_pending"), tr("to_be_completed"), ACCENT2, True),
+            ("☑️", str(len(completed)), tr("completed"),     tr("great_progress"),  GREEN,   False),
+            ("📅", str(len(due_today)), tr("due_today"),     tr("focus_on_these"),  BLUE,    False),
+            ("🚩", str(len(high_prio)), tr("prio_high") + " " + tr("priority"), tr("needs_attention"), RED, False),
         ]
 
         for icon, val, title, sub, col, highlight in items:
@@ -327,7 +335,7 @@ class TasksPage(QWidget):
         filters = ["All Tasks", "Today", "This Week"]
         for f in filters:
             active = f == self.active_filter
-            btn = QPushButton(f)
+            btn = QPushButton(tr(self.FILTER_TR_KEYS[f]))
             btn.setCheckable(True)
             btn.setChecked(active)
             btn.setStyleSheet(f"""
@@ -350,7 +358,7 @@ class TasksPage(QWidget):
 
         lay.addStretch()
 
-        add_btn = QPushButton("+ " + tr("add") + " " + tr("tasks").capitalize())
+        add_btn = QPushButton("+ " + tr("add_task_btn"))
         add_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {ACCENT};

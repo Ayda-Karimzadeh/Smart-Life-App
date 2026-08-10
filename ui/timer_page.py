@@ -231,7 +231,7 @@ class StartSessionDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        start_btn = QPushButton("▶  " + tr("start"))
+        start_btn = QPushButton("▶  " + tr("start_timer"))
         start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         start_btn.setStyleSheet(f"""
             QPushButton {{
@@ -670,7 +670,7 @@ class TimerPage(QWidget):
         btn_row.setSpacing(12)
 
         # دکمه Start Session (باز کردن دیالوگ)
-        self.start_btn = QPushButton("▶  " + tr("start") + " " + tr("session_name"))
+        self.start_btn = QPushButton("▶  " + tr("start_timer"))
         self.start_btn.setFixedHeight(46)
         self.start_btn.setMinimumWidth(160)
         self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
