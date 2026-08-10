@@ -27,6 +27,9 @@ from database.repository import (
 from core.dates import start_of_week, end_of_week
 from core.language_manager import tr
 
+# کلیدهای ترجمه برای روزهای هفته (میلادی، دوشنبه تا یکشنبه)
+WEEKDAY_KEYS = ["day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun"]
+
 
 # ─── نمودار خطی با نقاط ──────────────────────────────────────────────────────
 class LineChartDot(QWidget):
@@ -43,7 +46,7 @@ class LineChartDot(QWidget):
             p = QPainter(self)
             p.setPen(QColor(TEXT_MUTED))
             p.setFont(QFont("Segoe UI", 11))
-            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No data yet")
+            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, tr("no_data_available"))
             return
 
         p = QPainter(self)
@@ -111,7 +114,11 @@ class LineChartDot(QWidget):
 class RadarChart(QWidget):
     def __init__(self, labels=None, values=None, parent=None):
         super().__init__(parent)
-        self.labels = labels or [tr("habits").capitalize(), tr("goals").capitalize(), tr("tasks").capitalize(), "Time", tr("streak").capitalize()]
+        self.labels = labels or [
+            tr("habits").capitalize(), tr("goals").capitalize(),
+            tr("tasks").capitalize(), tr("focus").capitalize(),
+            tr("streak").capitalize()
+        ]
         self.values = values or [0, 0, 0, 0, 0]
         self.setMinimumSize(250, 250)
 
@@ -176,7 +183,7 @@ class RadarChart(QWidget):
 class CompareBarChart(QWidget):
     def __init__(self, labels=None, this_week=None, last_week=None, parent=None):
         super().__init__(parent)
-        self.labels    = labels    or ["Week 1", "Week 2", "Week 3", "Week 4"]
+        self.labels    = labels    or [f"{tr('week')} {i}" for i in range(1, 5)]
         self.this_week = this_week or [0, 0, 0, 0]
         self.last_week = last_week or [0, 0, 0, 0]
         self.setMinimumHeight(220)
@@ -236,13 +243,13 @@ class CompareBarChart(QWidget):
         p.setPen(Qt.PenStyle.NoPen)
         p.drawRect(lx, ly, 12, 12)
         p.setPen(QColor(TEXT_MUTED))
-        p.drawText(lx + 16, ly - 1, 80, 14, Qt.AlignmentFlag.AlignLeft, "Last Week")
+        p.drawText(lx + 16, ly - 1, 80, 14, Qt.AlignmentFlag.AlignLeft, tr("last_week"))
         lx2 = lx + 110
         p.setBrush(QBrush(QColor(ACCENT2)))
         p.setPen(Qt.PenStyle.NoPen)
         p.drawRect(lx2, ly, 12, 12)
         p.setPen(QColor(ACCENT2))
-        p.drawText(lx2 + 16, ly - 1, 80, 14, Qt.AlignmentFlag.AlignLeft, "This Week")
+        p.drawText(lx2 + 16, ly - 1, 80, 14, Qt.AlignmentFlag.AlignLeft, tr("this_week"))
 
 
 # ─── صفحه: Analytics ─────────────────────────────────────────────────────────
@@ -348,10 +355,10 @@ class AnalyticsPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("📈", str(habit_pct) + "%", "Habit Score",       "Today's completion",  ACCENT2, True,  f"+{habit_pct}%", GREEN),
-            ("💚", str(avg_goal)  + "%", "Goal Progress",     "Average across goals", GREEN,   False, f"{avg_goal}%",  GREEN),
-            ("✅", str(task_pct)  + "%", "Task Completion",   "All time",            BLUE,    False, f"{task_pct}%",  BLUE),
-            ("🔥", str(max_streak),      "Longest Streak",    "Days active",         ORANGE,  False, "Best" if max_streak > 0 else "—", ORANGE),
+            ("📈", str(habit_pct) + "%", tr("habit_score"),     tr("todays_completion"),   ACCENT2, True,  f"+{habit_pct}%", GREEN),
+            ("💚", str(avg_goal)  + "%", tr("goal_progress"),   tr("across_all_goals"),     GREEN,   False, f"{avg_goal}%",  GREEN),
+            ("✅", str(task_pct)  + "%", tr("task_completion"), tr("all_time"),             BLUE,    False, f"{task_pct}%",  BLUE),
+            ("🔥", str(max_streak),      tr("longest_streak"),  tr("days_active"),          ORANGE,  False, tr("best") if max_streak > 0 else "—", ORANGE),
         ]
 
         for icon, val, title, sub, col, highlight, badge, badge_col in items:
@@ -392,8 +399,8 @@ class AnalyticsPage(QWidget):
         for h in self._habits:
             streak = habit_repo.get_current_streak(h.id)
             if streak >= 7:
-                insights.append(("🔥", f"{streak}-Day Streak!",
-                                  f"You've kept up '{h.name}' for {streak} days. Amazing!",
+                insights.append(("🔥", tr("day_streak_insight").format(streak=streak),
+                                  tr("streak_insight_desc").format(name=h.name, streak=streak),
                                   "#2a1a0a", ORANGE))
                 break
 
@@ -401,8 +408,8 @@ class AnalyticsPage(QWidget):
         for g in self._goals:
             pct = goal_repo.get_goal_progress_percent(g.id)
             if pct >= 75:
-                insights.append(("🎯", "Goal Almost Done!",
-                                  f"'{g.name}' is {pct}% complete. Keep pushing!",
+                insights.append(("🎯", tr("goal_almost_done"),
+                                  tr("goal_almost_done_desc").format(name=g.name, pct=pct),
                                   "#0a1a2a", BLUE))
                 break
 
@@ -410,15 +417,15 @@ class AnalyticsPage(QWidget):
         if self._habits:
             all_done = all(habit_repo.is_habit_done_today(h.id) for h in self._habits)
             if all_done:
-                insights.append(("⭐", "Perfect Day!",
-                                  "You completed all your habits today. Outstanding!",
+                insights.append(("⭐", tr("perfect_day"),
+                                  tr("perfect_day_desc"),
                                   "#1a2a1a", GREEN))
 
         # Focus time بالا
         if self._focus_today >= 3600:
             h = self._focus_today // 3600
-            insights.append(("⚡", "Deep Focus Session",
-                              f"You've logged {h}h of focus time today. Great work!",
+            insights.append(("⚡", tr("deep_focus_session"),
+                              tr("deep_focus_desc").format(hours=h),
                               "#1a1535", ACCENT2))
 
         if not insights:
@@ -430,7 +437,7 @@ class AnalyticsPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(10)
 
-        title = QLabel("Key Insights")
+        title = QLabel(tr("key_insights"))
         title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         lay.addWidget(title)
 
@@ -510,7 +517,7 @@ class AnalyticsPage(QWidget):
         ll = QVBoxLayout(left)
         ll.setContentsMargins(20, 18, 20, 18)
         ll.setSpacing(12)
-        t1 = QLabel("Habit Score Trend")
+        t1 = QLabel(tr("habit_score_trend"))
         t1.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         ll.addWidget(t1)
         ll.addWidget(LineChartDot(habit_trend, trend_labels, ACCENT2, False))
@@ -520,7 +527,7 @@ class AnalyticsPage(QWidget):
         rl = QVBoxLayout(right)
         rl.setContentsMargins(20, 18, 20, 18)
         rl.setSpacing(12)
-        t2 = QLabel(tr("weekly") + " " + tr("focus_time"))
+        t2 = QLabel(tr("weekly_focus_time"))
         t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         rl.addWidget(t2)
         rl.addWidget(LineChartDot(focus_trend, trend_labels, GREEN, True))
@@ -553,7 +560,7 @@ class AnalyticsPage(QWidget):
 
         this_week_hours = []
         last_week_hours = []
-        week_labels     = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        week_labels     = [tr(k) for k in WEEKDAY_KEYS]
 
         for i in range(7):
             d_this = this_start + timedelta(days=i)
@@ -573,11 +580,15 @@ class AnalyticsPage(QWidget):
         rl2 = QVBoxLayout(radar_card)
         rl2.setContentsMargins(20, 18, 20, 18)
         rl2.setSpacing(12)
-        radar_title = QLabel("Performance Radar")
+        radar_title = QLabel(tr("performance_radar"))
         radar_title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         rl2.addWidget(radar_title)
         rl2.addWidget(RadarChart(
-            labels=[tr("habits").capitalize(), tr("goals").capitalize(), tr("tasks").capitalize(), "Focus", tr("streak").capitalize()],
+            labels=[
+                tr("habits").capitalize(), tr("goals").capitalize(),
+                tr("tasks").capitalize(), tr("focus").capitalize(),
+                tr("streak").capitalize()
+            ],
             values=radar_values
         ))
 
@@ -586,7 +597,7 @@ class AnalyticsPage(QWidget):
         cl2 = QVBoxLayout(compare_card)
         cl2.setContentsMargins(20, 18, 20, 18)
         cl2.setSpacing(12)
-        tc = QLabel(tr("focus_time") + ": " + tr("weekly") + " vs Last")
+        tc = QLabel(tr("focus_weekly_vs_last"))
         tc.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         cl2.addWidget(tc)
         cl2.addWidget(CompareBarChart(week_labels, this_week_hours, last_week_hours))
@@ -607,20 +618,20 @@ class AnalyticsPage(QWidget):
 
         # پیام بر اساس عملکرد
         if habit_pct == 100:
-            msg = "Outstanding Performance! 🌟"
-            sub = "You completed all your habits today. You're in the top 5%!"
+            msg = tr("outstanding_performance")
+            sub = tr("outstanding_performance_desc")
         elif habit_pct >= 75:
-            msg = "Great Work Today! 💪"
-            sub = f"You've completed {habit_pct}% of your habits. Keep it up!"
+            msg = tr("great_work_today")
+            sub = tr("great_work_today_desc").format(pct=habit_pct)
         elif habit_pct >= 50:
-            msg = "Good Progress! 📈"
-            sub = "You're halfway there. Push a little more today!"
+            msg = tr("good_progress_msg")
+            sub = tr("good_progress_desc")
         elif habits:
-            msg = "Let's Get Moving! 🚀"
-            sub = "Start checking off your habits to see your score climb!"
+            msg = tr("lets_get_moving")
+            sub = tr("lets_get_moving_desc")
         else:
-            msg = "Welcome to Analytics! 📊"
-            sub = "Add habits, goals and tasks to see your performance here."
+            msg = tr("welcome_analytics")
+            sub = tr("welcome_analytics_desc")
 
         card = make_card(color="#1a1535")
         card.setMinimumHeight(160)
@@ -650,11 +661,11 @@ class AnalyticsPage(QWidget):
 
         stats = []
         if habits:
-            stats.append((f"{habit_pct}%", "Habits", ACCENT2))
+            stats.append((f"{habit_pct}%", tr("habits").capitalize(), ACCENT2))
         if goals:
-            stats.append((f"{avg_goal}%", "Goals", BLUE))
+            stats.append((f"{avg_goal}%", tr("goals").capitalize(), BLUE))
         if max_streak > 0:
-            stats.append((str(max_streak), "Day Streak", GREEN))
+            stats.append((str(max_streak), tr("day_streak").capitalize(), GREEN))
 
         for j, (val, lbl, col) in enumerate(stats):
             item = QVBoxLayout()
@@ -685,5 +696,3 @@ class AnalyticsPage(QWidget):
             lay.addLayout(stats_row)
 
         return card
-
-    # ─ توابع کمکی ────────────────────────────────────────────────────────────

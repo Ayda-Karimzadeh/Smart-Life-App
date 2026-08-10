@@ -357,7 +357,7 @@ TRANSLATIONS = {
         "session_complete": "Session Complete!",
         "session_finished": "finished!",
         "duration_minutes": "Duration",
-        
+
         # task_page
         "delete_task": "Delete Task",
         "delete_task_confirm": "Are you sure you want to delete '{name}'?",
@@ -371,9 +371,173 @@ TRANSLATIONS = {
         "great_progress": "Great progress!",
         "focus_on_these": "Focus on these",
         "needs_attention": "Needs attention",
+
+        # Analytics - Extended
+        "no_data_available": "No data available",
+
+        "habits": "Habits",
+        "goals": "Goals",
+        "tasks": "Tasks",
+        "focus": "Focus",
+        "streak": "Streak",
+
+        "week": "Week",
+
+        # Days of week
+        "day_mon": "Mon",
+        "day_tue": "Tue",
+        "day_wed": "Wed",
+        "day_thu": "Thu",
+        "day_fri": "Fri",
+        "day_sat": "Sat",
+        "day_sun": "Sun",
+
+        # Empty Analytics
+        "empty_analytics_title": "Your Progress Awaits",
+        "empty_analytics_desc": "Start tracking to see your growth patterns and insights.",
+
+        # Stats
+        "habit_score": "Habit Score",
+        "todays_completion": "Today's completion",
+
+        "goal_progress": "Goal Progress",
+        "across_all_goals": "Across all goals",
+
+        "task_completion": "Task Completion",
+        "all_time": "All time",
+
+        "longest_streak": "Longest Streak",
+        "days_active": "Days active",
+        "best": "Best",
+
+        # Insights
+        "day_streak_insight": "{streak} Day Streak",
+        "streak_insight_desc": "You've completed \"{name}\" for {streak} days in a row.",
+
+        "goal_almost_done": "Goal Almost Complete",
+        "goal_almost_done_desc": "\"{name}\" is {pct}% complete.",
+
+        "perfect_day": "Perfect Day",
+        "perfect_day_desc": "You've completed all your habits today. Amazing!",
+
+        "deep_focus_session": "Deep Focus",
+        "deep_focus_desc": "You've focused for {hours} hours today.",
+
+        "key_insights": "Key Insights",
+
+        # Trends
+        "habit_score_trend": "Habit Score Trend",
+        "weekly_focus_time": "Weekly Focus Time",
+
+        # Radar / Comparison
+        "performance_radar": "Performance Radar",
+        "focus_weekly_vs_last": "Focus: This Week vs Last Week",
+
+        "last_week": "Last Week",
+        "this_week": "This Week",
+
+        # Performance Banner
+        "outstanding_performance": "Outstanding Performance!",
+        "outstanding_performance_desc": "You've completed all your habits today. Keep it up!",
+
+        "great_work_today": "Great Work Today!",
+        "great_work_today_desc": "You've completed {pct}% of your habits today.",
+
+        "good_progress_msg": "Good Progress!",
+        "good_progress_desc": "Keep going and take it one step at a time.",
+
+        "lets_get_moving": "Let's Get Moving!",
+        "lets_get_moving_desc": "There's still time to complete some of your habits today.",
+
+        "welcome_analytics": "Welcome to Analytics!",
+        "welcome_analytics_desc": "Your stats and performance insights will appear here as you start tracking.",
+
+        "day_streak": "Day Streak",
     },
     
     "fa": {
+        # Analytics - Extended
+        "no_data_available": "داده‌ای برای نمایش وجود ندارد",
+
+        "habits": "عادت‌ها",
+        "goals": "اهداف",
+        "tasks": "تسک‌ها",
+        "focus": "تمرکز",
+        "streak": "تداوم",
+
+        "week": "هفته",
+
+        # Days of week
+        "day_mon": "دوشنبه",
+        "day_tue": "سه‌شنبه",
+        "day_wed": "چهارشنبه",
+        "day_thu": "پنجشنبه",
+        "day_fri": "جمعه",
+        "day_sat": "شنبه",
+        "day_sun": "یکشنبه",
+
+        # Empty Analytics
+        "empty_analytics_title": "پیشرفتت در انتظارت است",
+        "empty_analytics_desc": "شروع به ثبت فعالیت‌ها کن تا الگوهای رشد و بینش‌های عملکردت را ببینی.",
+
+        # Stats
+        "habit_score": "امتیاز عادت‌ها",
+        "todays_completion": "تکمیل امروز",
+
+        "goal_progress": "پیشرفت اهداف",
+        "across_all_goals": "میانگین تمام اهداف",
+
+        "task_completion": "تکمیل تسک‌ها",
+        "all_time": "از ابتدا",
+
+        "longest_streak": "بیشترین تداوم",
+        "days_active": "روزهای فعال",
+        "best": "بهترین",
+
+        # Insights
+        "day_streak_insight": "{streak} روز تداوم",
+        "streak_insight_desc": "عادت «{name}» را {streak} روز متوالی انجام داده‌ای.",
+
+        "goal_almost_done": "هدف نزدیک به پایان",
+        "goal_almost_done_desc": "هدف «{name}» {pct}% پیشرفت داشته است.",
+
+        "perfect_day": "روز عالی",
+        "perfect_day_desc": "امروز تمام عادت‌هایت را انجام داده‌ای. فوق‌العاده است!",
+
+        "deep_focus_session": "تمرکز عمیق",
+        "deep_focus_desc": "امروز {hours} ساعت تمرکز داشته‌ای.",
+
+        "key_insights": "نکات مهم",
+
+        # Trends
+        "habit_score_trend": "روند امتیاز عادت‌ها",
+        "weekly_focus_time": "زمان تمرکز هفتگی",
+
+        # Radar / Comparison
+        "performance_radar": "رادار عملکرد",
+        "focus_weekly_vs_last": "مقایسه تمرکز این هفته با هفته قبل",
+
+        "last_week": "هفته قبل",
+        "this_week": "این هفته",
+
+        # Performance Banner
+        "outstanding_performance": "عملکرد فوق‌العاده!",
+        "outstanding_performance_desc": "امروز تمام عادت‌هایت را انجام داده‌ای. همین‌طور ادامه بده!",
+
+        "great_work_today": "امروز عالی بود!",
+        "great_work_today_desc": "امروز {pct}% از عادت‌هایت را انجام داده‌ای.",
+
+        "good_progress_msg": "پیشرفت خوبی داری!",
+        "good_progress_desc": "همین روند را ادامه بده و قدم‌به‌قدم پیش برو.",
+
+        "lets_get_moving": "بیا شروع کنیم!",
+        "lets_get_moving_desc": "امروز هنوز فرصت داری چند عادت را انجام بدهی.",
+
+        "welcome_analytics": "به بخش تحلیل خوش آمدی!",
+        "welcome_analytics_desc": "با شروع ثبت فعالیت‌ها، آمار و تحلیل عملکردت اینجا نمایش داده می‌شود.",
+
+        "day_streak": "روز تداوم",
+
         # task_page
         "delete_task": "حذف تسک",
         "delete_task_confirm": "آیا مطمئن هستید که می‌خواهید «{name}» را حذف کنید؟",
