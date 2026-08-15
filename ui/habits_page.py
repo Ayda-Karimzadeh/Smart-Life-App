@@ -210,7 +210,19 @@ class HabitCard(QWidget):
         outer.addWidget(card)
 
     def _handle_toggle(self):
+        was_done = habit_repo.is_habit_done_today(self.habit.id)
         habit_repo.toggle_habit_today(self.habit.id)
+
+        from core.habit_feedback import get_habit_toggle_feedback
+        from ui.toast import Toast
+
+        title, message, icon, kind = get_habit_toggle_feedback(
+            self.habit.id, self.habit.name, was_done
+        )
+        host = self.window()
+        if host and title:
+            Toast.show(host, title, message, icon, kind)
+
         self.on_change()
 
     def _handle_edit(self):

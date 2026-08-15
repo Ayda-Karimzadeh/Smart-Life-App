@@ -174,7 +174,37 @@ class DashboardPage(QWidget):
         self.scroll.setWidget(content)
 
     def _toggle_habit(self, habit_id):
+        was_done = habit_repo.is_habit_done_today(habit_id)
+
         habit_repo.toggle_habit_today(habit_id)
+
+        from core.habit_feedback import get_habit_toggle_feedback
+        from ui.toast import Toast
+
+        habit = next(
+            (h for h in habit_repo.get_all_habits() if h.id == habit_id),
+            None
+        )
+
+        if habit:
+            title, message, icon, kind = get_habit_toggle_feedback(
+                habit_id,
+                habit.name,
+                was_done
+            )
+
+            host = self.window()
+
+            if host and title:
+                Toast.show(
+                    host,
+                    title,
+                    message,
+                    icon,
+                    kind
+                )
+
+        QTimer.singleShot(100, self.refresh)
 
         # فقط بعد از تمام شدن event کلیک، Dashboard را refresh کن
         QTimer.singleShot(100, self.refresh)

@@ -52,8 +52,12 @@ TRANSLATIONS = {
         "daily": "Daily",
         "weekly": "Weekly",
         "add_habit_btn": "Add Habit",
-        
-        # Tasks
+        "habit_completed": "Nice work!",
+        "habit_completed_desc": "\"{name}\" is done for today.",
+        "habit_unchecked": "Marked as undone",
+        "habit_unchecked_desc": "\"{name}\" is unchecked for today.",
+        "streak_milestone_title": "{streak}-Day Streak!",
+        "streak_milestone_desc": "Amazing — \"{name}\" for {streak} days in a row!",
         "add_task": "Add New Task",
         "edit_task": "Edit Task",
         "task_name": "Task Name",
@@ -503,6 +507,13 @@ TRANSLATIONS = {
 
         "perfect_day": "روز عالی",
         "perfect_day_desc": "امروز تمام عادت‌هایت را انجام داده‌ای. فوق‌العاده است!",
+
+        "habit_completed": "آفرین!",
+        "habit_completed_desc": "«{name}» برای امروز انجام شد.",
+        "habit_unchecked": "لغو شد",
+        "habit_unchecked_desc": "«{name}» برای امروز لغو شد.",
+        "streak_milestone_title": "{streak} روز تداوم!",
+        "streak_milestone_desc": "عالیه — «{name}» {streak} روز پشت‌سرهم!",
 
         "deep_focus_session": "تمرکز عمیق",
         "deep_focus_desc": "امروز {hours} ساعت تمرکز داشته‌ای.",
