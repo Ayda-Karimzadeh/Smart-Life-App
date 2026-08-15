@@ -38,12 +38,14 @@ def init_db():
 
 def add_habit(name, icon, category, frequency_type="daily", frequency_count=7):
     conn = get_connection()
-    conn.execute(
+    cursor = conn.execute(
         "INSERT INTO habits (name, icon, category, frequency_type, frequency_count) VALUES (?, ?, ?, ?, ?)",
         (name, icon, category, frequency_type, frequency_count)
     )
     conn.commit()
+    habit_id = cursor.lastrowid
     conn.close()
+    return habit_id
 
 
 def get_all_habits():
@@ -88,6 +90,26 @@ def toggle_habit_today(habit_id):
         )
     conn.commit()
     conn.close()
+
+
+def add_habit_log(habit_id, log_date):
+    """برخلاف toggle_habit_today، این یکی برای هر تاریخ دلخواهی کار می‌کنه
+    (نه فقط امروز) و اگه از قبل ثبت شده باشه، دوباره اضافه نمی‌کنه.
+    عمدتاً برای seed کردن داده‌ی گذشته (مثل demo data) استفاده می‌شه."""
+    conn = get_connection()
+    try:
+        exists = conn.execute(
+            "SELECT id FROM habit_logs WHERE habit_id = ? AND log_date = ?",
+            (habit_id, log_date)
+        ).fetchone()
+        if not exists:
+            conn.execute(
+                "INSERT INTO habit_logs (habit_id, log_date) VALUES (?, ?)",
+                (habit_id, log_date)
+            )
+            conn.commit()
+    finally:
+        conn.close()
 
 
 def is_habit_done_today(habit_id):

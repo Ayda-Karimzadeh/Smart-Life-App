@@ -66,6 +66,11 @@ class HabitRepository:
     def toggle_habit_today(self, habit_id):
         return db.toggle_habit_today(habit_id)
 
+    def log_habit_on_date(self, habit_id, log_date):
+        """ثبت لاگ یه عادت برای تاریخ دلخواه (نه فقط امروز).
+        عمدتاً برای seed کردن داده‌ی گذشته (مثل demo data) استفاده می‌شه."""
+        return db.add_habit_log(habit_id, log_date)
+
     def get_all_habits(self):
         return db.get_all_habits()
 

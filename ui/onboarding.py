@@ -1134,6 +1134,87 @@ class ReadyPage(QWidget):
         self.name = name
         self.retranslate_ui()
 
+
+# ─── صفحه ۵: می‌خوای با داده نمونه ببینی؟ ───────────────────────────────────
+class DemoDataPage(QWidget):
+    """
+    صفحه‌ی انتخاب Demo Data. دو دکمه‌ی «بله» و «نه» مستقیماً
+    onboarding رو تموم می‌کنن، بنابراین next_btn پایین دیالوگ
+    برای این صفحه مخفی می‌شه (نگاه کن به OnboardingDialog._update_ui).
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setStyleSheet("background: transparent;")
+
+        # OnboardingDialog این callback رو بعد از ساخت صفحه ست می‌کنه
+        self.choice_callback = None
+
+        lay = QVBoxLayout(self)
+        lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.setSpacing(18)
+        lay.setContentsMargins(60, 30, 60, 30)
+
+        icon = QLabel("📊")
+        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon.setStyleSheet("font-size:52px; background:transparent;")
+        lay.addWidget(icon)
+
+        self.title = QLabel()
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title.setWordWrap(True)
+        self.title.setStyleSheet(
+            f"""
+            font-size:22px;
+            font-weight:bold;
+            color:{TEXT_PRIMARY};
+            background:transparent;
+            """
+        )
+        lay.addWidget(self.title)
+
+        self.sub = QLabel()
+        self.sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.sub.setWordWrap(True)
+        self.sub.setStyleSheet(
+            f"""
+            font-size:13px;
+            color:{TEXT_MUTED};
+            background:transparent;
+            """
+        )
+        lay.addWidget(self.sub)
+
+        lay.addSpacing(14)
+
+        self.yes_btn = QPushButton()
+        self.yes_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.yes_btn.setStyleSheet(BTN_STYLE(ACCENT, ACCENT2))
+        self.yes_btn.setMinimumWidth(260)
+        self.yes_btn.clicked.connect(lambda: self._choose(True))
+        lay.addWidget(self.yes_btn, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        self.no_btn = QPushButton()
+        self.no_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.no_btn.setStyleSheet(GHOST_BTN)
+        self.no_btn.setMinimumWidth(260)
+        self.no_btn.clicked.connect(lambda: self._choose(False))
+        lay.addWidget(self.no_btn, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        self.retranslate_ui()
+
+    def _choose(self, want_demo: bool):
+        if self.choice_callback:
+            self.choice_callback(want_demo)
+
+    def retranslate_ui(self):
+        self.title.setText(tr("demo_data_title"))
+        self.sub.setText(tr("demo_data_prompt_desc"))
+        self.yes_btn.setText(tr("demo_data_yes_btn"))
+        self.no_btn.setText(tr("demo_data_no_btn"))
+
+
 # ─── Onboarding Dialog اصلی ──────────────────────────────────────────────────
 class OnboardingDialog(QDialog):
     def __init__(self, parent=None):
@@ -1175,6 +1256,8 @@ class OnboardingDialog(QDialog):
         self.page_habits = HabitsPage()
         self.page_goals = GoalsPage()
         self.page_ready = ReadyPage()
+        self.page_demo = DemoDataPage()
+        self.page_demo.choice_callback = self._handle_demo_choice
 
 
         pages = [
@@ -1182,7 +1265,8 @@ class OnboardingDialog(QDialog):
             self.page_welcome,
             self.page_habits,
             self.page_goals,
-            self.page_ready
+            self.page_ready,
+            self.page_demo,
         ]
 
 
@@ -1209,7 +1293,7 @@ class OnboardingDialog(QDialog):
 
         self.dots = []
 
-        for _ in range(5):
+        for _ in range(len(pages)):
 
             dot = QLabel("●")
 
@@ -1343,12 +1427,8 @@ class OnboardingDialog(QDialog):
             )
 
 
-        if self._current == 4:
-
-            self._finish()
-            return
-
-
+        # صفحه‌ی Demo Data آخرین صفحه است و از طریق دکمه‌های خودش
+        # (نه next_btn) تصمیم رو می‌گیره؛ next_btn روی اون صفحه مخفیه.
 
         self._current += 1
 
@@ -1380,6 +1460,7 @@ class OnboardingDialog(QDialog):
         self.page_habits.retranslate_ui()
         self.page_goals.retranslate_ui()
         self.page_ready.retranslate_ui()
+        self.page_demo.retranslate_ui()
 
         self.back_btn.setText(
         tr("back")
@@ -1396,6 +1477,19 @@ class OnboardingDialog(QDialog):
         self.back_btn.setVisible(
             self._current > 0
         )
+
+        # صفحه‌ی آخر (Demo Data) دکمه‌های خودش رو داره،
+        # next_btn پایین دیالوگ برای اون مخفی می‌شه
+        is_demo_page = (
+            self._current == len(self.dots) - 1
+        )
+
+        self.next_btn.setVisible(
+            not is_demo_page
+        )
+
+        if is_demo_page:
+            return
 
         # Next button text
         labels = [
@@ -1437,8 +1531,12 @@ class OnboardingDialog(QDialog):
                 )
 
 
+    def _handle_demo_choice(self, want_demo: bool):
+        """وقتی کاربر رو صفحه‌ی DemoDataPage یکی از دو دکمه رو بزنه."""
+        self._finish(seed_demo=want_demo)
 
-    def _finish(self):
+
+    def _finish(self, seed_demo: bool = False):
 
         name = self.page_welcome.get_name()
 
@@ -1487,6 +1585,17 @@ class OnboardingDialog(QDialog):
 
 
         settings_repo.mark_onboarding_completed()
+
+        if seed_demo:
+            try:
+                from database.demo_data import seed_demo_data
+                seed_demo_data()
+            except Exception:
+                QMessageBox.warning(
+                    self,
+                    tr("demo_data_error_title"),
+                    tr("demo_data_error_desc")
+                )
 
         self.accept()
 
