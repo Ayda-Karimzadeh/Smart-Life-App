@@ -7,6 +7,7 @@ from database.repository import (
 )
 from core.streak_engine import weekly_streak as streak_weekly_streak
 from core.dates import start_of_week, WEEKDAY_LABELS_SHORT
+from core.language_manager import tr
 
 # Consistency Score
 def consistency_score(habit_id: int, days: int = 30) -> float:
@@ -151,3 +152,80 @@ def _habits_done_on(habits, target_date: date) -> int:
 def _focus_on(target_date: date) -> float:
     """ساعت‌های Focus یه روز خاص"""
     return analytics_repo.get_focus_duration_on_date(target_date)
+
+def get_key_insight() -> dict | None:
+    """
+    یک Insight برجسته برای Dashboard برمی‌گرداند.
+
+    اولویت:
+    1. Streak قوی
+    2. Goal نزدیک به تکمیل
+    3. اگر داده کافی نباشد → None
+
+    خروجی:
+    {
+        "type": "streak",
+        "icon": "🔥",
+        "title": "...",
+        "message": "...",
+        "value": 12
+    }
+    """
+
+    habits = habit_repo.get_all_habits()
+    goals = goal_repo.get_all_goals()
+
+    # ─────────────────────────────────────────────
+    # 1. بهترین Streak
+    # ─────────────────────────────────────────────
+    best_habit = None
+    best_streak = 0
+
+    for habit in habits:
+        streak = habit_repo.get_current_streak(habit.id)
+
+        if streak > best_streak:
+            best_streak = streak
+            best_habit = habit
+
+    if best_habit and best_streak >= 3:
+        return {
+            "type": "streak",
+            "icon": "🔥",
+            "title": tr("key_insight"),
+            "message": tr("insight_streak").format(
+                habit=tr(best_habit.name),
+                streak=best_streak
+            ),
+            "value": best_streak,
+        }
+
+    # ─────────────────────────────────────────────
+    # 2. نزدیک‌ترین Goal
+    # ─────────────────────────────────────────────
+    almost_done = []
+
+    for goal in goals:
+        pct = goal_repo.get_goal_progress_percent(goal.id)
+
+        if 70 <= pct < 100:
+            almost_done.append((pct, goal))
+
+    if almost_done:
+        pct, goal = max(almost_done, key=lambda x: x[0])
+
+        return {
+            "type": "goal",
+            "icon": "🎯",
+            "title": tr("key_insight"),
+            "message": tr("insight_goal_almost_done").format(
+                goal=tr(goal.name),
+                progress=pct
+            ),
+            "value": pct,
+        }
+
+    # ─────────────────────────────────────────────
+    # 3. داده کافی نیست
+    # ─────────────────────────────────────────────
+    return None

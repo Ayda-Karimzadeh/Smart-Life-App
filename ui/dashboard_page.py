@@ -19,6 +19,7 @@ from database.repository import (
     settings_repo,
 )
 from core.language_manager import tr
+from core.analytics import get_key_insight
 
 # ─── نمودار دایره‌ای ──────────────────────────────────────────────────────────
 class CircleChart(QWidget):
@@ -157,7 +158,10 @@ class DashboardPage(QWidget):
         layout = QVBoxLayout(content)
         layout.setSpacing(18)
         layout.setContentsMargins(28, 24, 28, 28)
+
         layout.addWidget(self._banner())
+        layout.addWidget(self._key_insight())
+
         if _needs_getting_started():
             layout.addWidget(self._getting_started())
             layout.addWidget(self._today_habits())
@@ -273,6 +277,81 @@ class DashboardPage(QWidget):
         lay.addWidget(title)
         lay.addWidget(sub)
         lay.addLayout(badges)
+        return card
+
+    def _key_insight(self):
+        insight = get_key_insight()
+
+        card = make_card(color="#201b32")
+        card.setMinimumHeight(105)
+
+        lay = QVBoxLayout(card)
+        lay.setContentsMargins(20, 16, 20, 16)
+        lay.setSpacing(6)
+
+        # Empty State
+        if insight is None:
+            title = QLabel("💡  " + tr("key_insight"))
+            title.setStyleSheet(
+                f"""
+                font-size: 15px;
+                font-weight: 600;
+                color: {TEXT_PRIMARY};
+                background: transparent;
+                """
+            )
+
+            message = QLabel(tr("no_insight_yet"))
+            message.setWordWrap(True)
+            message.setStyleSheet(
+                f"""
+                font-size: 12px;
+                color: {TEXT_MUTED};
+                background: transparent;
+                """
+            )
+
+            lay.addWidget(title)
+            lay.addWidget(message)
+
+            return card
+
+        # Insight
+        header = QHBoxLayout()
+
+        icon = QLabel(insight["icon"])
+        icon.setStyleSheet(
+            "font-size: 22px; background: transparent;"
+        )
+        icon.setFixedWidth(36)
+
+        title = QLabel(insight["title"])
+        title.setStyleSheet(
+            f"""
+            font-size: 15px;
+            font-weight: 600;
+            color: {TEXT_PRIMARY};
+            background: transparent;
+            """
+        )
+
+        header.addWidget(icon)
+        header.addWidget(title)
+        header.addStretch()
+
+        message = QLabel(insight["message"])
+        message.setWordWrap(True)
+        message.setStyleSheet(
+            f"""
+            font-size: 13px;
+            color: {TEXT_MUTED};
+            background: transparent;
+            """
+        )
+
+        lay.addLayout(header)
+        lay.addWidget(message)
+
         return card
 
     def _getting_started(self):

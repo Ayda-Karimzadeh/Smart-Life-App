@@ -6,6 +6,14 @@ Translation system for bilingual support (English/Persian)
 
 TRANSLATIONS = {
     "en": {
+        "key_insight": "Key Insight",
+
+        "insight_streak": "Your {habit} streak is {streak} days. Keep it going!",
+
+        "insight_goal_almost_done": "You're {progress}% through {goal}. You're almost there!",
+
+        "no_insight_yet": "Keep using Smart Life and we'll show you something worth noticing here.",
+
         # App
         "app_name": "Smart Life Dashboard",
         "loading": "Loading your data...",
@@ -460,6 +468,14 @@ TRANSLATIONS = {
     },
     
     "fa": {
+        "key_insight": "بینش کلیدی",
+
+        "insight_streak": "رکورد پیوستگی «{habit}» به {streak} روز رسیده. همین‌طور ادامه بده!",
+
+        "insight_goal_almost_done": "هدف «{goal}» رو {progress}% پیش بردی. تقریباً رسیدی!",
+
+        "no_insight_yet": "به استفاده از Smart Life ادامه بده تا اینجا یک نکته جالب درباره پیشرفتت نشون بدیم.",
+
         # Analytics - Extended
         "no_data_available": "داده‌ای برای نمایش وجود ندارد",
 
