@@ -104,7 +104,7 @@ class DonutChart(QWidget):
         if not self.data:
             p.setPen(QColor(TEXT_MUTED))
             p.setFont(QFont("Segoe UI", 11))
-            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No data yet")
+            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, tr("no_data_yet"))
             return
         size = min(self.width(), self.height()) - 20
         x = (self.width() - size) // 2

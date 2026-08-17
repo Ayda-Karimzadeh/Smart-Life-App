@@ -791,7 +791,7 @@ class DashboardPage(QWidget):
         lay.addWidget(title)
 
         if not habits:
-            empty = QLabel("No habits yet — add some in Habits page!")
+            empty = QLabel(tr("no_habits_yet"))
             empty.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
             lay.addWidget(empty)
             return section

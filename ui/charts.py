@@ -7,6 +7,8 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 
+from core.language_manager import tr
+
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 
 # ─── رنگ‌های ثابت (هماهنگ با style.py) ──────────────────────────────────────
@@ -193,7 +195,7 @@ class MplDonutChart(BaseChart):
         if not self.data or sum(v for _, v, _ in self.data) == 0:
             ax = self.fig.add_subplot(111)
             ax.set_facecolor(BG_CARD)
-            ax.text(0.5, 0.5, "No data yet", ha="center", va="center",
+            ax.text(0.5, 0.5, tr("no_data_yet"), ha="center", va="center",
                     color=MUTED, fontsize=11,
                     transform=ax.transAxes)
             ax.axis("off")

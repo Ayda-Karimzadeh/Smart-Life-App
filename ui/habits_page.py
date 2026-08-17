@@ -238,7 +238,7 @@ class HabitCard(QWidget):
 
     def _handle_delete(self):
         reply = QMessageBox.question(
-            self, "Delete Habit",
+            self, "delete_habit",
             tr("delete_habit_confirm").format(
                 name=tr(self.habit.name)
             ),
