@@ -45,40 +45,94 @@ class CircleChart(QWidget):
         p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, f"{self.value}%")
 
 
-# ─── نمودار خطی ──────────────────────────────────────────────────────────────
-class LineChart(QWidget):
+class BarChart(QWidget):
     def __init__(self, data=None, color=ACCENT2, parent=None):
         super().__init__(parent)
         self.data = data or [0] * 7
         self.color = color
-        self.setMinimumHeight(120)
+        self.setMinimumHeight(180)
 
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        w, h = self.width(), self.height()
-        pad = 10
-        mn, mx = min(self.data), max(self.data)
-        rang = mx - mn if mx != mn else 1
-        pts = []
-        for i, v in enumerate(self.data):
-            x = pad + i * (w - 2 * pad) / max(len(self.data) - 1, 1)
-            y = h - pad - (v - mn) / rang * (h - 2 * pad)
-            pts.append((x, y))
-        fill_color = QColor(self.color)
-        fill_color.setAlpha(40)
-        p.setBrush(QBrush(fill_color))
-        p.setPen(Qt.PenStyle.NoPen)
-        poly_pts = [(pad, h - pad)] + pts + [(w - pad, h - pad)]
-        poly = QPolygonF([QPointF(x, y) for x, y in poly_pts])
-        p.drawPolygon(poly)
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(QPen(QColor(self.color), 2.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        path = QPainterPath()
-        path.moveTo(pts[0][0], pts[0][1])
-        for x, y in pts[1:]:
-            path.lineTo(x, y)
-        p.drawPath(path)
+
+        w = self.width()
+        h = self.height()
+
+        left = 12
+        right = 12
+        top = 20
+        bottom = 30
+
+        chart_w = w - left - right
+        chart_h = h - top - bottom
+
+        max_value = max(self.data) if self.data else 0
+
+        if max_value <= 0:
+            max_value = 1
+
+        bar_count = len(self.data)
+        slot_w = chart_w / bar_count
+        bar_w = min(32, slot_w * 0.55)
+
+        days = [
+            tr("sat"),
+            tr("sun"),
+            tr("mon"),
+            tr("tue"),
+            tr("wed"),
+            tr("thu"),
+            tr("fri"),
+        ]
+
+        for i, value in enumerate(self.data):
+            x = left + i * slot_w + (slot_w - bar_w) / 2
+
+            bar_h = (value / max_value) * chart_h
+            y = top + chart_h - bar_h
+
+            # Bar
+            p.setBrush(QBrush(QColor(self.color)))
+            p.setPen(Qt.PenStyle.NoPen)
+
+            p.drawRoundedRect(
+                int(x),
+                int(y),
+                int(bar_w),
+                int(bar_h),
+                5,
+                5
+            )
+
+            # مقدار بالای bar
+            if value > 0:
+                p.setPen(QColor(TEXT_PRIMARY))
+                p.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+
+                label = f"{value:g}h"
+
+                p.drawText(
+                    int(x - 10),
+                    int(y - 6),
+                    int(bar_w + 20),
+                    16,
+                    Qt.AlignmentFlag.AlignCenter,
+                    label
+                )
+
+            # روز هفته
+            p.setPen(QColor(TEXT_MUTED))
+            p.setFont(QFont("Segoe UI", 9))
+
+            p.drawText(
+                int(x - 10),
+                int(top + chart_h + 8),
+                int(bar_w + 20),
+                18,
+                Qt.AlignmentFlag.AlignCenter,
+                days[i] if i < len(days) else ""
+            )
 
 class ClickableCard(QFrame):
     def __init__(self, clicked_callback=None, parent=None):
@@ -207,8 +261,6 @@ class DashboardPage(QWidget):
                     icon,
                     kind
                 )
-
-        QTimer.singleShot(100, self.refresh)
 
         # فقط بعد از تمام شدن event کلیک، Dashboard را refresh کن
         QTimer.singleShot(100, self.refresh)
@@ -594,8 +646,11 @@ class DashboardPage(QWidget):
             weekly_avg = 0
 
         weekly_data = analytics_repo.get_weekly_activity()
-        chart_data  = [v for _, v in weekly_data]
+        chart_data = [v for _, v in weekly_data]
+
         has_focus_data = any(v > 0 for v in chart_data)
+
+        weekly_focus_total = sum(chart_data)
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -626,26 +681,57 @@ class DashboardPage(QWidget):
         left.setMinimumWidth(280)
 
         if has_focus_data:
-            # Weekly Activity — فقط اگه داده‌ای برای نشون دادن هست
             right = make_card()
+
             rl = QVBoxLayout(right)
             rl.setContentsMargins(20, 18, 20, 18)
-            rl.setSpacing(12)
+            rl.setSpacing(8)
+
+            # Header
             rtop = QHBoxLayout()
-            t2 = QLabel(tr("weekly_activity"))
-            t2.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-            ps = QLabel(tr("focus_hours"))
-            ps.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
-            rtop.addWidget(t2)
+
+            title_box = QVBoxLayout()
+            title_box.setSpacing(2)
+
+            title = QLabel(tr("weekly_focus"))
+            title.setStyleSheet(
+                f"""
+                font-size: 15px;
+                font-weight: 600;
+                color: {TEXT_PRIMARY};
+                background: transparent;
+                """
+            )
+
+            total_lbl = QLabel(_fmt_time(weekly_focus_total))
+            total_lbl.setStyleSheet(
+                f"""
+                font-size: 12px;
+                color: {TEXT_MUTED};
+                background: transparent;
+                """
+            )
+
+            title_box.addWidget(title)
+            title_box.addWidget(total_lbl)
+
+            rtop.addLayout(title_box)
             rtop.addStretch()
-            rtop.addWidget(ps)
-            chart = LineChart(data=chart_data, color=ACCENT2)
-            chart.setMinimumHeight(160)
+
             rl.addLayout(rtop)
+
+            chart = BarChart(
+                data=chart_data,
+                color=ACCENT2
+            )
+
+            chart.setMinimumHeight(180)
+
             rl.addWidget(chart)
 
             lay.addWidget(left, 1)
             lay.addWidget(right, 2)
+
         else:
             lay.addWidget(left)
 

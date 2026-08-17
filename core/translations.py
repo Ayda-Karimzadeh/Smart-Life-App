@@ -282,6 +282,7 @@ TRANSLATIONS = {
         # Trends
         "habit_score_trend": "Habit Score Trend",
         "weekly_focus_time": "Weekly Focus Time",
+        "weekly_focus": "Weekly Focus",
 
         # Radar / Comparison
         "performance_radar": "Performance Radar",
@@ -562,6 +563,35 @@ TRANSLATIONS = {
         # =========================================================
         "default_name": "Sara",
         "reset": "Reset",
+
+        # ── Demo Data ──────────────────────────────────────────────────────
+        "demo_goal_description": "Work towards: {name}",
+
+        # Demo Tasks
+        "task_finish_python_exercise": "Finish Python exercise",
+        "task_python_exercise_desc": "Chapter 3 practice problems",
+
+        "task_go_for_run": "Go for a run",
+        "task_go_for_run_desc": "30 minutes jogging",
+
+        "task_reply_emails": "Reply to emails",
+        "task_reply_emails_desc": "Clear out the inbox",
+
+        "task_book_dentist": "Book dentist appointment",
+        "task_book_dentist_desc": "Overdue — call the clinic",
+
+        "task_read_chapter": "Read chapter 5",
+        "task_read_chapter_desc": "Continue reading current book",
+
+        "task_grocery_shopping": "Weekly grocery shopping",
+        "task_grocery_shopping_desc": "Milk, eggs, vegetables",
+
+        # Demo Time Sessions
+        "session_python_study": "Python Study",
+        "session_deep_work": "Deep Work Block",
+        "session_evening_run": "Evening Run",
+        "session_journaling": "Journaling",
+        "session_book_reading": "Book Reading",
     },
 
     # =====================================================================
@@ -1184,6 +1214,35 @@ TRANSLATIONS = {
         # Misc
         # =========================================================
         "default_name": "سارا",
+
+        # ── Demo Data ──────────────────────────────────────────────────────
+        "demo_goal_description": "برای رسیدن به «{name}» تلاش کن.",
+
+        # Demo Tasks
+        "task_finish_python_exercise": "تکمیل تمرین پایتون",
+        "task_python_exercise_desc": "تمرین‌های فصل سوم",
+
+        "task_go_for_run": "رفتن برای دویدن",
+        "task_go_for_run_desc": "۳۰ دقیقه دویدن",
+
+        "task_reply_emails": "پاسخ به ایمیل‌ها",
+        "task_reply_emails_desc": "پاک‌سازی صندوق ایمیل",
+
+        "task_book_dentist": "گرفتن وقت دندانپزشکی",
+        "task_book_dentist_desc": "عقب‌افتاده — با کلینیک تماس بگیر",
+
+        "task_read_chapter": "خواندن فصل پنجم",
+        "task_read_chapter_desc": "ادامه مطالعه کتاب فعلی",
+
+        "task_grocery_shopping": "خرید هفتگی",
+        "task_grocery_shopping_desc": "شیر، تخم‌مرغ و سبزیجات",
+
+        # Demo Time Sessions
+        "session_python_study": "مطالعه پایتون",
+        "session_deep_work": "بلوک کار عمیق",
+        "session_evening_run": "دویدن عصرگاهی",
+        "session_journaling": "نوشتن روزانه",
+        "session_book_reading": "مطالعه کتاب",
     },
 }
 
