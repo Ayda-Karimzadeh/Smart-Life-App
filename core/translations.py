@@ -494,6 +494,16 @@ TRANSLATIONS = {
         "load_demo": "Load Demo Data",
         "skip_demo": "Start Fresh",
 
+        # Demo Data Page
+        "demo_data_prompt_desc":
+            "Load sample habits, goals, tasks, and time sessions to explore the app.",
+        "demo_data_yes_btn": "Yes, load demo data",
+        "demo_data_no_btn": "No, start fresh",
+        
+        "demo_data_error_title": "Demo Data Error",
+        "demo_data_error_desc":
+            "Something went wrong while loading demo data.",
+        
         # Suggested Goals
         "goal_learn_something": "Learn Something New",
         "goal_get_fit": "Get Fit",
@@ -665,9 +675,8 @@ TRANSLATIONS = {
         "habit_completed_desc":
             "«{name}» برای امروز انجام شد.",
 
-        "habit_unchecked": "لغو شد",
-        "habit_unchecked_desc":
-            "«{name}» برای امروز لغو شد.",
+        "habit_unchecked": "انجام‌نشده شد",
+        "habit_unchecked_desc": "«{name}» برای امروز انجام‌نشده علامت خورد.",
 
         "streak_milestone_title":
             "{streak} روز تداوم!",
@@ -884,6 +893,7 @@ TRANSLATIONS = {
         # Trends
         "habit_score_trend": "روند امتیاز عادت‌ها",
         "weekly_focus_time": "زمان تمرکز هفتگی",
+        "weekly_focus": "تمرکز هفتگی",
 
         # Radar / Comparison
         "performance_radar": "رادار عملکرد",
@@ -1101,6 +1111,17 @@ TRANSLATIONS = {
 
         "load_demo": "بارگذاری داده نمونه",
         "skip_demo": "شروع تازه",
+
+        # Demo Data Page
+        "demo_data_prompt_desc":
+            "داده‌های نمونه شامل عادت‌ها، اهداف، تسک‌ها و جلسات زمانی را بارگذاری کن تا با برنامه آشنا شوی.",
+
+        "demo_data_yes_btn": "بله، داده نمونه را بارگذاری کن",
+        "demo_data_no_btn": "نه، از صفر شروع کن",
+
+        "demo_data_error_title": "خطا در داده نمونه",
+        "demo_data_error_desc":
+            "هنگام بارگذاری داده‌های نمونه مشکلی پیش آمد.",
 
         # Suggested Goals
         "goal_learn_something": "یادگیری یک مهارت جدید",

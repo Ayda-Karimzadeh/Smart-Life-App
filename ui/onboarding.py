@@ -298,6 +298,7 @@ class LanguagePage(QWidget):
             """
             font-size:28px;
             background:transparent;
+            border: none;
             """
         )
 
@@ -313,6 +314,7 @@ class LanguagePage(QWidget):
             font-weight:600;
             color:{TEXT_PRIMARY};
             background:transparent;
+            border: none;
             """
         )
 
@@ -323,6 +325,7 @@ class LanguagePage(QWidget):
             font-size:11px;
             color:{TEXT_MUTED};
             background:transparent;
+            border: none;
             """
         )
 
@@ -347,6 +350,7 @@ class LanguagePage(QWidget):
                 color:white;
                 background:{ACCENT};
                 border-radius:11px;
+                border: none;
                 """
             )
 
@@ -424,6 +428,7 @@ class LanguagePage(QWidget):
             color:white;
             background:{ACCENT};
             border-radius:11px;
+            border: none;
             """
         )
 
@@ -762,6 +767,7 @@ class HabitsPage(QWidget):
             """
             font-size:24px;
             background:transparent;
+            border: none;
             """
         )
 
@@ -779,6 +785,7 @@ class HabitsPage(QWidget):
             font-size:13px;
             font-weight:600;
             background:transparent;
+            border: none;
             """
         )
 
@@ -792,6 +799,7 @@ class HabitsPage(QWidget):
             color:{TEXT_MUTED};
             font-size:11px;
             background:transparent;
+            border: none;
             """
         )
 
@@ -892,6 +900,7 @@ class HabitsPage(QWidget):
                 color:white;
                 background:{ACCENT};
                 border-radius:11px;
+                border: none;
                 """
             )
 
@@ -1022,17 +1031,17 @@ class GoalsPage(QWidget):
         lay.setSpacing(10)
 
         icon_lbl = QLabel(goal["icon"])
-        icon_lbl.setStyleSheet("font-size: 24px; background: transparent;")
+        icon_lbl.setStyleSheet("font-size: 24px; background: transparent; border: none;")
         icon_lbl.setFixedWidth(32)
 
         info = QVBoxLayout()
         info.setSpacing(2)
         name_lbl = QLabel(tr(goal["name"]))
-        name_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        name_lbl.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent; border: none;")
         detail = QLabel(
             f"{tr(goal['category'])} • {goal['days']} {tr('days')}"
         )
-        detail.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+        detail.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent; border: none;")
         info.addWidget(name_lbl)
         info.addWidget(detail)
 
@@ -1253,21 +1262,33 @@ class OnboardingDialog(QDialog):
 
         self.page_language = LanguagePage()
         self.page_welcome = WelcomePage()
+        self.page_demo = DemoDataPage()
         self.page_habits = HabitsPage()
         self.page_goals = GoalsPage()
         self.page_ready = ReadyPage()
-        self.page_demo = DemoDataPage()
         self.page_demo.choice_callback = self._handle_demo_choice
 
-
+        # ترتیب صفحات:
+        # زبان -> اسم -> «دیتای نمونه می‌خوای؟» -> (اگه نه) عادت -> هدف -> آماده‌ای!
+        # اگه «بله» رو روی صفحه‌ی دمو بزنه، آنبوردینگ همون‌جا تموم می‌شه
+        # و صفحات عادت/هدف/آماده‌ای اصلاً دیده نمی‌شن.
         pages = [
             self.page_language,
             self.page_welcome,
+            self.page_demo,
             self.page_habits,
             self.page_goals,
             self.page_ready,
-            self.page_demo,
         ]
+
+        # ایندکس‌های نام‌دار به‌جای عدد خام، تا منطق _go_next/_update_ui
+        # به ترتیب فیزیکی صفحات وابسته نباشه و تغییرش راحت باشه.
+        self.IDX_LANGUAGE = pages.index(self.page_language)
+        self.IDX_WELCOME = pages.index(self.page_welcome)
+        self.IDX_DEMO = pages.index(self.page_demo)
+        self.IDX_HABITS = pages.index(self.page_habits)
+        self.IDX_GOALS = pages.index(self.page_goals)
+        self.IDX_READY = pages.index(self.page_ready)
 
 
         for page in pages:
@@ -1387,7 +1408,7 @@ class OnboardingDialog(QDialog):
     def _go_next(self):
 
         # انتخاب زبان
-        if self._current == 0:
+        if self._current == self.IDX_LANGUAGE:
 
             from core.language_manager import get_language_manager
 
@@ -1398,9 +1419,8 @@ class OnboardingDialog(QDialog):
             self.retranslate_ui()
 
 
-
-        # چک کردن عادت
-        if self._current == 2:
+        # چک کردن عادت (فقط توی مسیر «بدون دیتای نمونه» به این صفحه می‌رسیم)
+        if self._current == self.IDX_HABITS:
 
             if not self.page_habits.get_selected_habits():
 
@@ -1413,9 +1433,8 @@ class OnboardingDialog(QDialog):
                 return
 
 
-
-        # قبل از Ready
-        if self._current == 3:
+        # قبل از Ready، اسم رو روی صفحه‌ی Ready ست کن
+        if self._current == self.IDX_GOALS:
 
             name = (
                 self.page_welcome
@@ -1427,8 +1446,18 @@ class OnboardingDialog(QDialog):
             )
 
 
-        # صفحه‌ی Demo Data آخرین صفحه است و از طریق دکمه‌های خودش
-        # (نه next_btn) تصمیم رو می‌گیره؛ next_btn روی اون صفحه مخفیه.
+        # Ready آخرین صفحه‌ی مسیر «بدون دیتای نمونه» است —
+        # اینجا onboarding رو مستقیم تموم می‌کنیم، نه اینکه بریم صفحه‌ی بعد.
+        if self._current == self.IDX_READY:
+
+            self._finish(seed_demo=False)
+
+            return
+
+
+        # صفحه‌ی Demo Data از طریق دکمه‌های خودش (نه next_btn) تصمیم
+        # می‌گیره؛ next_btn روی اون صفحه مخفیه، پس هیچ‌وقت این متد
+        # وقتی self._current == IDX_DEMO باشه صدا زده نمی‌شه.
 
         self._current += 1
 
@@ -1478,10 +1507,10 @@ class OnboardingDialog(QDialog):
             self._current > 0
         )
 
-        # صفحه‌ی آخر (Demo Data) دکمه‌های خودش رو داره،
+        # صفحه‌ی Demo Data دکمه‌های خودش رو داره (بله/خیر)،
         # next_btn پایین دیالوگ برای اون مخفی می‌شه
         is_demo_page = (
-            self._current == len(self.dots) - 1
+            self._current == self.IDX_DEMO
         )
 
         self.next_btn.setVisible(
@@ -1491,17 +1520,17 @@ class OnboardingDialog(QDialog):
         if is_demo_page:
             return
 
-        # Next button text
-        labels = [
-            "continue",    # Language
-            "lets_start",  # Welcome
-            "next",        # Habits
-            "next",        # Goals
-            "lets_go"      # Ready
-        ]
+        # Next button text بر اساس صفحه‌ی فعلی
+        labels = {
+            self.IDX_LANGUAGE: "continue",
+            self.IDX_WELCOME: "lets_start",
+            self.IDX_HABITS: "next",
+            self.IDX_GOALS: "next",
+            self.IDX_READY: "lets_go",
+        }
 
         self.next_btn.setText(
-            tr(labels[self._current])
+            tr(labels.get(self._current, "next"))
         )
   
 
@@ -1532,8 +1561,17 @@ class OnboardingDialog(QDialog):
 
 
     def _handle_demo_choice(self, want_demo: bool):
-        """وقتی کاربر رو صفحه‌ی DemoDataPage یکی از دو دکمه رو بزنه."""
-        self._finish(seed_demo=want_demo)
+        """وقتی کاربر روی صفحه‌ی DemoDataPage یکی از دو دکمه رو بزنه."""
+
+        if want_demo:
+            # بله: همین‌جا آنبوردینگ رو تموم کن و دیتای نمونه رو بریز.
+            # به Habits/Goals/Ready اصلاً نیازی نیست.
+            self._finish(seed_demo=True)
+        else:
+            # خیر: مسیر دستی رو ادامه بده -> Habits
+            self._current += 1
+            self.stack.setCurrentIndex(self._current)
+            self._update_ui()
 
 
     def _finish(self, seed_demo: bool = False):
