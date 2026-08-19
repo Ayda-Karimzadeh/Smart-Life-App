@@ -2,12 +2,18 @@
 
 from datetime import date, timedelta
 
-from database.repository import habit_repo, goal_repo, task_repo, time_repo
+from database.repository import (
+    habit_repo,
+    goal_repo,
+    task_repo,
+    time_repo,
+)
 from core.language_manager import tr
+from core.dates import start_of_week
 
 
 def seed_demo_data():
-    """Seed demo data for a better first-time experience.
+    """Seed realistic demo data for a better first-time experience.
 
     Demo data is stored using stable English keys/values.
     User-facing text is translated through tr().
@@ -15,9 +21,10 @@ def seed_demo_data():
 
     today = date.today()
 
-    # ── Demo Habits ──────────────────────────────────────────────────────
-    # Stored values remain in English so repository/database logic
-    # stays language-independent.
+    # ==========================================================
+    # Demo Habits
+    # ==========================================================
+
     demo_habits = [
         (
             "🧘",
@@ -69,7 +76,15 @@ def seed_demo_data():
         ),
     ]
 
-    for icon, name_key, category, freq_type, freq_count, pattern in demo_habits:
+    for (
+        icon,
+        name_key,
+        category,
+        freq_type,
+        freq_count,
+        pattern,
+    ) in demo_habits:
+
         name = tr(name_key)
 
         habit_id = habit_repo.add_habit(
@@ -82,7 +97,10 @@ def seed_demo_data():
 
         # pattern[0] = 6 days ago
         # pattern[-1] = today
-        for offset, done in zip(range(6, -1, -1), pattern):
+        for offset, done in zip(
+            range(6, -1, -1),
+            pattern,
+        ):
             if done:
                 log_date = (
                     today - timedelta(days=offset)
@@ -93,7 +111,10 @@ def seed_demo_data():
                     log_date,
                 )
 
-    # ── Demo Goals ───────────────────────────────────────────────────────
+    # ==========================================================
+    # Demo Goals
+    # ==========================================================
+
     demo_goals = [
         (
             "🎯",
@@ -135,12 +156,19 @@ def seed_demo_data():
         ),
     ]
 
-    for icon, name_key, category, days, milestone_keys in demo_goals:
+    for (
+        icon,
+        name_key,
+        category,
+        days,
+        milestone_keys,
+    ) in demo_goals:
+
         name = tr(name_key)
 
-        description = tr("demo_goal_description").format(
-            name=name
-        )
+        description = tr(
+            "demo_goal_description"
+        ).format(name=name)
 
         deadline = (
             today + timedelta(days=days)
@@ -160,7 +188,10 @@ def seed_demo_data():
                 tr(milestone_key),
             )
 
-    # ── Demo Tasks ───────────────────────────────────────────────────────
+    # ==========================================================
+    # Demo Tasks
+    # ==========================================================
+
     demo_tasks = [
         (
             "task_finish_python_exercise",
@@ -222,41 +253,173 @@ def seed_demo_data():
             due_date,
         )
 
-    # ── Demo Time Sessions ──────────────────────────────────────────────
-    # Categories remain stable English database values.
-    demo_sessions = [
-        ("session_python_study", "Study", 45 * 60),
-        ("session_deep_work", "Work", 50 * 60),
-        ("session_evening_run", "Fitness", 30 * 60),
-        ("session_journaling", "Personal", 15 * 60),
-        ("session_book_reading", "Study", 25 * 60),
+    # ==========================================================
+    # Demo Focus Sessions
+    # ==========================================================
+    #
+    # Purpose:
+    # Create realistic Focus Time data across the current week
+    # so the Dashboard weekly bar chart (get_weekly_activity)
+    # has meaningful, varied data.
+    #
+    # IMPORTANT — why offsets are relative to start_of_week():
+    # get_weekly_activity() in db_manager.py builds the chart by
+    # iterating week_start .. week_start+6 (Saturday -> Friday).
+    # The old version of this seeder computed session dates as
+    # `today - timedelta(days=days_ago)`, which silently assumed
+    # "today" is always Friday (days_ago=0). Any other day of the
+    # week broke the assumption: the generated dates could land
+    # outside the current week entirely, so get_weekly_activity()
+    # wouldn't find them and the chart looked flat/empty.
+    #
+    # Fix: compute each session's date from the real start of the
+    # current week (index 0 = Saturday ... index 6 = Friday), and
+    # only seed days that have already happened (offset <= today's
+    # position in the week). Seeding a "future" day inside the
+    # current week isn't realistic (you can't log a focus session
+    # that hasn't happened yet), and it would misleadingly show a
+    # completed bar for a day that hasn't occurred.
+    #
+    # Target pattern (once the week has fully elapsed):
+    #
+    # Saturday  -> 1h 20m
+    # Sunday    -> 2h 10m
+    # Monday    -> 0h 45m
+    # Tuesday   -> 2h 35m
+    # Wednesday -> 1h 40m
+    # Thursday  -> 0h
+    # Friday    -> 1h 15m
+    #
+    # These values are intentionally different so the chart
+    # looks like real usage rather than a flat demo. Whatever
+    # portion of the week has already passed gets seeded; the
+    # rest stays at 0h, which is expected/realistic.
+    # ==========================================================
+
+    week_start = start_of_week()
+
+    weekly_focus_sessions = [
+        # Saturday (offset 0)
+        (
+            0,
+            [
+                ("session_python_study", "Study", 45 * 60),
+                ("session_reading", "Study", 35 * 60),
+            ],
+        ),
+
+        # Sunday (offset 1)
+        (
+            1,
+            [
+                ("session_deep_work", "Work", 50 * 60),
+                ("session_python_project", "Study", 45 * 60),
+                ("session_learning", "Study", 35 * 60),
+            ],
+        ),
+
+        # Monday (offset 2)
+        (
+            2,
+            [
+                ("session_python_study", "Study", 45 * 60),
+            ],
+        ),
+
+        # Tuesday (offset 3)
+        (
+            3,
+            [
+                ("session_deep_work", "Work", 60 * 60),
+                ("session_python_project", "Study", 50 * 60),
+                ("session_reading", "Study", 45 * 60),
+            ],
+        ),
+
+        # Wednesday (offset 4)
+        (
+            4,
+            [
+                ("session_deep_work", "Work", 50 * 60),
+                ("session_learning", "Study", 50 * 60),
+            ],
+        ),
+
+        # Thursday (offset 5)
+        (
+            5,
+            [],
+        ),
+
+        # Friday (offset 6)
+        (
+            6,
+            [
+                ("session_week_review", "Study", 45 * 60),
+                ("session_planning", "Personal", 30 * 60),
+            ],
+        ),
     ]
 
-    for name_key, category, duration in demo_sessions:
-        time_repo.add_time_session(
-            tr(name_key),
+    for offset, sessions in weekly_focus_sessions:
+
+        session_date_obj = week_start + timedelta(days=offset)
+
+        # Never seed a day that's still in the future within the
+        # current week — that's not realistic and would corrupt
+        # the "real usage" look of the chart.
+        if session_date_obj > today:
+            continue
+
+        session_date = session_date_obj.isoformat()
+
+        for (
+            name_key,
             category,
             duration,
-        )
+        ) in sessions:
+
+            time_repo.add_time_session(
+                tr(name_key),
+                category,
+                duration,
+                session_date=session_date,
+            )
 
 
 def clear_demo_data():
     """Clear all demo data."""
+
+    # ----------------------------------------------------------
+    # Habits
+    # ----------------------------------------------------------
 
     habits = habit_repo.get_all_habits()
 
     for habit in habits:
         habit_repo.delete_habit(habit.id)
 
+    # ----------------------------------------------------------
+    # Goals
+    # ----------------------------------------------------------
+
     goals = goal_repo.get_all_goals()
 
     for goal in goals:
         goal_repo.delete_goal(goal.id)
 
+    # ----------------------------------------------------------
+    # Tasks
+    # ----------------------------------------------------------
+
     tasks = task_repo.get_all_tasks()
 
     for task in tasks:
         task_repo.delete_task(task.id)
+
+    # ----------------------------------------------------------
+    # Time Sessions
+    # ----------------------------------------------------------
 
     sessions = time_repo.get_recent_sessions(
         limit=100000
