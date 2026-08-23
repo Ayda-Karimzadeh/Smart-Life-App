@@ -25,12 +25,26 @@ from core.language_manager import tr
 # (مثلاً "Career", "career", "CAREER" همه باید یک ترجمه بگیرن).
 GOAL_CATEGORY_TRANSLATION_KEYS = {
     "all": "all",
-    "career": "career",
-    "personal": "personal",
-    "health": "health",
-    "finance": "finance",
-    "education": "education",
-    "other": "other",
+
+    "career": "cat_career",
+    "personal": "cat_personal",
+
+    "health": "cat_health",
+    "fitness": "cat_fitness",
+
+    "finance": "cat_finance",
+
+    "education": "cat_learning",
+    "learning": "cat_learning",
+
+    "study": "cat_study",
+    "work": "cat_work",
+
+    "mindfulness": "cat_mindfulness",
+    "personal_growth": "cat_personal_growth",
+    "wellness": "cat_wellness",
+
+    "other": "cat_other",
 }
 
 

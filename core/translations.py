@@ -5,6 +5,9 @@ Translation system for bilingual support (English / Persian)
 """
 
 TRANSLATIONS = {
+    # =====================================================================
+    # English
+    # =====================================================================
     "en": {
 
         # =========================================================
@@ -78,7 +81,7 @@ TRANSLATIONS = {
         "streak_milestone_desc":
             "Amazing — \"{name}\" for {streak} days in a row!",
 
-        # Demo / suggested habits
+        # Suggested Habits
         "habit_meditation": "Morning Meditation",
         "habit_exercise": "Exercise",
         "habit_reading": "Reading",
@@ -244,6 +247,17 @@ TRANSLATIONS = {
             "Come back here — your stats will fill in automatically",
 
         # =========================================================
+        # Days
+        # =========================================================
+        "sat": "Sat",
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+
+        # =========================================================
         # Analytics
         # =========================================================
         "weekly_activity": "Weekly Activity",
@@ -271,7 +285,6 @@ TRANSLATIONS = {
         "most_time_spent": "Most time spent",
         "daily_average": "Daily Average",
 
-        # Empty Analytics
         "empty_analytics_title": "Your Progress Awaits",
         "empty_analytics_desc":
             "Start tracking to see your growth patterns and insights.",
@@ -345,6 +358,22 @@ TRANSLATIONS = {
         # =========================================================
         # Categories
         # =========================================================
+        "all": "All",
+        "fitness": "Fitness",
+        "health": "Health",
+        "mindfulness": "Mindfulness",
+        "personal_growth": "Personal Growth",
+        "learning": "Learning",
+        "finance": "Finance",
+        "study": "Study",
+        "work": "Work",
+        "personal": "Personal",
+        "wellness": "Wellness",
+        "skills": "Skills",
+        "digital_wellness": "Digital Wellness",
+        "career": "Career",
+        "other": "Other",
+
         "cat_mindfulness": "Mindfulness",
         "cat_fitness": "Fitness",
         "cat_health": "Health",
@@ -373,7 +402,6 @@ TRANSLATIONS = {
         "days_overdue": "days overdue",
         "due_today": "Due today",
         "days_left": "days left",
-
         "progress": "Progress",
 
         # =========================================================
@@ -423,12 +451,6 @@ TRANSLATIONS = {
 
         "empty_timer_desc":
             "Measure your productive time. Every minute counts toward your goals.",
-
-        "empty_analytics_title":
-            "Your Progress Awaits",
-
-        "empty_analytics_desc":
-            "Start tracking to see your growth patterns and insights.",
 
         # =========================================================
         # Placeholders
@@ -485,7 +507,9 @@ TRANSLATIONS = {
         "select_habit_error_desc":
             "Select at least one habit to get started.",
 
-        # Demo data
+        # =========================================================
+        # Demo Data
+        # =========================================================
         "demo_data_title": "Try Demo Data?",
         "demo_data_desc":
             "Load sample habits, goals, and tasks to see how the app works. "
@@ -494,17 +518,21 @@ TRANSLATIONS = {
         "load_demo": "Load Demo Data",
         "skip_demo": "Start Fresh",
 
-        # Demo Data Page
         "demo_data_prompt_desc":
             "Load sample habits, goals, tasks, and time sessions to explore the app.",
+
         "demo_data_yes_btn": "Yes, load demo data",
         "demo_data_no_btn": "No, start fresh",
-        
+
         "demo_data_error_title": "Demo Data Error",
         "demo_data_error_desc":
             "Something went wrong while loading demo data.",
-        
+
+        "demo_goal_description": "Work towards: {name}",
+
+        # =========================================================
         # Suggested Goals
+        # =========================================================
         "goal_learn_something": "Learn Something New",
         "goal_get_fit": "Get Fit",
         "goal_save_money": "Save Money",
@@ -512,7 +540,9 @@ TRANSLATIONS = {
         "goal_side_project": "Build a Side Project",
         "goal_new_language": "Learn a New Language",
 
+        # =========================================================
         # Suggested Milestones
+        # =========================================================
         "ms_choose_topic": "Choose a Topic",
         "ms_beginner_lessons": "Complete Beginner Lessons",
         "ms_practice_consistently": "Practice Consistently",
@@ -522,8 +552,7 @@ TRANSLATIONS = {
         "ms_create_workout_plan": "Create a Workout Plan",
         "ms_complete_first_month": "Complete the First Month",
         "ms_improve_endurance": "Improve Endurance",
-        "ms_reach_first_fitness_goal":
-            "Reach Your First Fitness Goal",
+        "ms_reach_first_fitness_goal": "Reach Your First Fitness Goal",
         "ms_keep_consistency": "Maintain Consistency",
 
         "ms_set_saving_target": "Set a Savings Target",
@@ -542,8 +571,7 @@ TRANSLATIONS = {
         "ms_plan_project": "Plan the Project",
         "ms_build_mvp": "Build the MVP",
         "ms_launch_first_version": "Launch the First Version",
-        "ms_improve_from_feedback":
-            "Improve Based on Feedback",
+        "ms_improve_from_feedback": "Improve Based on Feedback",
 
         "ms_learn_alphabet": "Learn the Alphabet",
         "ms_learn_500_words": "Learn 500 Words",
@@ -569,15 +597,8 @@ TRANSLATIONS = {
             "Remove all sample data added during onboarding",
 
         # =========================================================
-        # Common UI
-        # =========================================================
-        "default_name": "Sara",
-        "reset": "Reset",
-
-        # ── Demo Data ──────────────────────────────────────────────────────
-        "demo_goal_description": "Work towards: {name}",
-
         # Demo Tasks
+        # =========================================================
         "task_finish_python_exercise": "Finish Python exercise",
         "task_python_exercise_desc": "Chapter 3 practice problems",
 
@@ -596,17 +617,20 @@ TRANSLATIONS = {
         "task_grocery_shopping": "Weekly grocery shopping",
         "task_grocery_shopping_desc": "Milk, eggs, vegetables",
 
+        # =========================================================
         # Demo Time Sessions
+        # =========================================================
         "session_python_study": "Python Study",
         "session_deep_work": "Deep Work Block",
         "session_evening_run": "Evening Run",
         "session_journaling": "Journaling",
         "session_book_reading": "Book Reading",
 
-        "this_week": "This Week",
+        # =========================================================
+        # Habit Statistics
+        # =========================================================
         "days_count": "{count} days",
         "weeks_count": "{count} weeks",
-        "best": "Best",
         "longest": "Longest",
         "across_all_habits": "Across all habits",
         "building_consistency": "Building consistency",
@@ -614,37 +638,33 @@ TRANSLATIONS = {
         "broken": "Broken",
         "weeks": "weeks",
         "of": "of",
-        # Categories
-        "all": "All",
-        "fitness": "Fitness",
-        "health": "Health",
-        "mindfulness": "Mindfulness",
-        "personal_growth": "Personal Growth",
-
+        # =========================================================
+        # =========================================================
+        # Demo Time Sessions
+        # =========================================================
+        "session_python_study": "Python Study",
+        "session_reading": "Reading",
+        "session_deep_work": "Deep Work Block",
+        "session_python_project": "Python Project",
+        "session_learning": "Learning",
+        "session_week_review": "Weekly Review",
+        "session_planning": "Planning",
     },
 
     # =====================================================================
     # Persian
     # =====================================================================
     "fa": {
-        
-        # Categories
-        "all": "همه",
-        "fitness": "ورزش",
-        "health": "سلامت",
-        "mindfulness": "ذهن‌آگاهی",
-        "personal_growth": "رشد فردی",        
-        "of": "از",
-        "weeks": "هفته",
-        "this_week": "این هفته",
-        "days_count": "{count} روز",
-        "weeks_count": "{count} هفته",
-        "best": "بهترین",
-        "longest": "طولانی‌ترین",
-        "across_all_habits": "در تمام عادت‌ها",
-        "building_consistency": "در حال ساختن استمرار",
-        "at_risk": "در معرض خطر",
-        "broken": "قطع شده",
+        # =========================================================
+        # Demo Time Sessions
+        # =========================================================
+        "session_python_study": "مطالعه پایتون",
+        "session_reading": "مطالعه",
+        "session_deep_work": "کار عمیق",
+        "session_python_project": "پروژه پایتون",
+        "session_learning": "یادگیری",
+        "session_week_review": "مرور هفتگی",
+        "session_planning": "برنامه‌ریزی",
 
         # =========================================================
         # App
@@ -711,13 +731,12 @@ TRANSLATIONS = {
         "habit_completed": "آفرین!",
         "habit_completed_desc":
             "«{name}» برای امروز انجام شد.",
-
         "habit_unchecked": "انجام‌نشده شد",
-        "habit_unchecked_desc": "«{name}» برای امروز انجام‌نشده علامت خورد.",
+        "habit_unchecked_desc":
+            "«{name}» برای امروز انجام‌نشده علامت خورد.",
 
         "streak_milestone_title":
             "{streak} روز تداوم!",
-
         "streak_milestone_desc":
             "عالیه — «{name}» {streak} روز پشت‌سرهم!",
 
@@ -762,7 +781,6 @@ TRANSLATIONS = {
         "add_goal": "افزودن هدف جدید",
         "edit_goal": "ویرایش هدف",
         "delete_goal": "حذف هدف",
-
         "delete_goal_confirm":
             "آیا مطمئن هستید که می‌خواهید «{name}» را حذف کنید؟ "
             "تمام مایلستون‌های آن نیز حذف خواهند شد.",
@@ -841,7 +859,7 @@ TRANSLATIONS = {
 
         "daily_progress": "پیشرفت روزانه",
         "habit_completion_today": "تکمیل عادت‌های امروز",
-        "habits_completed": "عادت‌های انجام شده",
+        "habits_completed": "عادت‌های انجام‌شده",
         "keep_it_up": "ادامه بده!",
 
         "active_goals": "اهداف فعال",
@@ -850,7 +868,7 @@ TRANSLATIONS = {
         "focus_time": "زمان تمرکز",
         "focus_time_today": "زمان تمرکز امروز",
         "focus_hours": "ساعت تمرکز",
-        "tracked_sessions": "جلسات ثبت شده",
+        "tracked_sessions": "جلسات ثبت‌شده",
 
         "completed_today": "امروز انجام شده",
         "not_completed_yet": "هنوز انجام نشده",
@@ -890,15 +908,18 @@ TRANSLATIONS = {
 
         "stats_fill_automatically":
             "دوباره به اینجا برگرد — آمار پیشرفتت خودکار تکمیل می‌شود",
-        # days
-        "sat": "Sat",
-        "sun": "Sun",
-        "mon": "Mon",
-        "tue": "Tue",
-        "wed": "Wed",
-        "thu": "Thu",
-        "fri": "Fri",
-        
+
+        # =========================================================
+        # Days
+        # =========================================================
+        "sat": "شنبه",
+        "sun": "یکشنبه",
+        "mon": "دوشنبه",
+        "tue": "سه‌شنبه",
+        "wed": "چهارشنبه",
+        "thu": "پنجشنبه",
+        "fri": "جمعه",
+
         # =========================================================
         # Analytics
         # =========================================================
@@ -927,7 +948,6 @@ TRANSLATIONS = {
         "most_time_spent": "بیشترین زمان صرف‌شده",
         "daily_average": "میانگین روزانه",
 
-        # Empty Analytics
         "empty_analytics_title": "پیشرفتت در انتظارت است",
         "empty_analytics_desc":
             "شروع به ثبت فعالیت‌ها کن تا الگوهای رشد و بینش‌های عملکردت را ببینی.",
@@ -1005,6 +1025,22 @@ TRANSLATIONS = {
         # =========================================================
         # Categories
         # =========================================================
+        "all": "همه",
+        "fitness": "ورزش",
+        "health": "سلامت",
+        "mindfulness": "ذهن‌آگاهی",
+        "personal_growth": "رشد فردی",
+        "learning": "یادگیری",
+        "finance": "مالی",
+        "study": "مطالعه",
+        "work": "کار",
+        "personal": "شخصی",
+        "wellness": "رفاه",
+        "skills": "مهارت‌ها",
+        "digital_wellness": "سلامت دیجیتال",
+        "career": "شغل",
+        "other": "سایر",
+
         "cat_mindfulness": "ذهن‌آگاهی",
         "cat_fitness": "تناسب اندام",
         "cat_health": "سلامتی",
@@ -1030,10 +1066,9 @@ TRANSLATIONS = {
         # =========================================================
         # Deadline / Progress
         # =========================================================
-        "days_overdue": "روز تاخیر",
+        "days_overdue": "روز تأخیر",
         "due_today": "سررسید امروز",
         "days_left": "روز باقی‌مانده",
-
         "progress": "پیشرفت",
 
         # =========================================================
@@ -1084,12 +1119,6 @@ TRANSLATIONS = {
 
         "empty_timer_desc":
             "زمان مولد خود را اندازه بگیرید. هر دقیقه به سمت اهداف شما می‌شمارد.",
-
-        "empty_analytics_title":
-            "پیشرفت شما در انتظار است",
-
-        "empty_analytics_desc":
-            "برای دیدن الگوهای رشد و بینش خود، شروع به پیگیری کنید.",
 
         # =========================================================
         # Placeholders
@@ -1147,7 +1176,9 @@ TRANSLATIONS = {
         "select_habit_error_desc":
             "حداقل یک عادت انتخاب کن تا شروع کنی.",
 
-        # Demo
+        # =========================================================
+        # Demo Data
+        # =========================================================
         "demo_data_title": "داده نمونه رو امتحان کنی؟",
 
         "demo_data_desc":
@@ -1157,7 +1188,6 @@ TRANSLATIONS = {
         "load_demo": "بارگذاری داده نمونه",
         "skip_demo": "شروع تازه",
 
-        # Demo Data Page
         "demo_data_prompt_desc":
             "داده‌های نمونه شامل عادت‌ها، اهداف، تسک‌ها و جلسات زمانی را بارگذاری کن تا با برنامه آشنا شوی.",
 
@@ -1168,7 +1198,12 @@ TRANSLATIONS = {
         "demo_data_error_desc":
             "هنگام بارگذاری داده‌های نمونه مشکلی پیش آمد.",
 
+        "demo_goal_description":
+            "برای رسیدن به «{name}» تلاش کن.",
+
+        # =========================================================
         # Suggested Goals
+        # =========================================================
         "goal_learn_something": "یادگیری یک مهارت جدید",
         "goal_get_fit": "تناسب اندام",
         "goal_save_money": "پس‌انداز پول",
@@ -1176,87 +1211,46 @@ TRANSLATIONS = {
         "goal_side_project": "ساخت یک پروژه شخصی",
         "goal_new_language": "یادگیری زبان جدید",
 
+        # =========================================================
         # Suggested Milestones
+        # =========================================================
         "ms_choose_topic": "انتخاب موضوع",
         "ms_beginner_lessons": "تکمیل درس‌های مقدماتی",
         "ms_practice_consistently": "تمرین منظم",
         "ms_build_small_project": "ساخت یک پروژه کوچک",
         "ms_master_basics": "تسلط بر مبانی",
 
-        "ms_create_workout_plan":
-            "ساخت برنامه تمرینی",
-
-        "ms_complete_first_month":
-            "تکمیل ماه اول",
-
-        "ms_improve_endurance":
-            "بهبود استقامت",
-
+        "ms_create_workout_plan": "ساخت برنامه تمرینی",
+        "ms_complete_first_month": "تکمیل ماه اول",
+        "ms_improve_endurance": "بهبود استقامت",
         "ms_reach_first_fitness_goal":
             "رسیدن به اولین هدف تناسب اندام",
+        "ms_keep_consistency": "حفظ استمرار",
 
-        "ms_keep_consistency":
-            "حفظ استمرار",
+        "ms_set_saving_target": "تعیین هدف پس‌انداز",
+        "ms_save_first_amount": "اولین مبلغ را پس‌انداز کن",
+        "ms_save_25_percent": "پس‌انداز ۲۵٪ از هدف",
+        "ms_save_50_percent": "پس‌انداز ۵۰٪ از هدف",
+        "ms_reach_saving_goal": "رسیدن به هدف پس‌انداز",
 
-        "ms_set_saving_target":
-            "تعیین هدف پس‌انداز",
+        "ms_finish_first_book": "خواندن اولین کتاب",
+        "ms_finish_three_books": "خواندن ۳ کتاب",
+        "ms_finish_six_books": "خواندن ۶ کتاب",
+        "ms_finish_nine_books": "خواندن ۹ کتاب",
+        "ms_finish_twelve_books": "خواندن ۱۲ کتاب",
 
-        "ms_save_first_amount":
-            "اولین مبلغ را پس‌انداز کن",
-
-        "ms_save_25_percent":
-            "پس‌انداز ۲۵٪ از هدف",
-
-        "ms_save_50_percent":
-            "پس‌انداز ۵۰٪ از هدف",
-
-        "ms_reach_saving_goal":
-            "رسیدن به هدف پس‌انداز",
-
-        "ms_finish_first_book":
-            "خواندن اولین کتاب",
-
-        "ms_finish_three_books":
-            "خواندن ۳ کتاب",
-
-        "ms_finish_six_books":
-            "خواندن ۶ کتاب",
-
-        "ms_finish_nine_books":
-            "خواندن ۹ کتاب",
-
-        "ms_finish_twelve_books":
-            "خواندن ۱۲ کتاب",
-
-        "ms_choose_project_idea":
-            "انتخاب ایده پروژه",
-
-        "ms_plan_project":
-            "برنامه‌ریزی پروژه",
-
-        "ms_build_mvp":
-            "ساخت MVP",
-
-        "ms_launch_first_version":
-            "انتشار نسخه اول",
-
+        "ms_choose_project_idea": "انتخاب ایده پروژه",
+        "ms_plan_project": "برنامه‌ریزی پروژه",
+        "ms_build_mvp": "ساخت MVP",
+        "ms_launch_first_version": "انتشار نسخه اول",
         "ms_improve_from_feedback":
             "بهبود بر اساس بازخورد",
 
-        "ms_learn_alphabet":
-            "یادگیری الفبا",
-
-        "ms_learn_500_words":
-            "یادگیری ۵۰۰ کلمه",
-
-        "ms_first_conversation":
-            "اولین مکالمه",
-
-        "ms_reach_a2":
-            "رسیدن به سطح A2",
-
-        "ms_reach_b1":
-            "رسیدن به سطح B1",
+        "ms_learn_alphabet": "یادگیری الفبا",
+        "ms_learn_500_words": "یادگیری ۵۰۰ کلمه",
+        "ms_first_conversation": "اولین مکالمه",
+        "ms_reach_a2": "رسیدن به سطح A2",
+        "ms_reach_b1": "رسیدن به سطح B1",
 
         # =========================================================
         # Settings
@@ -1272,19 +1266,12 @@ TRANSLATIONS = {
 
         "data": "داده‌ها",
         "clear_demo": "پاک کردن داده نمونه",
-
         "clear_demo_desc":
             "حذف تمام داده‌های نمونه اضافه شده در شروع",
 
         # =========================================================
-        # Misc
-        # =========================================================
-        "default_name": "سارا",
-
-        # ── Demo Data ──────────────────────────────────────────────────────
-        "demo_goal_description": "برای رسیدن به «{name}» تلاش کن.",
-
         # Demo Tasks
+        # =========================================================
         "task_finish_python_exercise": "تکمیل تمرین پایتون",
         "task_python_exercise_desc": "تمرین‌های فصل سوم",
 
@@ -1295,30 +1282,38 @@ TRANSLATIONS = {
         "task_reply_emails_desc": "پاک‌سازی صندوق ایمیل",
 
         "task_book_dentist": "گرفتن وقت دندانپزشکی",
-        "task_book_dentist_desc": "عقب‌افتاده — با کلینیک تماس بگیر",
+        "task_book_dentist_desc":
+            "عقب‌افتاده — با کلینیک تماس بگیر",
 
         "task_read_chapter": "خواندن فصل پنجم",
-        "task_read_chapter_desc": "ادامه مطالعه کتاب فعلی",
+        "task_read_chapter_desc":
+            "ادامه مطالعه کتاب فعلی",
 
         "task_grocery_shopping": "خرید هفتگی",
-        "task_grocery_shopping_desc": "شیر، تخم‌مرغ و سبزیجات",
+        "task_grocery_shopping_desc":
+            "شیر، تخم‌مرغ و سبزیجات",
 
+        # =========================================================
         # Demo Time Sessions
+        # =========================================================
         "session_python_study": "مطالعه پایتون",
         "session_deep_work": "بلوک کار عمیق",
         "session_evening_run": "دویدن عصرگاهی",
         "session_journaling": "نوشتن روزانه",
         "session_book_reading": "مطالعه کتاب",
 
-        # days
-        "sat": "شنبه",
-        "sun": "یکشنبه",
-        "mon": "دوشنبه",
-        "tue": "سه‌شنبه",
-        "wed": "چهارشنبه",
-        "thu": "پنجشنبه",
-        "fri": "جمعه",
-
+        # =========================================================
+        # Habit Statistics
+        # =========================================================
+        "days_count": "{count} روز",
+        "weeks_count": "{count} هفته",
+        "longest": "طولانی‌ترین",
+        "across_all_habits": "در تمام عادت‌ها",
+        "building_consistency": "در حال ساختن استمرار",
+        "at_risk": "در معرض خطر",
+        "broken": "قطع شده",
+        "weeks": "هفته",
+        "of": "از",
     },
 }
 

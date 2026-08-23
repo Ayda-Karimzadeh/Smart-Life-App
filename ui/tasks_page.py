@@ -148,7 +148,8 @@ class TaskCard(QWidget):
         tags.setContentsMargins(40, 0, 0, 0)
 
         cat_col = CAT_COLORS.get(task.category, ACCENT)
-        cat_lbl = QLabel(task.category)
+        cat_text = tr(f"cat_{task.category.lower()}")
+        cat_lbl = QLabel(cat_text)
         cat_lbl.setStyleSheet(f"""
             font-size: 11px; color: white;
             background: {cat_col};
