@@ -305,12 +305,14 @@ class TasksPage(QWidget):
                 font-size: 20px;
                 background: rgba(255,255,255,0.07);
                 border-radius: 10px;
+                margin-bottom: 6px;
             """)
             top.addWidget(icon_box)
             top.addStretch()
 
             val_lbl = QLabel(val)
-            val_lbl.setStyleSheet(f"font-size: 30px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+            val_lbl.setMinimumHeight(40)
+            val_lbl.setStyleSheet(f"font-size: 30px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent; padding-top: 6px;")
             t_lbl = QLabel(title)
             t_lbl.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
             s_lbl = QLabel(sub)

@@ -602,12 +602,49 @@ TRANSLATIONS = {
         "session_evening_run": "Evening Run",
         "session_journaling": "Journaling",
         "session_book_reading": "Book Reading",
+
+        "this_week": "This Week",
+        "days_count": "{count} days",
+        "weeks_count": "{count} weeks",
+        "best": "Best",
+        "longest": "Longest",
+        "across_all_habits": "Across all habits",
+        "building_consistency": "Building consistency",
+        "at_risk": "At Risk",
+        "broken": "Broken",
+        "weeks": "weeks",
+        "of": "of",
+        # Categories
+        "all": "All",
+        "fitness": "Fitness",
+        "health": "Health",
+        "mindfulness": "Mindfulness",
+        "personal_growth": "Personal Growth",
+
     },
 
     # =====================================================================
     # Persian
     # =====================================================================
     "fa": {
+        
+        # Categories
+        "all": "همه",
+        "fitness": "ورزش",
+        "health": "سلامت",
+        "mindfulness": "ذهن‌آگاهی",
+        "personal_growth": "رشد فردی",        
+        "of": "از",
+        "weeks": "هفته",
+        "this_week": "این هفته",
+        "days_count": "{count} روز",
+        "weeks_count": "{count} هفته",
+        "best": "بهترین",
+        "longest": "طولانی‌ترین",
+        "across_all_habits": "در تمام عادت‌ها",
+        "building_consistency": "در حال ساختن استمرار",
+        "at_risk": "در معرض خطر",
+        "broken": "قطع شده",
 
         # =========================================================
         # App
@@ -853,7 +890,15 @@ TRANSLATIONS = {
 
         "stats_fill_automatically":
             "دوباره به اینجا برگرد — آمار پیشرفتت خودکار تکمیل می‌شود",
-
+        # days
+        "sat": "Sat",
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        
         # =========================================================
         # Analytics
         # =========================================================
@@ -1264,6 +1309,16 @@ TRANSLATIONS = {
         "session_evening_run": "دویدن عصرگاهی",
         "session_journaling": "نوشتن روزانه",
         "session_book_reading": "مطالعه کتاب",
+
+        # days
+        "sat": "شنبه",
+        "sun": "یکشنبه",
+        "mon": "دوشنبه",
+        "tue": "سه‌شنبه",
+        "wed": "چهارشنبه",
+        "thu": "پنجشنبه",
+        "fri": "جمعه",
+
     },
 }
 

@@ -650,7 +650,7 @@ class DashboardPage(QWidget):
 
         has_focus_data = any(v > 0 for v in chart_data)
 
-        weekly_focus_total = sum(chart_data)
+        weekly_focus_total = sum(chart_data) * 3600
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")

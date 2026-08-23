@@ -7,15 +7,11 @@ from PyQt6.QtGui import QColor, QPainter
 
 from assets.style import (
     BG_CARD, BG_CARD2, TEXT_PRIMARY, TEXT_MUTED,
-    ACCENT, ACCENT2, GREEN, ORANGE, BLUE, RED,
+    ACCENT, GREEN, ORANGE, BLUE, RED,
     make_card
 )
-from database.repository import (
-    goal_repo,
-    habit_repo,
-    task_repo,
-    analytics_repo,
-)
+from database.repository import habit_repo
+
 from core.streak_engine import (
     daily_streak, best_daily_streak,
     weekly_streak, week_status, predict_streak_break
@@ -23,6 +19,18 @@ from core.streak_engine import (
 from ui.dialogs import AddHabitDialog
 from core.language_manager import tr
 
+CATEGORY_TRANSLATION_KEYS = {
+    "All": "all",
+    "Fitness": "fitness",
+    "Health": "health",
+    "Mindfulness": "mindfulness",
+    "Personal Growth": "personal_growth",
+}
+
+
+def translate_category(category):
+    key = CATEGORY_TRANSLATION_KEYS.get(category, category)
+    return tr(key)
 
 # ─── WeekBar ──────────────────────────────────────────────────────────────────
 class WeekBar(QWidget):
@@ -97,18 +105,18 @@ class HabitCard(QWidget):
 
         tags = QHBoxLayout()
         tags.setSpacing(6)
-        for tag in [tr(habit.category), freq_text]:
+        for tag in [translate_category(habit.category), freq_text]:
             t = QLabel(tag)
             t.setStyleSheet(f"font-size: 11px; color: {GREEN}; background: rgba(62,207,142,0.12); border-radius: 6px; padding: 2px 8px;")
             tags.addWidget(t)
 
         # نشانه پیش‌بینی
         if prediction == "at_risk":
-            warn = QLabel("⚠ At Risk")
+            warn = QLabel("⚠ " + tr("at_risk"))
             warn.setStyleSheet(f"font-size: 11px; color: {ORANGE}; background: transparent;")
             tags.addWidget(warn)
         elif prediction == "broken":
-            warn = QLabel("✕ Broken")
+            warn = QLabel("✕ " + tr("broken"))
             warn.setStyleSheet(f"font-size: 11px; color: {RED}; background: transparent;")
             tags.addWidget(warn)
 
@@ -148,11 +156,14 @@ class HabitCard(QWidget):
         top.addLayout(actions)
         lay.addLayout(top)
 
-        # ─ نوار هفتگی ─
+        # ─ نوار هفتگی ـ
         week_row = QHBoxLayout()
-        week_lbl = QLabel("This Week")
+        week_lbl = QLabel(tr("this_week"))
         week_lbl.setStyleSheet(f"font-size: 12px; color: {TEXT_MUTED}; background: transparent;")
-        days_lbl = QLabel(f"{done_week}/{total_week} days")
+        days_lbl = QLabel(
+            f"{done_week}/{total_week} " +
+            tr("days")
+        )
         days_lbl.setStyleSheet(f"font-size: 12px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         week_row.addWidget(week_lbl)
         week_row.addStretch()
@@ -181,7 +192,7 @@ class HabitCard(QWidget):
         wsl = QLabel(tr("weekly") + " " + tr("streak"))
         wsl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         wsl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        wsv = QLabel(f"📅 {w_streak} weeks")
+        wsv = QLabel(f"📅 {w_streak} {tr('weeks')}")
         wsv.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {BLUE}; background: transparent;")
         wsv.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         week_str_col.addWidget(wsl)
@@ -189,10 +200,10 @@ class HabitCard(QWidget):
 
         best_col = QVBoxLayout()
         best_col.setAlignment(Qt.AlignmentFlag.AlignRight)
-        best_lbl = QLabel("Best " + tr("streak"))
+        best_lbl = QLabel(tr("best") + " " + tr("streak"))
         best_lbl.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
         best_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        best_val = QLabel(f"{best_str} days")
+        best_val = QLabel(f"{best_str} {tr('days')}")
         best_val.setStyleSheet(f"font-size: 13px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
         best_val.setAlignment(Qt.AlignmentFlag.AlignRight)
         best_col.addWidget(best_lbl)
@@ -238,13 +249,15 @@ class HabitCard(QWidget):
 
     def _handle_delete(self):
         reply = QMessageBox.question(
-            self, "delete_habit",
+            self,
+            tr("delete_habit"),
             tr("delete_habit_confirm").format(
                 name=tr(self.habit.name)
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
+        
         if reply == QMessageBox.StandardButton.Yes:
             habit_repo.delete_habit(self.habit.id)
             self.on_change()
@@ -301,7 +314,7 @@ class HabitsPage(QWidget):
             week_pcts = []
             for h in habits:
                 ws = week_status(h.id)
-                t  = ws.get("target", h.frequency_count)
+                t  = ws.get("effective_target", h.frequency_count)
                 d  = ws.get("done", 0)
                 week_pcts.append(min(d / t, 1) * 100 if t else 0)
             weekly_avg = round(sum(week_pcts) / len(week_pcts))
@@ -315,10 +328,38 @@ class HabitsPage(QWidget):
         lay.setSpacing(14)
 
         items = [
-            ("✅", f"{today_pct}%", tr("daily") + " " + tr("progress"), f"{done_today} of {total} habits", ACCENT, True),
-            ("🔥", str(longest),    "Longest " + tr("streak"),      longest_name,                    ORANGE, False),
-            ("📈", f"{weekly_avg}%", tr("weekly") + " " + tr("score"),      "Across all habits",              GREEN,  False),
-            ("🏆", str(total),      tr("habits").capitalize(),       "Building consistency",           ORANGE, False),
+            (
+                "✅",
+                f"{today_pct}%",
+                tr("daily") + " " + tr("progress"),
+                f"{done_today} {tr('of')} {total} {tr('habits')}",
+                ACCENT,
+                True
+            ),
+            (
+                "🔥",
+                str(longest),
+                tr("longest") + " " + tr("streak"),
+                longest_name,
+                ORANGE,
+                False
+            ),
+            (
+                "📈",
+                f"{weekly_avg}%",
+                tr("weekly") + " " + tr("score"),
+                tr("across_all_habits"),
+                GREEN,
+                False
+            ),
+            (
+                "🏆",
+                str(total),
+                tr("habits").capitalize(),
+                tr("building_consistency"),
+                ORANGE,
+                False
+            ),
         ]
 
         for icon, val, title, sub, col, highlight in items:
@@ -331,11 +372,13 @@ class HabitsPage(QWidget):
             ib = QLabel(icon)
             ib.setFixedSize(40, 40)
             ib.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            ib.setStyleSheet("font-size: 20px; background: rgba(255,255,255,0.07); border-radius: 10px;")
+            ib.setStyleSheet("font-size: 20px; background: rgba(255,255,255,0.07); border-radius: 10px; margin-bottom: 6px;")
             top.addWidget(ib)
             top.addStretch()
             val_lbl = QLabel(val)
-            val_lbl.setStyleSheet(f"font-size: 30px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent;")
+            val_lbl.setWordWrap(False)
+            val_lbl.setMinimumHeight(40)
+            val_lbl.setStyleSheet(f"font-size: 30px; font-weight: bold; color: {TEXT_PRIMARY}; background: transparent; padding-top: 6px;")
             t_lbl = QLabel(title)
             t_lbl.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_PRIMARY}; background: transparent;")
             s_lbl = QLabel(sub)
@@ -360,8 +403,9 @@ class HabitsPage(QWidget):
 
         for cat in categories:
             active = cat == self.selected_category
+
             btn = QPushButton(
-                tr(cat) if cat != "All" else tr("all")
+                translate_category(cat)
             )
             btn.setCheckable(True)
             btn.setChecked(active)
