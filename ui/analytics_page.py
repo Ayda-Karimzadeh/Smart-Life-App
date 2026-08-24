@@ -27,8 +27,19 @@ from database.repository import (
 from core.dates import start_of_week, end_of_week
 from core.language_manager import tr
 
-# کلیدهای ترجمه برای روزهای هفته (میلادی، دوشنبه تا یکشنبه)
-WEEKDAY_KEYS = ["day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun"]
+# کلیدهای ترجمه برای روزهای هفته
+WEEKDAY_KEYS = [
+    "sat",
+    "sun",
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+]
+
+# نسخه کوتاه‌شده (یک حرفی/دو حرفی) برای محور کنار هیت‌مپ
+WEEKDAY_SHORT_KEYS = WEEKDAY_KEYS  # از همون تابع tr() با اندیس استفاده می‌کنیم
 
 
 # ─── نمودار خطی با نقاط ──────────────────────────────────────────────────────
@@ -110,73 +121,92 @@ class LineChartDot(QWidget):
                            Qt.AlignmentFlag.AlignHCenter, lbl)
 
 
-# ─── نمودار رادار ─────────────────────────────────────────────────────────────
-class RadarChart(QWidget):
-    def __init__(self, labels=None, values=None, parent=None):
+# ─── هیت‌مپ عادت‌ها (شبیه گیت‌هاب) ─────────────────────────────────────────────
+# جایگزین RadarChart قبلی: به‌جای یک شکل انتزاعی با فرمول‌های دلبخواهی
+# (مثل max_streak * 3 یا هدف ثابت ۸ ساعت فوکوس)، این ویجت مستقیماً نشون می‌ده
+# کاربر در کدوم روزها فعال بوده — چیزی که واقعاً قابل تفسیره.
+class HabitHeatmap(QWidget):
+    """
+    day_data: لیستی از (date, ratio) از قدیم به جدید.
+    ratio بین 0 و 1 است، یا None اگر آن روز هیچ عادت فعالی وجود نداشته.
+    """
+    def __init__(self, day_data=None, parent=None):
         super().__init__(parent)
-        self.labels = labels or [
-            tr("habits").capitalize(), tr("goals").capitalize(),
-            tr("tasks").capitalize(), tr("focus").capitalize(),
-            tr("streak").capitalize()
-        ]
-        self.values = values or [0, 0, 0, 0, 0]
-        self.setMinimumSize(250, 250)
+        self.day_data = day_data or []
+        self.setMinimumHeight(170)
+
+    def _color_for_ratio(self, ratio):
+        if ratio is None:
+            return QColor(255, 255, 255, 18)  # خنثی — عادتی وجود نداشته
+        if ratio <= 0:
+            return QColor(255, 255, 255, 28)
+        base = QColor(ACCENT2)
+        if ratio <= 0.25:
+            base.setAlpha(90)
+        elif ratio <= 0.5:
+            base.setAlpha(140)
+        elif ratio <= 0.75:
+            base.setAlpha(195)
+        else:
+            base.setAlpha(255)
+        return base
 
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        cx, cy = self.width() // 2, self.height() // 2
-        r = min(cx, cy) - 40
-        n = len(self.values)
+        if not self.day_data:
+            p.setPen(QColor(TEXT_MUTED))
+            p.setFont(QFont("Segoe UI", 11))
+            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, tr("no_data_available"))
+            return
 
-        # خطوط راهنما
-        for level in [25, 50, 75, 100]:
-            pts = []
-            for i in range(n):
-                angle = math.pi / 2 + 2 * math.pi * i / n
-                rr = r * level / 100
-                pts.append(QPointF(cx + rr * math.cos(angle), cy - rr * math.sin(angle)))
-            p.setPen(QPen(QColor(60, 60, 80), 1))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            for i in range(n):
-                p.drawLine(pts[i], pts[(i + 1) % n])
+        # داده‌ها را به هفته‌ها تقسیم می‌کنیم (هر ستون = یک هفته، شنبه تا جمعه)
+        weeks = [self.day_data[i:i + 7] for i in range(0, len(self.day_data), 7)]
+        n_weeks = len(weeks)
 
-        # محورها
-        p.setPen(QPen(QColor(60, 60, 80), 1))
-        for i in range(n):
-            angle = math.pi / 2 + 2 * math.pi * i / n
-            p.drawLine(int(cx), int(cy),
-                       int(cx + r * math.cos(angle)),
-                       int(cy - r * math.sin(angle)))
+        w, h = self.width(), self.height()
+        pad_l, pad_t, pad_b = 34, 10, 26
+        avail_w = w - pad_l - 10
+        avail_h = h - pad_t - pad_b
 
-        # سطح داده
-        pts = []
-        for i, v in enumerate(self.values):
-            angle = math.pi / 2 + 2 * math.pi * i / n
-            rr = r * min(v, 100) / 100
-            pts.append(QPointF(cx + rr * math.cos(angle), cy - rr * math.sin(angle)))
+        gap = 4
+        cell = min(
+            (avail_w - gap * (n_weeks - 1)) / n_weeks if n_weeks else avail_w,
+            (avail_h - gap * 6) / 7
+        )
+        cell = max(cell, 8)
 
-        fill = QColor(ACCENT)
-        fill.setAlpha(60)
-        p.setBrush(QBrush(fill))
-        p.setPen(QPen(QColor(ACCENT2), 2))
-        p.drawPolygon(QPolygonF(pts))
+        day_labels = [tr(k) for k in WEEKDAY_SHORT_KEYS]
+        p.setPen(QColor(TEXT_MUTED))
+        p.setFont(QFont("Segoe UI", 8))
+        for row in range(7):
+            y = pad_t + row * (cell + gap)
+            p.drawText(0, int(y), pad_l - 8, int(cell),
+                       Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                       day_labels[row][:2])
 
-        for pt in pts:
-            p.setBrush(QBrush(QColor(ACCENT2)))
-            p.setPen(QPen(QColor(BG_CARD), 2))
-            p.drawEllipse(pt, 5, 5)
+        for col, week in enumerate(weeks):
+            x = pad_l + col * (cell + gap)
+            for row, (d, ratio) in enumerate(week):
+                y = pad_t + row * (cell + gap)
+                p.setBrush(QBrush(self._color_for_ratio(ratio)))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawRoundedRect(int(x), int(y), int(cell), int(cell), 3, 3)
 
-        # برچسب‌ها
+        # راهنمای رنگ (کم -> زیاد)
+        legend_y = h - 16
         p.setPen(QColor(TEXT_MUTED))
         p.setFont(QFont("Segoe UI", 9))
-        for i, lbl in enumerate(self.labels):
-            angle = math.pi / 2 + 2 * math.pi * i / n
-            x = cx + (r + 18) * math.cos(angle)
-            y = cy - (r + 18) * math.sin(angle)
-            p.drawText(int(x) - 30, int(y) - 8, 60, 16,
-                       Qt.AlignmentFlag.AlignHCenter, lbl)
+        p.drawText(pad_l, legend_y - 12, 60, 14, Qt.AlignmentFlag.AlignLeft, tr("less"))
+        lx = pad_l + 34
+        for ratio in [None, 0.1, 0.4, 0.6, 0.9]:
+            p.setBrush(QBrush(self._color_for_ratio(ratio)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(int(lx), int(legend_y - 12), 12, 12, 3, 3)
+            lx += 16
+        p.setPen(QColor(TEXT_MUTED))
+        p.drawText(int(lx) + 4, legend_y - 12, 60, 14, Qt.AlignmentFlag.AlignLeft, tr("more"))
 
 
 # ─── نمودار میله‌ای مقایسه‌ای ─────────────────────────────────────────────────
@@ -297,7 +327,7 @@ class AnalyticsPage(QWidget):
             layout.addWidget(self._trend_charts())
 
             if self._habits or self._tasks:
-                layout.addWidget(self._radar_compare_row())
+                layout.addWidget(self._heatmap_compare_row())
 
             layout.addWidget(self._performance_banner())
             layout.addStretch()
@@ -477,15 +507,40 @@ class AnalyticsPage(QWidget):
 
         return section
 
+    # ─ اولین تاریخی که داده‌ای برای نمایش وجود داره ────────────────────────────
+    # به‌جای نمایش ۷ هفته‌ی همیشه‌ثابت (که برای کاربر تازه فقط یک خط تخت با صفره)،
+    # فقط تا جایی عقب می‌ریم که واقعاً عادتی وجود داشته.
+    def _earliest_activity_date(self):
+        dates = []
+        for h in self._habits:
+            cd = getattr(h, "created_date", None)
+            if not cd:
+                continue
+            try:
+                d = date.fromisoformat(cd) if isinstance(cd, str) else cd
+                dates.append(d)
+            except (ValueError, TypeError):
+                continue
+        if dates:
+            return min(dates)
+        return None  # نمی‌دونیم عادت‌ها از کِی هستن؛ به حالت پیش‌فرض ۷ هفته برمی‌گردیم
+
     # ─ نمودارهای خطی ─────────────────────────────────────────────────────────
     def _trend_charts(self):
-        # داده هفته جاری و ۶ هفته گذشته برای habit score
         today = date.today()
+
+        earliest = self._earliest_activity_date()
+        if earliest:
+            weeks_of_history = (today - earliest).days // 7 + 1
+            weeks_available = max(1, min(weeks_of_history, 7))
+        else:
+            weeks_available = 7
+
         habit_trend  = []
         focus_trend  = []
         trend_labels = []
 
-        for week_offset in range(6, -1, -1):
+        for week_offset in range(weeks_available - 1, -1, -1):
             week_start = start_of_week(today) - timedelta(weeks=week_offset)
             week_end   = min(end_of_week(week_start), today) if week_offset == 0 else end_of_week(week_start)
 
@@ -504,7 +559,7 @@ class AnalyticsPage(QWidget):
             focus_h = analytics_repo.get_focus_duration_in_range(week_start.isoformat(),week_end.isoformat())
             focus_trend.append(round(focus_h, 1))
 
-            trend_labels.append(f"W{7 - week_offset}")
+            trend_labels.append(f"W{weeks_available - week_offset}")
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -536,38 +591,69 @@ class AnalyticsPage(QWidget):
         lay.addWidget(right, 1)
         return row
 
-    # ─ Radar + Compare ───────────────────────────────────────────────────────
-    def _radar_compare_row(self):
-        # محاسبه امتیاز هر بخش (0-100)
-        habits     = self._habits
-        goals      = self._goals
-        tasks      = self._tasks
+    # ─ Heatmap + Compare ─────────────────────────────────────────────────────
+    def _heatmap_compare_row(self):
+        today = date.today()
 
-        habit_score = round(sum(1 for h in habits if habit_repo.is_habit_done_today(h.id)) / len(habits) * 100) if habits else 0
-        goal_score  = round(sum(goal_repo.get_goal_progress_percent(g.id) for g in goals) / len(goals)) if goals else 0
-        task_score  = round(sum(1 for t in tasks if t.done) / len(tasks) * 100) if tasks else 0
-        focus_score = min(round(self._focus_today / 3600 / 8 * 100), 100)  # هدف ۸ ساعت
+        # ── داده‌ی هیت‌مپ: ۷ هفته‌ی اخیر، شنبه تا جمعه ──
+        days_since_saturday = (today.weekday() - 5) % 7
+        heatmap_start = today - timedelta(days=days_since_saturday) - timedelta(weeks=6)
 
-        max_streak  = max((habit_repo.get_current_streak(h.id) for h in habits), default=0)
-        streak_score = min(max_streak * 3, 100)  # ۳۳ روز = 100%
+        day_data = []
+        for i in range(49):
+            d = heatmap_start + timedelta(days=i)
+            if d > today:
+                day_data.append((d, None))
+                continue
 
-        radar_values = [habit_score, goal_score, task_score, focus_score, streak_score]
+            active_habits = [
+                h for h in self._habits
+                if not getattr(h, "created_date", None) or self._as_date(h.created_date) <= d
+            ]
+            if not active_habits:
+                day_data.append((d, None))
+                continue
 
-        # مقایسه این هفته با هفته قبل (focus hours)
-        today      = date.today()
-        this_start = today - timedelta(days=today.weekday())
-        last_start = this_start - timedelta(weeks=1)
+            done = sum(
+                1 for h in active_habits
+                if habit_repo.count_logs_in_range(h.id, d.isoformat(), d.isoformat()) > 0
+            )
+            day_data.append((d, done / len(active_habits)))
+
+        # ── مقایسه این هفته با هفته قبل: شنبه → جمعه ──
+        this_start = today - timedelta(days=days_since_saturday)
+        last_start = this_start - timedelta(days=7)
 
         this_week_hours = []
         last_week_hours = []
-        week_labels     = [tr(k) for k in WEEKDAY_KEYS]
+
+        # ترتیب صحیح نمودار:
+        # Saturday → Sunday → Monday → Tuesday → Wednesday → Thursday → Friday
+        week_labels = [tr(k) for k in WEEKDAY_KEYS]
 
         for i in range(7):
             d_this = this_start + timedelta(days=i)
             d_last = last_start + timedelta(days=i)
-            this_week_hours.append(round(analytics_repo.get_focus_duration_in_range(d_this.isoformat(),d_this.isoformat()),1))
 
-            last_week_hours.append(round(analytics_repo.get_focus_duration_in_range(d_last.isoformat(),d_last.isoformat()),1))
+            this_week_hours.append(
+                round(
+                    analytics_repo.get_focus_duration_in_range(
+                        d_this.isoformat(),
+                        d_this.isoformat()
+                    ),
+                    1
+                )
+            )
+
+            last_week_hours.append(
+                round(
+                    analytics_repo.get_focus_duration_in_range(
+                        d_last.isoformat(),
+                        d_last.isoformat()
+                    ),
+                    1
+                )
+            )
 
         row = QWidget()
         row.setStyleSheet("background: transparent;")
@@ -575,22 +661,15 @@ class AnalyticsPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(14)
 
-        # Performance Radar
-        radar_card = make_card()
-        rl2 = QVBoxLayout(radar_card)
-        rl2.setContentsMargins(20, 18, 20, 18)
-        rl2.setSpacing(12)
-        radar_title = QLabel(tr("performance_radar"))
-        radar_title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
-        rl2.addWidget(radar_title)
-        rl2.addWidget(RadarChart(
-            labels=[
-                tr("habits").capitalize(), tr("goals").capitalize(),
-                tr("tasks").capitalize(), tr("focus").capitalize(),
-                tr("streak").capitalize()
-            ],
-            values=radar_values
-        ))
+        # Habit Heatmap
+        heatmap_card = make_card()
+        hl = QVBoxLayout(heatmap_card)
+        hl.setContentsMargins(20, 18, 20, 18)
+        hl.setSpacing(12)
+        heatmap_title = QLabel(tr("habit_activity_map"))
+        heatmap_title.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {TEXT_PRIMARY}; background: transparent;")
+        hl.addWidget(heatmap_title)
+        hl.addWidget(HabitHeatmap(day_data=day_data))
 
         # Weekly Comparison
         compare_card = make_card()
@@ -602,9 +681,15 @@ class AnalyticsPage(QWidget):
         cl2.addWidget(tc)
         cl2.addWidget(CompareBarChart(week_labels, this_week_hours, last_week_hours))
 
-        lay.addWidget(radar_card, 1)
-        lay.addWidget(compare_card, 2)
+        lay.addWidget(heatmap_card, 1)
+        lay.addWidget(compare_card, 1)
         return row
+
+    @staticmethod
+    def _as_date(value):
+        if isinstance(value, date):
+            return value
+        return date.fromisoformat(value)
 
     # ─ Performance Banner ─────────────────────────────────────────────────────
     def _performance_banner(self):
