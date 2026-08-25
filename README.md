@@ -140,22 +140,67 @@ Smart-Life-App/
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Installation and Run (Windows)
 
-```bash
-# Clone the repository
+### Prerequisites
+
+- Windows 10 or newer
+- Python 3.11 or newer installed and available through the `py` command
+- Git, if cloning the repository from GitHub
+
+### 1. Download the project
+
+```powershell
 git clone https://github.com/Ayda-Karimzadeh/Smart-Life-App.git
-
 cd Smart-Life-App
+```
 
-# Install dependencies
-pip install -r requirements.txt
+If the project was downloaded as a ZIP file, extract it and open PowerShell in the folder that contains `main.py`.
 
-# Run the application
+### 2. Create and activate the virtual environment
+
+Run these commands from the project root:
+
+```powershell
+py -3 -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+For Command Prompt (`cmd.exe`), activate it with:
+
+```bat
+venv\Scripts\activate.bat
+```
+
+After activation, the terminal prompt should start with `(venv)`.
+
+### 3. Install the required packages
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+This installs the exact versions required by the project: PyQt6 6.11.0, Matplotlib 3.11.0, and NumPy 2.3.2.
+
+### 4. Run the application
+
+Make sure `(venv)` is still visible in the terminal, then run:
+
+```powershell
 python main.py
 ```
 
-On the first launch, if no database exists, the onboarding wizard will guide users through creating their initial habits and goals.
+The application must be launched from the project root, where `main.py` is located. On the first launch, if no database exists, the onboarding wizard will guide users through creating their initial habits and goals.
+
+### Optional: PowerShell activation policy
+
+If PowerShell blocks `Activate.ps1`, run this command once in the current PowerShell window and activate the environment again:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\venv\Scripts\Activate.ps1
+```
 
 ---
 

@@ -9,6 +9,7 @@ from core.streak_engine import weekly_streak as streak_weekly_streak
 from core.dates import start_of_week, WEEKDAY_LABELS_SHORT
 from core.language_manager import tr
 
+
 # Consistency Score
 def consistency_score(habit_id: int, days: int = 30) -> float:
     today = date.today()
@@ -128,6 +129,8 @@ def strengths_and_weaknesses() -> dict:
         "weaknesses": [{"name": "مطالعه", "score": 30}, ...],
     }
     """
+    from core.language_manager import tr
+
     habits = habit_repo.get_all_habits()
     if not habits:
         return {"strengths": [], "weaknesses": []}

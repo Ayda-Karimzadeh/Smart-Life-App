@@ -10,13 +10,10 @@ import sqlite3
 import os
 from datetime import date, timedelta
 from database.models import Habit, Goal, Milestone, Task, TimeSession
-from core.dates import start_of_week, WEEKDAY_LABELS_SHORT
+from core.dates import start_of_week, end_of_week, WEEKDAY_LABELS_SHORT
 from config.paths import DB_PATH, SCHEMA_PATH
 
 def get_connection():
-    print("DB_PATH =", DB_PATH)
-    print("DB Exists =", DB_PATH.exists())
-
     conn = sqlite3.connect(str(DB_PATH))
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -126,11 +123,13 @@ def is_habit_done_today(habit_id):
 def get_week_progress(habit_id):
     """تعداد روزهای انجام‌شده در هفته جاری (شنبه تا الان) رو برمی‌گردونه"""
     week_start = start_of_week()
+    week_end = end_of_week()
 
     conn = get_connection()
     rows = conn.execute(
-        "SELECT COUNT(*) FROM habit_logs WHERE habit_id = ? AND log_date >= ?",
-        (habit_id, week_start.isoformat())
+        "SELECT COUNT(*) FROM habit_logs "
+        "WHERE habit_id = ? AND log_date BETWEEN ? AND ?",
+        (habit_id, week_start.isoformat(), week_end.isoformat())
     ).fetchone()
     conn.close()
     return rows[0]
