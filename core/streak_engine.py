@@ -36,6 +36,10 @@ RISK_BUFFER_DAYS = 1
 # ════════════════════════════════════════════════════════════
 
 def daily_streak(habit_id: int) -> int:
+    """Current streak only counts consecutive completions through today.
+
+    If today is not completed, the current streak is considered broken and returns 0.
+    """
     rows = habit_repo.get_habit_log_dates(
         habit_id,
         order="DESC"
@@ -49,19 +53,17 @@ def daily_streak(habit_id: int) -> int:
         for r in rows
     ]
 
-    streak = 0
-    expected = date.today()
+    today = date.today()
+    if dates[0] != today:
+        return 0
 
-    for d in dates:
+    streak = 1
+    expected = today - timedelta(days=1)
+
+    for d in dates[1:]:
         if d == expected:
             streak += 1
             expected -= timedelta(days=1)
-
-        elif d == expected + timedelta(days=1):
-            # اگر امروز انجام نشده ولی یک رکورد جدیدتر وجود دارد،
-            # آن رکورد را رد می‌کنیم.
-            continue
-
         else:
             break
 
@@ -145,6 +147,7 @@ def weekly_streak(habit_id: int) -> int:
 def best_weekly_streak(habit_id: int) -> int:
     """
     بهترین تعداد هفته‌های متوالی که عادت به هدف هفتگی رسیده است.
+    هفته جاری، اگر هنوز کامل نشده باشد، در شمارش streak وارد نمی‌شود.
     """
 
     target = habit_repo.get_habit_frequency_count(habit_id)
@@ -170,8 +173,8 @@ def best_weekly_streak(habit_id: int) -> int:
 
     ws = start_of_week(start_date)
 
-    while ws <= today:
-        we = min(end_of_week(ws), today)
+    while ws < start_of_week(today):
+        we = end_of_week(ws)
 
         done = habit_repo.count_logs_in_range(
             habit_id,
@@ -258,6 +261,12 @@ def week_status(habit_id: int) -> dict:
         1
     )
 
+    # اگر target از مرز هفته بیشتر باشد، اینجا به‌صورت صریحی محدود می‌شود.
+    # Validation واقعی باید در layer ورودی/Repository انجام شود، اما برای وضعیت فعلی
+    # UI نباید مقدار غیرمنطقی را از این helper دریافت کند.
+    if target > days_in_week_for_habit:
+        effective_target = days_in_week_for_habit
+
     # ────────────────────────────────────────────────────────
     # تعداد روزهای سپری‌شده
     # ────────────────────────────────────────────────────────
@@ -289,9 +298,8 @@ def week_status(habit_id: int) -> dict:
         today.isoformat()
     )
 
-    # جلوگیری از بیشتر شدن done از target
-    # در محاسبات درصد و وضعیت.
     done_for_status = min(done, effective_target)
+    done_value = done_for_status
 
     # ────────────────────────────────────────────────────────
     # باقی‌مانده
@@ -413,7 +421,7 @@ def week_status(habit_id: int) -> dict:
     ]
 
     return {
-        "done": done,
+        "done": done_value,
         "target": target,
         "effective_target": effective_target,
         "remaining": remaining,

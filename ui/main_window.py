@@ -339,9 +339,6 @@ class MainWindow(QMainWindow):
     # ─────────────────────────────────────────────────────────────────────
 
     def language_changed(self, lang):
-
-        print("Language changed:", lang)
-
         # عنوان پنجره
         self.setWindowTitle(
             tr("app_name")

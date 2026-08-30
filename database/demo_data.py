@@ -55,7 +55,7 @@ def seed_demo_data():
             "habit_water",
             "Health",
             "daily",
-            8,
+            7,
             [True, True, True, True, True, True, True],
         ),
         (
@@ -85,10 +85,8 @@ def seed_demo_data():
         pattern,
     ) in demo_habits:
 
-        name = tr(name_key)
-
         habit_id = habit_repo.add_habit(
-            name,
+            name_key,
             icon,
             category,
             freq_type,
@@ -164,19 +162,15 @@ def seed_demo_data():
         milestone_keys,
     ) in demo_goals:
 
-        name = tr(name_key)
-
-        description = tr(
-            "demo_goal_description"
-        ).format(name=name)
+        description_key = f"{name_key}_description"
 
         deadline = (
             today + timedelta(days=days)
         ).isoformat()
 
         goal_id = goal_repo.add_goal(
-            name,
-            description,
+            name_key,
+            description_key,
             icon,
             category,
             deadline,
@@ -185,7 +179,7 @@ def seed_demo_data():
         for milestone_key in milestone_keys:
             goal_repo.add_milestone(
                 goal_id,
-                tr(milestone_key),
+                milestone_key,
             )
 
     # ==========================================================

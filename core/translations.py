@@ -60,12 +60,14 @@ TRANSLATIONS = {
         # Habits
         # =========================================================
         "add_habit": "Add New Habit",
+        "add_new_habit": "Add New Habit",
         "edit_habit": "Edit Habit",
         "delete_habit": "Delete Habit",
         "delete_habit_confirm":
             "Are you sure you want to delete '{name}'?",
 
         "habit_name": "Habit Name",
+        "default_name": "Unnamed Habit",
         "frequency": "Frequency",
         "times_per_week": "Times / week",
         "daily": "Daily",
@@ -196,6 +198,7 @@ TRANSLATIONS = {
         "todays_tasks": "Today's Tasks",
 
         "habit_streaks": "Habit Streaks",
+        "habit_activity_map": "Habit Activity Map",
 
         "daily_progress": "Daily Progress",
         "habit_completion_today": "Habit completion today",
@@ -217,6 +220,8 @@ TRANSLATIONS = {
 
         "view_all": "View All →",
         "show_less": "Show Less",
+        "less": "Less",
+        "more": "More",
 
         "habits_ready": "habits ready",
         "tap_habit_to_mark_done": "Tap a habit to mark it done",
@@ -359,20 +364,15 @@ TRANSLATIONS = {
         # Categories
         # =========================================================
         "all": "All",
-        "fitness": "Fitness",
         "health": "Health",
         "mindfulness": "Mindfulness",
         "personal_growth": "Personal Growth",
         "learning": "Learning",
         "finance": "Finance",
-        "study": "Study",
-        "work": "Work",
-        "personal": "Personal",
         "wellness": "Wellness",
         "skills": "Skills",
         "digital_wellness": "Digital Wellness",
         "career": "Career",
-        "other": "Other",
 
         "cat_mindfulness": "Mindfulness",
         "cat_fitness": "Fitness",
@@ -529,6 +529,10 @@ TRANSLATIONS = {
             "Something went wrong while loading demo data.",
 
         "demo_goal_description": "Work towards: {name}",
+        "goal_learn_something_description": "Work towards: Learn Something New",
+        "goal_get_fit_description": "Work towards: Get Fit",
+        "goal_read_books_description": "Work towards: Read 12 Books",
+        "goal_save_money_description": "Work towards: Save Money",
 
         # =========================================================
         # Suggested Goals
@@ -642,9 +646,7 @@ TRANSLATIONS = {
         # =========================================================
         # Demo Time Sessions
         # =========================================================
-        "session_python_study": "Python Study",
         "session_reading": "Reading",
-        "session_deep_work": "Deep Work Block",
         "session_python_project": "Python Project",
         "session_learning": "Learning",
         "session_week_review": "Weekly Review",
@@ -652,14 +654,6 @@ TRANSLATIONS = {
         # =========================================================
         # Days
         # =========================================================
-        "sat": "Sat",
-        "sun": "Sun",
-        "mon": "Mon",
-        "tue": "Tue",
-        "wed": "Wed",
-        "thu": "Thu",
-        "fri": "Fri",
-
         "sat_short": "S",
         "sun_short": "S",
         "mon_short": "M",
@@ -753,12 +747,14 @@ TRANSLATIONS = {
         # Habits
         # =========================================================
         "add_habit": "افزودن عادت جدید",
+        "add_new_habit": "افزودن عادت جدید",
         "edit_habit": "ویرایش عادت",
         "delete_habit": "حذف عادت",
         "delete_habit_confirm":
             "آیا مطمئن هستید که می‌خواهید «{name}» را حذف کنید؟",
 
         "habit_name": "نام عادت",
+        "default_name": "عادت بدون نام",
         "frequency": "تکرار",
         "times_per_week": "بار در هفته",
         "daily": "روزانه",
@@ -893,6 +889,7 @@ TRANSLATIONS = {
         "todays_tasks": "تسک‌های امروز",
 
         "habit_streaks": "تداوم عادت‌ها",
+        "habit_activity_map": "نقشه فعالیت عادت‌ها",
 
         "daily_progress": "پیشرفت روزانه",
         "habit_completion_today": "تکمیل عادت‌های امروز",
@@ -914,6 +911,8 @@ TRANSLATIONS = {
 
         "view_all": "مشاهده همه ←",
         "show_less": "نمایش کمتر",
+        "less": "کمتر",
+        "more": "بیشتر",
 
         "habits_ready": "عادت آماده",
         "tap_habit_to_mark_done":
@@ -949,14 +948,6 @@ TRANSLATIONS = {
         # =========================================================
         # Days
         # =========================================================
-        "sat": "شنبه",
-        "sun": "یکشنبه",
-        "mon": "دوشنبه",
-        "tue": "سه‌شنبه",
-        "wed": "چهارشنبه",
-        "thu": "پنجشنبه",
-        "fri": "جمعه",
-
         # =========================================================
         # Analytics
         # =========================================================
@@ -1063,20 +1054,15 @@ TRANSLATIONS = {
         # Categories
         # =========================================================
         "all": "همه",
-        "fitness": "ورزش",
         "health": "سلامت",
         "mindfulness": "ذهن‌آگاهی",
         "personal_growth": "رشد فردی",
         "learning": "یادگیری",
         "finance": "مالی",
-        "study": "مطالعه",
-        "work": "کار",
-        "personal": "شخصی",
         "wellness": "رفاه",
         "skills": "مهارت‌ها",
         "digital_wellness": "سلامت دیجیتال",
         "career": "شغل",
-        "other": "سایر",
 
         "cat_mindfulness": "ذهن‌آگاهی",
         "cat_fitness": "تناسب اندام",
@@ -1237,6 +1223,10 @@ TRANSLATIONS = {
 
         "demo_goal_description":
             "برای رسیدن به «{name}» تلاش کن.",
+        "goal_learn_something_description": "برای رسیدن به «یادگیری یک مهارت جدید» تلاش کن.",
+        "goal_get_fit_description": "برای رسیدن به «تناسب اندام» تلاش کن.",
+        "goal_read_books_description": "برای رسیدن به «خواندن ۱۲ کتاب» تلاش کن.",
+        "goal_save_money_description": "برای رسیدن به «پس‌انداز پول» تلاش کن.",
 
         # =========================================================
         # Suggested Goals
@@ -1333,8 +1323,6 @@ TRANSLATIONS = {
         # =========================================================
         # Demo Time Sessions
         # =========================================================
-        "session_python_study": "مطالعه پایتون",
-        "session_deep_work": "بلوک کار عمیق",
         "session_evening_run": "دویدن عصرگاهی",
         "session_journaling": "نوشتن روزانه",
         "session_book_reading": "مطالعه کتاب",

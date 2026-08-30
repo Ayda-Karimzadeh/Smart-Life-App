@@ -141,7 +141,6 @@ class ClickableCard(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def mousePressEvent(self, event):
-        print("CARD CLICKED")
         if event.button() == Qt.MouseButton.LeftButton:
             if self.clicked_callback:
                 self.clicked_callback()
@@ -488,7 +487,6 @@ class DashboardPage(QWidget):
             card = ClickableCard(
                 clicked_callback=lambda habit_id=h.id: self._toggle_habit(habit_id)
             )
-            print("CREATED CARD:", h.id, "CALLBACK:", card.clicked_callback)
 
             card.setStyleSheet(
                f"""

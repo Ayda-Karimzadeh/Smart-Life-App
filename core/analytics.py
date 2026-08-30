@@ -5,19 +5,62 @@ from database.repository import (
     task_repo,
     analytics_repo,
 )
-from core.streak_engine import weekly_streak as streak_weekly_streak
-from core.dates import start_of_week, WEEKDAY_LABELS_SHORT
+from core.streak_engine import daily_streak, weekly_streak as streak_weekly_streak
+from core.dates import start_of_week, get_weekday_labels_short
 from core.language_manager import tr
+
+
+def _habit_created_date(habit) -> date | None:
+    created_at = getattr(habit, "created_at", None)
+    if not created_at:
+        return None
+
+    try:
+        return date.fromisoformat(created_at)
+    except (TypeError, ValueError):
+        return None
+
+
+def _weekly_expected_count(habit, period_start: date, period_end: date) -> int:
+    """Return weekly targets prorated to the habit's active days."""
+    created_date = _habit_created_date(habit)
+    active_start = max(period_start, created_date) if created_date else period_start
+    active_days = (period_end - active_start).days + 1
+
+    if active_days <= 0:
+        return 0
+
+    return min(int(habit.frequency_count), active_days)
 
 
 # Consistency Score
 def consistency_score(habit_id: int, days: int = 30) -> float:
     today = date.today()
     start = today - timedelta(days=days - 1)
+    habit = next((h for h in habit_repo.get_all_habits() if h.id == habit_id), None)
+    if habit is None or habit.frequency_count <= 0:
+        return 0.0
+
+    created_date = _habit_created_date(habit)
+    tracking_start = max(start, created_date) if created_date else start
+
     done = habit_repo.get_habit_log_count(
-        habit_id,   start.isoformat(), today.isoformat()
+        habit_id, tracking_start.isoformat(), today.isoformat()
     )
-    return round(done / days * 100, 1)
+    if habit.frequency_type == "weekly":
+        expected = 0
+        week_start = start_of_week(start)
+        while week_start <= today:
+            week_end = min(week_start + timedelta(days=6), today)
+            expected += _weekly_expected_count(habit, week_start, week_end)
+            week_start += timedelta(weeks=1)
+    else:
+        expected = max((today - tracking_start).days + 1, 0)
+
+    if expected <= 0:
+        return 0.0
+
+    return round(done / expected * 100, 1)
 
 def overall_consistency(days: int = 30) -> float:
     habits = habit_repo.get_all_habits()
@@ -32,6 +75,7 @@ def productivity_score(target_focus_hours: int = 4) -> int:
     goals  = goal_repo.get_all_goals()
     tasks  = task_repo.get_all_tasks()
     focus  = analytics_repo.get_total_time_today()
+    today = date.today().isoformat()
 
     if habits:
         done_today  = sum(1 for h in habits if habit_repo.is_habit_done_today(h.id))
@@ -44,9 +88,13 @@ def productivity_score(target_focus_hours: int = 4) -> int:
     else:
         goal_score = 0
 
-    if tasks:
-        done_tasks = sum(1 for t in tasks if t.done)
-        task_score = done_tasks / len(tasks) * 100
+    relevant_tasks = [
+        t for t in tasks
+            if getattr(t, "due_date", None) == today
+    ]
+    if relevant_tasks:
+        done_tasks = sum(1 for t in relevant_tasks if t.done)
+        task_score = done_tasks / len(relevant_tasks) * 100
     else:
         task_score = 0
 
@@ -74,7 +122,7 @@ def weekly_report() -> dict:
     habits = habit_repo.get_all_habits()
     tasks  = task_repo.get_all_tasks()
 
-    day_names    = WEEKDAY_LABELS_SHORT
+    day_names    = get_weekday_labels_short()
     habit_scores = []
     focus_hours  = []
     tasks_done   = []
@@ -84,8 +132,24 @@ def weekly_report() -> dict:
 
         # habit score
         if habits:
-            done = _habits_done_on(habits, d)
-            habit_scores.append(round(done / len(habits) * 100))
+            completed_ratios = []
+            for h in habits:
+                created_date = _habit_created_date(h)
+                if created_date and d < created_date:
+                    continue
+
+                if h.frequency_type == "weekly":
+                    active_week_start = max(week_start, created_date) if created_date else week_start
+                    active_days = (week_start + timedelta(days=6) - active_week_start).days + 1
+                    target = min(int(h.frequency_count), active_days) / active_days
+                else:
+                    target = 1
+                done_today = habit_repo.count_logs_in_range(h.id, d.isoformat(), d.isoformat())
+                completed_ratios.append(min(done_today / target, 1.0) * 100)
+            habit_scores.append(
+                round(sum(completed_ratios) / len(completed_ratios))
+                if completed_ratios else 0
+            )
         else:
             habit_scores.append(0)
 
@@ -120,7 +184,7 @@ def weekly_streak(habit_id: int) -> int:
 # Strengths & Weaknesses
 def strengths_and_weaknesses() -> dict:
     """
-    بر اساس consistency_score هر عادت，
+    بر اساس consistency_score هر عادت،
     قوی‌ترین‌ها و ضعیف‌ترین‌ها رو برمی‌گردونه.
 
     برمی‌گردونه:
@@ -129,8 +193,6 @@ def strengths_and_weaknesses() -> dict:
         "weaknesses": [{"name": "مطالعه", "score": 30}, ...],
     }
     """
-    from core.language_manager import tr
-
     habits = habit_repo.get_all_habits()
     if not habits:
         return {"strengths": [], "weaknesses": []}
@@ -140,11 +202,16 @@ def strengths_and_weaknesses() -> dict:
         score = consistency_score(h.id, 30)
         scores.append({"name": h.name, "icon": h.icon, "score": score})
 
-    scores.sort(key=lambda x: x["score"], reverse=True)
+    ranked = sorted(scores, key=lambda x: x["score"], reverse=True)
+    strengths = ranked[:3]
+    weaknesses = sorted(
+        [s for s in ranked if s["score"] < 70],
+        key=lambda x: x["score"]
+    )[:3]
 
     return {
-        "strengths":  [s for s in scores if s["score"] >= 70][:3],
-        "weaknesses": [s for s in scores if s["score"] < 70][-3:],
+        "strengths": strengths,
+        "weaknesses": weaknesses,
     }
 
 # توابع کمکی داخلی
@@ -185,7 +252,7 @@ def get_key_insight() -> dict | None:
     best_streak = 0
 
     for habit in habits:
-        streak = habit_repo.get_current_streak(habit.id)
+        streak = daily_streak(habit.id)
 
         if streak > best_streak:
             best_streak = streak
@@ -197,7 +264,7 @@ def get_key_insight() -> dict | None:
             "icon": "🔥",
             "title": tr("key_insight"),
             "message": tr("insight_streak").format(
-                habit=tr(best_habit.name),
+                habit=best_habit.name,
                 streak=best_streak
             ),
             "value": best_streak,
@@ -222,7 +289,7 @@ def get_key_insight() -> dict | None:
             "icon": "🎯",
             "title": tr("key_insight"),
             "message": tr("insight_goal_almost_done").format(
-                goal=tr(goal.name),
+                goal=goal.name,
                 progress=pct
             ),
             "value": pct,

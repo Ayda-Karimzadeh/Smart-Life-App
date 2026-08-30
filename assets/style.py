@@ -1,5 +1,4 @@
-from PyQt6.QtWidgets import QFrame,QWidget,QLabel,QVBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QFrame
 
 
 
@@ -17,10 +16,14 @@ BLUE = "#4fa3e0"
 RED = "#e05c5c"
 
 GLOBAL_STYLE = f"""
-QMainWindow, QWidget {{
+QMainWindow {{
     background-color: {BG_MAIN};
     color: {TEXT_PRIMARY};
     font-family: 'Segoe UI', Arial, sans-serif;
+}}
+QMainWindow > QWidget {{
+    background-color: {BG_MAIN};
+    color: {TEXT_PRIMARY};
 }}
 QScrollArea {{ border: none; background: transparent; }}
 QScrollBar:vertical {{
@@ -41,18 +44,3 @@ def make_card(parent=None, radius=14, color=BG_CARD):
         }}
     """)
     return card
-
-def placeholder_page(icon, label):
-    w = QWidget()
-    w.setStyleSheet("background: transparent;")
-    lay = QVBoxLayout(w)
-    lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    ic = QLabel(icon)
-    ic.setStyleSheet("font-size: 48px; background: transparent;")
-    ic.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    lbl = QLabel(f"{label}\nComing soon...")
-    lbl.setStyleSheet(f"font-size: 18px; color: {TEXT_MUTED}; background: transparent;")
-    lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    lay.addWidget(ic)
-    lay.addWidget(lbl)
-    return w

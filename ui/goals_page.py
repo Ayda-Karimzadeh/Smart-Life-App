@@ -148,7 +148,7 @@ class GoalCard(QWidget):
             f"background: transparent;"
         )
 
-        desc_lbl = QLabel(goal.description)
+        desc_lbl = QLabel(tr(goal.description))
         desc_lbl.setStyleSheet(
             f"font-size: 12px;"
             f"color: {TEXT_MUTED};"

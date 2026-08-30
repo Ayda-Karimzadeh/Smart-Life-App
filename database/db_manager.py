@@ -10,8 +10,30 @@ import sqlite3
 import os
 from datetime import date, timedelta
 from database.models import Habit, Goal, Milestone, Task, TimeSession
-from core.dates import start_of_week, end_of_week, WEEKDAY_LABELS_SHORT
+from core.dates import start_of_week, end_of_week, get_weekday_labels_short
 from config.paths import DB_PATH, SCHEMA_PATH
+
+CURRENT_SCHEMA_VERSION = 1
+
+
+def _migrate(conn):
+    row = conn.execute(
+        "SELECT version FROM schema_version WHERE id = 1"
+    ).fetchone()
+    version = row[0] if row else 0
+
+    if version > CURRENT_SCHEMA_VERSION:
+        raise RuntimeError(
+            f"Database schema version {version} is newer than supported version "
+            f"{CURRENT_SCHEMA_VERSION}"
+        )
+
+    if version == 0:
+        conn.execute(
+            "INSERT INTO schema_version (id, version) VALUES (1, ?)",
+            (CURRENT_SCHEMA_VERSION,),
+        )
+
 
 def get_connection():
     conn = sqlite3.connect(str(DB_PATH))
@@ -20,13 +42,16 @@ def get_connection():
 
 
 def init_db():
-    """دیتابیس و جداول رو می‌سازه (اگه وجود نداشته باشن)"""
+    """Create the schema and record its version for future migrations."""
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_connection()
-    with SCHEMA_PATH.open("r", encoding="utf-8") as f:
-        conn.executescript(f.read())
-    conn.commit()
-    conn.close()
+    try:
+        with SCHEMA_PATH.open("r", encoding="utf-8") as f:
+            conn.executescript(f.read())
+        _migrate(conn)
+        conn.commit()
+    finally:
+        conn.close()
 
 
 # ════════════════════════════════════════════════════════════════
@@ -423,6 +448,7 @@ def get_total_time_today():
 def get_weekly_activity():
     """برمی‌گرداند: [(day_name, total_hours), ...] برای ۷ روز هفته جاری (شنبه تا جمعه)"""
     week_start = start_of_week()
+    weekday_labels = get_weekday_labels_short()
 
     conn = get_connection()
     result = []
@@ -433,7 +459,7 @@ def get_weekly_activity():
             (d.isoformat(),)
         ).fetchone()
         total_hours = (row[0] or 0) / 3600
-        result.append((WEEKDAY_LABELS_SHORT[i], round(total_hours, 1)))
+        result.append((weekday_labels[i], round(total_hours, 1)))
     conn.close()
     return result
 

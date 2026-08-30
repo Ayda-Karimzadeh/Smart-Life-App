@@ -11,10 +11,11 @@ def get_habit_toggle_feedback(habit_id: int, habit_name: str, was_done: bool):
     """
     Return toast payload after toggling a habit.
 
-    Returns:
-        (title, message, icon, kind) or (None, None, None, None) if no toast.
+    Contract:
+    - habit_name is a user-facing label stored in the database, not a translation key.
+    - streak logic and perfect-day checks are evaluated from the current DB state after the toggle.
     """
-    display_name = tr(habit_name)
+    display_name = habit_name
 
     if was_done:
         return (
@@ -24,15 +25,6 @@ def get_habit_toggle_feedback(habit_id: int, habit_name: str, was_done: bool):
             "info",
         )
 
-    habits = habit_repo.get_all_habits()
-    if habits and all(habit_repo.is_habit_done_today(h.id) for h in habits):
-        return (
-            tr("perfect_day"),
-            tr("perfect_day_desc"),
-            "⭐",
-            "perfect",
-        )
-
     streak = daily_streak(habit_id)
     if streak in STREAK_MILESTONES:
         return (
@@ -40,6 +32,15 @@ def get_habit_toggle_feedback(habit_id: int, habit_name: str, was_done: bool):
             tr("streak_milestone_desc").format(name=display_name, streak=streak),
             "🔥",
             "milestone",
+        )
+
+    habits = habit_repo.get_all_habits()
+    if habits and all(habit_repo.is_habit_done_today(h.id) for h in habits):
+        return (
+            tr("perfect_day"),
+            tr("perfect_day_desc"),
+            "⭐",
+            "perfect",
         )
 
     return (
